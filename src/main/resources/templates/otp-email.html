@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận Email</title>
+    <style>
+        body { margin: 0; padding: 0; min-width: 100%; font-family: Arial, sans-serif; background-color: #f4f7f6; }
+        .email-wrapper { width: 100%; table-layout: fixed; background-color: #f4f7f6; padding: 40px 0; }
+        .email-body { width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; }
+        .email-header { text-align: center; padding: 30px 20px; }
+        .logo { font-size: 24px; font-weight: bold; color: #333; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .content { padding: 40px; color: #333333; line-height: 1.6; }
+        .top-bar { height: 6px; background-color: #0d8299; width: 100%; }
+
+        /* OTP Box Styles */
+        .otp-container {
+            border: 2px dashed #bce0fd;
+            background-color: #f0f9ff;
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .otp-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #0d8299;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+        .otp-digits {
+            display: inline-block;
+        }
+        .otp-digit {
+            display: inline-block;
+            width: 45px;
+            height: 55px;
+            line-height: 55px;
+            background-color: #ffffff;
+            border: 1px solid #e1e1e1;
+            border-radius: 6px;
+            margin: 0 5px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #0d8299;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .timer-text {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* Warning Box */
+        .warning-box {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffb300;
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin-top: 30px;
+            font-size: 14px;
+            color: #5d4037;
+            display: flex;
+            align-items: start;
+        }
+        .warning-icon {
+            margin-right: 12px;
+            font-size: 18px;
+            color: #ffb300;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            font-size: 13px;
+            color: #777;
+        }
+
+        /* Responsive */
+        @media only screen and (max-width: 620px) {
+            .email-body { width: 95% !important; }
+            .content { padding: 20px !important; }
+            .otp-digit { width: 35px !important; height: 45px !important; line-height: 45px !important; margin: 0 2px !important; font-size: 20px !important; }
+        }
+    </style>
+</head>
+<body>
+
+<table class="email-wrapper" border="0" cellpadding="0" cellspacing="0">
+    <tr>
+        <td align="center">
+
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="display: inline-flex; align-items: center; justify-content: center;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2693/2693507.png" width="30" height="30" style="vertical-align: middle; margin-right: 10px;" alt="Logo"/>
+                    <span style="font-size: 22px; font-weight: bold; font-family: sans-serif; color: #111;">EventPlatform</span>
+                </div>
+            </div>
+
+            <table class="email-body" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td class="top-bar"></td>
+                </tr>
+
+                <tr>
+                    <td class="content">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; color: #111;">Xác nhận địa chỉ email của bạn</h1>
+
+                        <p style="font-size: 16px;">Chào bạn,</p>
+
+                        <p style="font-size: 15px;">
+                            Cảm ơn bạn đã đăng ký tài khoản tại <strong style="color: #0d8299;">EventPlatform</strong>.
+                            Chúng tôi rất vui mừng khi bạn tham gia cộng đồng quản lý sự kiện chuyên nghiệp.
+                            Vui lòng sử dụng mã OTP dưới đây để hoàn tất quá trình xác minh.
+                        </p>
+
+                        <div class="otp-container">
+                            <div class="otp-label">MÃ XÁC NHẬN CỦA BẠN</div>
+
+                            <div class="otp-digits">
+                                <span class="otp-digit" th:each="digit : ${otpDigits}" th:text="${digit}">0</span>
+                            </div>
+
+                            <div class="timer-text">
+                                Mã này có hiệu lực trong vòng <strong>5 phút</strong>.
+                            </div>
+                        </div>
+
+                        <div class="warning-box">
+                            <div style="display: table; width: 100%;">
+                                <div style="display: table-cell; vertical-align: top;">
+                                    Vui lòng không chia sẻ mã này với bất kỳ ai để bảo mật tài khoản của bạn.
+                                    Đội ngũ hỗ trợ của EventPlatform sẽ không bao giờ yêu cầu bạn cung cấp mã này.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="footer">
+                            <p style="margin-bottom: 5px;">Nếu bạn không thực hiện yêu cầu này, bạn có thể an tâm bỏ qua email này.</p>
+                            <p style="margin-top: 20px; font-weight: bold;">Trân trọng,<br>Đội ngũ EventPlatform</p>
+                        </div>
+
+                    </td>
+                </tr>
+            </table>
+
+            <div style="height: 40px;"></div>
+
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
