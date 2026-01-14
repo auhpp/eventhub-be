@@ -5,6 +5,7 @@ import com.auhpp.event_management.dto.request.LogoutRequest;
 import com.auhpp.event_management.dto.request.RegisterRequest;
 import com.auhpp.event_management.dto.request.VerifyAndRegisterRequest;
 import com.auhpp.event_management.dto.response.AuthenticationResponse;
+import com.auhpp.event_management.dto.response.UserResponse;
 import com.auhpp.event_management.entity.AppUser;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
@@ -25,4 +26,6 @@ public interface AuthenticationService {
     SignedJWT verifyToken(String token) throws ParseException, JOSEException;
 
     void logout(LogoutRequest logoutRequest);
+
+    UserResponse getCurrentUserInfo();
 }

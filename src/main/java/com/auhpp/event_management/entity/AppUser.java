@@ -50,9 +50,13 @@ public class AppUser {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
     private Role role;
 
     @OneToMany(mappedBy = "appUser")
     private List<SocialLink> socialLinks;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<OrganizerRegistration> organizerRegistrations;
 }

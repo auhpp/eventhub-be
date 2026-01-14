@@ -7,9 +7,11 @@ import com.auhpp.event_management.dto.request.LogoutRequest;
 import com.auhpp.event_management.dto.request.RegisterRequest;
 import com.auhpp.event_management.dto.request.VerifyAndRegisterRequest;
 import com.auhpp.event_management.dto.response.AuthenticationResponse;
+import com.auhpp.event_management.dto.response.UserResponse;
 import com.auhpp.event_management.entity.AppUser;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
+import com.auhpp.event_management.mapper.UserMapper;
 import com.auhpp.event_management.repository.AppUserRepository;
 import com.auhpp.event_management.service.AuthenticationService;
 import com.auhpp.event_management.service.EmailService;
@@ -48,6 +50,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     UserService userService;
     PasswordEncoder passwordEncoder;
     RedisTemplate<String, String> stringValueRedisTemplate;
+    UserMapper userMapper;
 
     @NonFinal
     @Value("${spring.jwt.signer-key}")
@@ -157,6 +160,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         );
         user.setRefreshToken(null);
         appUserRepository.save(user);
+    }
+
+    @Override
+    public UserResponse getCurrentUserInfo() {
+        String email = SecurityUtil.getCurrentUserLogin();
+        AppUser user = appUserRepository.findByEmail(email).orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_FOUND)
+        );
+        return userMapper.toUserResponse(user);
     }
 
     @Override

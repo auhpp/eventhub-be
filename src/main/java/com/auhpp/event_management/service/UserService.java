@@ -4,4 +4,6 @@ import com.auhpp.event_management.dto.request.RegisterRequest;
 
 public interface UserService {
     void createUser(RegisterRequest registerRequest);
+
+
 }

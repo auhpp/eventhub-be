@@ -5,6 +5,7 @@ import com.auhpp.event_management.dto.request.LogoutRequest;
 import com.auhpp.event_management.dto.request.RegisterRequest;
 import com.auhpp.event_management.dto.request.VerifyAndRegisterRequest;
 import com.auhpp.event_management.dto.response.AuthenticationResponse;
+import com.auhpp.event_management.dto.response.UserResponse;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.service.AuthenticationService;
@@ -25,7 +26,7 @@ import java.text.ParseException;
 import java.time.Duration;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationController {
@@ -98,5 +99,12 @@ public class AuthenticationController {
                 .ok()
                 .header(HttpHeaders.SET_COOKIE, deleteSpringCookie.toString())
                 .build();
+    }
+
+    @GetMapping("/current-user")
+    public ResponseEntity<UserResponse> getCurrentUserInfo() {
+        UserResponse response = authenticationService.getCurrentUserInfo();
+        return ResponseEntity
+                .ok().body(response);
     }
 }

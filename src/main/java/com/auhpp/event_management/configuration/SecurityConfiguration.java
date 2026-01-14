@@ -17,9 +17,18 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfiguration {
-    private final String[] PUBLIC_ENDPOINTS = {
-            "/auth/**",
+    private final String[] PUBLIC_POST_ENDPOINTS = {
+            "/api/v1/auth/**",
     };
+
+    private final String[] PRIVATE_POST_ENDPOINTS = {
+            "/api/v1/auth/logout",
+    };
+
+    private final String[] PRIVATE_GET_ENDPOINTS = {
+            "/api/v1/auth/current-user",
+    };
+
 
     private final CustomJwtDecoder customJwtDecoder;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
@@ -30,7 +39,9 @@ public class SecurityConfiguration {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         request -> request
-                                .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                                .requestMatchers(HttpMethod.POST, PRIVATE_POST_ENDPOINTS).authenticated()
+                                .requestMatchers(HttpMethod.POST, PRIVATE_GET_ENDPOINTS).authenticated()
+                                .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

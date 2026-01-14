@@ -22,6 +22,7 @@ public class SocialLink {
     @Enumerated(EnumType.STRING)
     private SocialType type;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
     private AppUser appUser;
 }

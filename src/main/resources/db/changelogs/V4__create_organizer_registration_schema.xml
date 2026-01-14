@@ -1,0 +1,54 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1768312491951-1">
+        <createTable tableName="organizer_registration">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="organizer_registrationPK"/>
+            </column>
+            <column name="avatar_public_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="biography" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="business_avatar_url" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="business_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contact_address" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phone_number" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rejection_reason" type="TEXT"/>
+            <column name="representative_full_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1768312491951-2">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="organizer_registration"
+                                 constraintName="FKcb02md8vihxt2nnb4p78usekw" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1768312491951-3">
+        <addNotNullConstraint tableName="organizer_registration" columnName="app_user_id"/>
+        <addNotNullConstraint tableName="app_user" columnName="role_id"/>
+        <addNotNullConstraint tableName="social_link" columnName="app_user_id"/>
+    </changeSet>
+</databaseChangeLog>

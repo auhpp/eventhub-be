@@ -1,5 +1,8 @@
 package com.auhpp.event_management.util;
 
+import com.auhpp.event_management.entity.AppUser;
+import com.auhpp.event_management.exception.AppException;
+import com.auhpp.event_management.exception.ErrorCode;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,5 +17,11 @@ public class SecurityUtil {
             return jwt.getSubject(); // return email
         }
         return null;
+    }
+
+    public static void isOwner(AppUser appUser) {
+        if (!appUser.getEmail().equals(getCurrentUserLogin())) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
     }
 }
