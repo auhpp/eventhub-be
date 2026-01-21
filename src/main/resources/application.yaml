@@ -35,11 +35,14 @@ spring:
           auth: true
           starttls:
             enable: true
+app:
   cloudinary:
     cloud-name: ${CLOUDINARY_CLOUD_NAME}
     api-key: ${CLOUDINARY_API_KEY}
     api-secret: ${CLOUDINARY_API_SECRET}
-app:
+  tomtom:
+    base-url: ${TOMTOM_BASE_URL}
+    api-key: ${TOMTOM_API_KEY}
   admin:
     email: ${ADMIN_EMAIL}
     password: ${ADMIN_PASSWORD}

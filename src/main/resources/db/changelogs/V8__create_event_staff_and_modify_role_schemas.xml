@@ -1,0 +1,59 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1768707300366-1">
+        <createSequence incrementBy="50" sequenceName="event_staff_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1768707300366-2">
+        <createTable tableName="event_staff">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="event_staffPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1768707300366-3">
+        <addColumn tableName="role">
+            <column name="description" type="TEXT">
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1768707300366-4">
+        <addColumn tableName="role">
+            <column name="type" type="VARCHAR(255)">
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1768707300366-5">
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="event_staff"
+                                 constraintName="FK1onfv7385f1fo26roflbhxg1x" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="role"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1768707300366-6">
+        <addForeignKeyConstraint baseColumnNames="event_id" baseTableName="event_staff"
+                                 constraintName="FKckpcnvkvelgbqx4xqk006gxdu" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="event"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1768707300366-7">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="event_staff"
+                                 constraintName="FKkw14aeem4uxuxredanlhdl2um" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+</databaseChangeLog>

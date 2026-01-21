@@ -19,7 +19,7 @@ import com.auhpp.event_management.repository.OrganizerRegistrationRepository;
 import com.auhpp.event_management.repository.RoleRepository;
 import com.auhpp.event_management.service.CloudinaryService;
 import com.auhpp.event_management.service.OrganizerRegistrationService;
-import com.auhpp.event_management.util.SecurityUtil;
+import com.auhpp.event_management.util.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -46,7 +46,7 @@ public class OrganizerRegistrationServiceImpl implements OrganizerRegistrationSe
     @Override
     @Transactional
     public OrganizerRegistrationResponse createOrganizerRegistration(OrganizerCreateRequest organizerCreateRequest) {
-        String email = SecurityUtil.getCurrentUserLogin();
+        String email = SecurityUtils.getCurrentUserLogin();
         AppUser user = appUserRepository.findByEmail(email).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_FOUND)
         );
@@ -81,7 +81,7 @@ public class OrganizerRegistrationServiceImpl implements OrganizerRegistrationSe
         OrganizerRegistration organizerRegistration = organizerRegistrationRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
-        SecurityUtil.isOwner(organizerRegistration.getAppUser());
+        SecurityUtils.isOwner(organizerRegistration.getAppUser());
         organizerRegistrationMapper.updateOrganizerRegistrationFromRequest(
                 organizerUpdateRequest, organizerRegistration
         );
@@ -108,7 +108,7 @@ public class OrganizerRegistrationServiceImpl implements OrganizerRegistrationSe
         OrganizerRegistration organizerRegistration = organizerRegistrationRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
-        SecurityUtil.isOwner(organizerRegistration.getAppUser());
+        SecurityUtils.isOwner(organizerRegistration.getAppUser());
         if (organizerRegistration.getStatus() == RegistrationStatus.PENDING) {
             cloudinaryService.deleteFile(organizerRegistration.getAvatarPublicId());
             organizerRegistrationRepository.delete(organizerRegistration);
@@ -123,7 +123,7 @@ public class OrganizerRegistrationServiceImpl implements OrganizerRegistrationSe
         OrganizerRegistration organizerRegistration = organizerRegistrationRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
-        SecurityUtil.isOwner(organizerRegistration.getAppUser());
+        SecurityUtils.isOwner(organizerRegistration.getAppUser());
         if (organizerRegistration.getStatus() == RegistrationStatus.PENDING) {
             organizerRegistration.setStatus(RegistrationStatus.CANCELLED);
             organizerRegistrationRepository.save(organizerRegistration);
@@ -158,7 +158,7 @@ public class OrganizerRegistrationServiceImpl implements OrganizerRegistrationSe
             organizerRegistration.setStatus(RegistrationStatus.APPROVED);
             organizerRegistrationRepository.save(organizerRegistration);
 
-            Role role = roleRepository.findByName(RoleName.ORGANIZER.name());
+            Role role = roleRepository.findByName(RoleName.ORGANIZER);
             AppUser register = organizerRegistration.getAppUser();
             register.setRole(role);
             appUserRepository.save(register);
@@ -187,7 +187,7 @@ public class OrganizerRegistrationServiceImpl implements OrganizerRegistrationSe
 
     @Override
     public PageResponse<OrganizerRegistrationResponse> getOrganizerRegistrationsByUser(int page, int size) {
-        String email = SecurityUtil.getCurrentUserLogin();
+        String email = SecurityUtils.getCurrentUserLogin();
         AppUser user = appUserRepository.findByEmail(email).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_FOUND)
         );

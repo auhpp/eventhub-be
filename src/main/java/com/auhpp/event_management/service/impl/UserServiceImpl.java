@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
         if (appUserOptional.isPresent()) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
-        Role role = roleRepository.findByName(RoleName.USER.name());
+        Role role = roleRepository.findByName(RoleName.USER);
         AppUser appUser = userMapper.toAppUser(registerRequest);
         String passwordEncoded = passwordEncoder.encode(registerRequest.getPassword());
 

@@ -3,7 +3,6 @@ package com.auhpp.event_management.service.impl;
 import com.auhpp.event_management.constant.EmailType;
 import com.auhpp.event_management.constant.RedisPrefix;
 import com.auhpp.event_management.dto.request.AuthenticationRequest;
-import com.auhpp.event_management.dto.request.LogoutRequest;
 import com.auhpp.event_management.dto.request.RegisterRequest;
 import com.auhpp.event_management.dto.request.VerifyAndRegisterRequest;
 import com.auhpp.event_management.dto.response.AuthenticationResponse;
@@ -17,7 +16,7 @@ import com.auhpp.event_management.service.AuthenticationService;
 import com.auhpp.event_management.service.EmailService;
 import com.auhpp.event_management.service.OtpService;
 import com.auhpp.event_management.service.UserService;
-import com.auhpp.event_management.util.SecurityUtil;
+import com.auhpp.event_management.util.SecurityUtils;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -131,9 +130,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void logout(LogoutRequest logoutRequest) {
+    public void logout(String accessToken) {
         // Handle access token
-        String accessToken = logoutRequest.getAccessToken();
         try {
             SignedJWT signedJWT = SignedJWT.parse(accessToken);
             String jti = signedJWT.getJWTClaimsSet().getJWTID();
@@ -154,7 +152,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         // Handle refresh token
-        String email = SecurityUtil.getCurrentUserLogin();
+        String email = SecurityUtils.getCurrentUserLogin();
         AppUser user = appUserRepository.findByEmail(email).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_FOUND)
         );
@@ -164,7 +162,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public UserResponse getCurrentUserInfo() {
-        String email = SecurityUtil.getCurrentUserLogin();
+        String email = SecurityUtils.getCurrentUserLogin();
         AppUser user = appUserRepository.findByEmail(email).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_FOUND)
         );

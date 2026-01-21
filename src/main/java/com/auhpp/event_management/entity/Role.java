@@ -1,6 +1,7 @@
 package com.auhpp.event_management.entity;
 
 import com.auhpp.event_management.constant.RoleName;
+import com.auhpp.event_management.constant.RoleType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +22,16 @@ public class Role {
     @Enumerated(EnumType.STRING)
     private RoleName name;
 
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String description;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private RoleType type;
+
     @OneToMany(mappedBy = "role")
     private List<AppUser> appUsers;
+
+    @OneToMany(mappedBy = "role")
+    private List<EventStaff> eventStaffs;
 }

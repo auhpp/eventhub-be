@@ -20,6 +20,10 @@ public class SecurityConfiguration {
     private final String[] PUBLIC_POST_ENDPOINTS = {
             "/api/v1/auth/**",
     };
+    private final String[] PUBLIC_GET_ENDPOINTS = {
+            "/api/v1/category/**", "/api/v1/event/**"
+    };
+
 
     private final String[] PRIVATE_POST_ENDPOINTS = {
             "/api/v1/auth/logout",
@@ -42,6 +46,7 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.POST, PRIVATE_POST_ENDPOINTS).authenticated()
                                 .requestMatchers(HttpMethod.POST, PRIVATE_GET_ENDPOINTS).authenticated()
                                 .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
+                                .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

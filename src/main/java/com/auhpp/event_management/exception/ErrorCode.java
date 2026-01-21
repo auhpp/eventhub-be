@@ -26,7 +26,8 @@ public enum ErrorCode {
     INVALID_EXTENSION(1016, "Invalid extension", HttpStatus.BAD_REQUEST),
     NOT_AN_IMAGE(1017, "Not an image", HttpStatus.BAD_REQUEST),
     FILE_DELETE_FAILED(1018, "file delete failed", HttpStatus.INTERNAL_SERVER_ERROR),
-    ORGANIZER_ALREADY(1019, "Organizer already", HttpStatus.BAD_REQUEST);
+    ORGANIZER_ALREADY(1019, "Organizer already", HttpStatus.BAD_REQUEST),
+    INVALID_PARAMS(1020, "Invalid params", HttpStatus.BAD_REQUEST);
 
     private final int code;
     private final String message;

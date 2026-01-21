@@ -1,7 +1,6 @@
 package com.auhpp.event_management.controller;
 
 import com.auhpp.event_management.dto.request.AuthenticationRequest;
-import com.auhpp.event_management.dto.request.LogoutRequest;
 import com.auhpp.event_management.dto.request.RegisterRequest;
 import com.auhpp.event_management.dto.request.VerifyAndRegisterRequest;
 import com.auhpp.event_management.dto.response.AuthenticationResponse;
@@ -20,6 +19,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -86,8 +87,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequest request) {
-        authenticationService.logout(request);
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal Jwt jwt) {
+        authenticationService.logout(jwt.getTokenValue());
         ResponseCookie deleteSpringCookie = ResponseCookie.from("refresh_token",
                         null)
                 .httpOnly(true)

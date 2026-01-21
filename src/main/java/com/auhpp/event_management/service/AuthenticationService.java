@@ -1,7 +1,6 @@
 package com.auhpp.event_management.service;
 
 import com.auhpp.event_management.dto.request.AuthenticationRequest;
-import com.auhpp.event_management.dto.request.LogoutRequest;
 import com.auhpp.event_management.dto.request.RegisterRequest;
 import com.auhpp.event_management.dto.request.VerifyAndRegisterRequest;
 import com.auhpp.event_management.dto.response.AuthenticationResponse;
@@ -25,7 +24,7 @@ public interface AuthenticationService {
 
     SignedJWT verifyToken(String token) throws ParseException, JOSEException;
 
-    void logout(LogoutRequest logoutRequest);
+    void logout(String accessToken);
 
     UserResponse getCurrentUserInfo();
 }

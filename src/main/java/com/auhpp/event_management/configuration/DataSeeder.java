@@ -26,7 +26,7 @@ public class DataSeeder {
                 AppUser admin = new AppUser();
                 admin.setEmail(adminEmail);
                 admin.setPassword(encoder.encode(adminPassword));
-                admin.setRole(roleRepository.findByName(RoleName.ADMIN.name()));
+                admin.setRole(roleRepository.findByName(RoleName.ADMIN));
                 admin.setStatus(true);
                 repo.save(admin);
             }
