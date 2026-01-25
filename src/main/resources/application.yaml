@@ -43,6 +43,13 @@ app:
   tomtom:
     base-url: ${TOMTOM_BASE_URL}
     api-key: ${TOMTOM_API_KEY}
+  vnpay:
+    vnp_TmnCode: ${VNP_TMN_CODE}
+    vnp_HashSecret: ${VNP_HASH_SECRET}
+    vnp_ReturnUrl: ${VNP_RETURN_URL}
+    vnp_PayUrl: ${VNP_PAY_URL}
+    vnp_ApiUrl: ${VNP_API_URL}
   admin:
     email: ${ADMIN_EMAIL}
     password: ${ADMIN_PASSWORD}
+

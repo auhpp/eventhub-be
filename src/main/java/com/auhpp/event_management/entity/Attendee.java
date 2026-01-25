@@ -1,13 +1,13 @@
 package com.auhpp.event_management.entity;
 
-import com.auhpp.event_management.constant.EventStaffStatus;
+import com.auhpp.event_management.constant.AttendeeStatus;
+import com.auhpp.event_management.constant.AttendeeType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Getter
@@ -15,14 +15,22 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class EventStaff {
+public class Attendee {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(unique = true)
+    private String ticketCode;
+
+    private LocalDateTime checkInAt;
+
     @Enumerated(EnumType.STRING)
-    private EventStaffStatus status;
+    @Column(nullable = false)
+    private AttendeeStatus status;
+
+    @Column(nullable = false)
+    private AttendeeType type;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -33,16 +41,12 @@ public class EventStaff {
 
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
-    private Role role;
+    private Booking booking;
 
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
-    private Event event;
+    private Ticket ticket;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(nullable = false)
-    private AppUser appUser;
-
-    @OneToMany(mappedBy = "eventStaff")
-    private List<Attendee> attendees;
+    @ManyToOne
+    private EventStaff eventStaff;
 }

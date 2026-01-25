@@ -26,7 +26,11 @@ public class AppUser {
 
     private String phoneNumber;
 
+    @Column(columnDefinition = "TEXT")
     private String avatar;
+
+    @Column(columnDefinition = "TEXT")
+    private String avatarPublicId;
 
     @Column(length = 1000)
     private String biography;
@@ -69,4 +73,7 @@ public class AppUser {
 
     @OneToMany(mappedBy = "appUser")
     private List<EventStaff> eventStaffs;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<Booking> bookings;
 }

@@ -161,6 +161,9 @@ public class OrganizerRegistrationServiceImpl implements OrganizerRegistrationSe
             Role role = roleRepository.findByName(RoleName.ORGANIZER);
             AppUser register = organizerRegistration.getAppUser();
             register.setRole(role);
+            register.setAvatar(organizerRegistration.getBusinessAvatarUrl());
+            register.setAvatarPublicId(organizerRegistration.getAvatarPublicId());
+            register.setFullName(organizerRegistration.getBusinessName());
             appUserRepository.save(register);
 
         } else {

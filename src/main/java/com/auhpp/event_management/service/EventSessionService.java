@@ -5,4 +5,6 @@ import com.auhpp.event_management.dto.response.EventSessionResponse;
 
 public interface EventSessionService {
     EventSessionResponse createEventSession(EventSessionCreateRequest eventSessionCreateRequest, Long eventId);
+
+    EventSessionResponse getEventSessionById(Long id);
 }

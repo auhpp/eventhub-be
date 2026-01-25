@@ -27,9 +27,13 @@ public class TicketResponse {
 
     private Integer maximumPerPurchase;
 
+    private Integer soldQuantity;
+
     private TicketStatus status;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    private Long eventSessionId;
 }

@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -28,6 +29,9 @@ public class Ticket {
     @Column(nullable = false)
     private String name;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @Column(nullable = false)
     private LocalDateTime openAt;
 
@@ -36,6 +40,8 @@ public class Ticket {
 
     @Column(nullable = false)
     private Integer maximumPerPurchase;
+
+    private Integer soldQuantity;
 
     @Enumerated(EnumType.STRING)
     private TicketStatus status;
@@ -50,4 +56,7 @@ public class Ticket {
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private EventSession eventSession;
+
+    @OneToMany(mappedBy = "ticket")
+    private List<Attendee> attendees;
 }

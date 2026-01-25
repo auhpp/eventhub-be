@@ -4,7 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum RedisPrefix {
-    OTP_KEY("otp:"), TOKEN_BLACKLIST("token_blacklist:");
+    OTP_KEY("otp:"), TOKEN_BLACKLIST("token_blacklist:"),
+    BOOKING_EXPIRATION("booking_expiration:");
 
     private final String value;
 

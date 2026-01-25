@@ -27,8 +27,6 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
-
-
     //Handle validation exceptions (@Valid)
     private String processErrorMessage(ObjectError error) {
         if (error instanceof FieldError fieldError) {

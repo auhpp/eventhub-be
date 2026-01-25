@@ -47,4 +47,12 @@ public class EventSessionServiceImpl implements EventSessionService {
         }
         return eventSessionMapper.toEventSessionResponse(eventSession);
     }
+
+    @Override
+    public EventSessionResponse getEventSessionById(Long id) {
+        EventSession eventSession = eventSessionRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        return eventSessionMapper.toEventSessionResponse(eventSession);
+    }
 }

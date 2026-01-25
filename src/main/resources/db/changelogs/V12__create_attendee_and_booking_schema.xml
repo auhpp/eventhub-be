@@ -1,0 +1,109 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1769226225602-1">
+        <createSequence incrementBy="50" sequenceName="attendee_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769226225602-2">
+        <createTable tableName="attendee">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="attendeePK"/>
+            </column>
+            <column name="check_in_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ticket_code" type="VARCHAR(255)"/>
+            <column name="type" type="SMALLINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="booking_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_staff_id" type="BIGINT"/>
+            <column name="ticket_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769226225602-3">
+        <createTable tableName="booking">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="bookingPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="customer_email" type="VARCHAR(255)"/>
+            <column name="customer_name" type="VARCHAR(255)"/>
+            <column name="customer_phone" type="VARCHAR(255)"/>
+            <column name="discount_amount" type="FLOAT(53)"/>
+            <column name="expired_at" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="final_amount" type="FLOAT(53)"/>
+            <column name="note" type="TEXT"/>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_amount" type="FLOAT(53)"/>
+            <column name="transaction_id" type="VARCHAR(255)"/>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="wallet_type" type="VARCHAR(255)"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769226225602-4">
+        <addColumn tableName="app_user">
+            <column name="avatar_public_id" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769226225602-5">
+        <addColumn tableName="ticket">
+            <column name="sold_quantity" type="INTEGER" defaultValue="0"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769226225602-6">
+        <addUniqueConstraint columnNames="ticket_code" constraintName="UC_ATTENDEETICKET_CODE_COL"
+                             tableName="attendee"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769226225602-7">
+        <addForeignKeyConstraint baseColumnNames="event_staff_id" baseTableName="attendee"
+                                 constraintName="FK496sthgym60v6n4upwo95xly9" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="event_staff"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769226225602-8">
+        <addForeignKeyConstraint baseColumnNames="booking_id" baseTableName="attendee"
+                                 constraintName="FK57n5fj4di8bj56d7inipraj22" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="booking"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769226225602-9">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="booking"
+                                 constraintName="FKlv76x2clh8fnw4djkxfgctj54" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769226225602-10">
+        <addForeignKeyConstraint baseColumnNames="ticket_id" baseTableName="attendee"
+                                 constraintName="FKm4272nxlvm7wfa85da4suy559" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="ticket"
+                                 validate="true"/>
+    </changeSet>
+
+    <changeSet author="auhpp (generated)" id="1769226225602-11">
+        <modifyDataType tableName="app_user" columnName="avatar" newDataType="text"/>
+        <rollback>
+            <modifyDataType tableName="app_user" columnName="avatar" newDataType="VARCHAR(255)"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769226225602-12">
+        <addColumn tableName="ticket">
+            <column name="description" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
