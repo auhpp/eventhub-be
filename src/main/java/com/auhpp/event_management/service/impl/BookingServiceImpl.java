@@ -4,13 +4,17 @@ import com.auhpp.event_management.constant.*;
 import com.auhpp.event_management.dto.request.*;
 import com.auhpp.event_management.dto.response.BookingResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
+import com.auhpp.event_management.dto.response.UserBookingSummaryResponse;
 import com.auhpp.event_management.entity.AppUser;
 import com.auhpp.event_management.entity.Attendee;
 import com.auhpp.event_management.entity.Booking;
 import com.auhpp.event_management.entity.Ticket;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
+import com.auhpp.event_management.mapper.BookingBasicMapper;
 import com.auhpp.event_management.mapper.BookingMapper;
+import com.auhpp.event_management.mapper.UserBasicMapper;
+import com.auhpp.event_management.mapper.UserMapper;
 import com.auhpp.event_management.repository.AppUserRepository;
 import com.auhpp.event_management.repository.BookingRepository;
 import com.auhpp.event_management.repository.TicketRepository;
@@ -32,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -43,6 +48,9 @@ public class BookingServiceImpl implements BookingService {
     RedisTemplate<String, String> stringValueRedisTemplate;
     AttendeeService attendeeService;
     AppUserRepository appUserRepository;
+    UserMapper userMapper;
+    BookingBasicMapper bookingBasicMapper;
+    UserBasicMapper userBasicMapper;
 
     private boolean checkValidDateSellTicket(Ticket ticket) {
         LocalDateTime currentDateTime = LocalDateTime.now();
@@ -105,6 +113,34 @@ public class BookingServiceImpl implements BookingService {
         stringValueRedisTemplate.opsForValue().set(key, "waiting_payment", 5, TimeUnit.MINUTES);
 
         return bookingMapper.toBookingResponse(booking);
+    }
+
+    @Override
+    @Transactional
+    public Booking createInvitationBooking(InvitationBookingCreateRequest bookingCreateRequest) {
+        Booking booking = Booking.builder()
+                .totalAmount(0D)
+                .discountAmount(0D)
+                .finalAmount(0D)
+                .status(BookingStatus.PAID)
+                .customerEmail(bookingCreateRequest.getUser().getEmail())
+                .customerName(bookingCreateRequest.getUser().getFullName())
+                .customerPhone(bookingCreateRequest.getUser().getPhoneNumber())
+                .type(AttendeeType.INVITE)
+                .appUser(bookingCreateRequest.getUser())
+                .build();
+        bookingRepository.save(booking);
+        for (int i = 0; i < bookingCreateRequest.getQuantity(); i++) {
+            attendeeService.createAttendee(
+                    AttendeeCreateRequest.builder()
+                            .bookingId(booking.getId())
+                            .ticketId(bookingCreateRequest.getTicketId())
+                            .type(AttendeeType.INVITE)
+                            .status(AttendeeStatus.VALID)
+                            .build()
+            );
+        }
+        return booking;
     }
 
     @Override
@@ -219,9 +255,9 @@ public class BookingServiceImpl implements BookingService {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
         Page<Booking> bookings;
-        if (bookingSearchRequest.getStatus() == BookingSearchStatus.PAID) {
+        if (bookingSearchRequest.getStatus() == BookingStatus.PAID) {
             bookings = bookingRepository.findAllByEmailUserAndStatus(email, BookingStatus.PAID, pageable);
-        } else if (bookingSearchRequest.getStatus() == BookingSearchStatus.CANCELLED) {
+        } else if (bookingSearchRequest.getStatus() == BookingStatus.CANCELLED) {
             bookings = bookingRepository.findAllByEmailUserAndStatus(email, BookingStatus.CANCELLED, pageable);
         } else {
             bookings = bookingRepository.findAllByEmailUser(email, pageable);
@@ -262,4 +298,71 @@ public class BookingServiceImpl implements BookingService {
         );
         return booking.map(bookingMapper::toBookingResponse).orElse(null);
     }
+
+    @Override
+    public PageResponse<UserBookingSummaryResponse>
+    getUserBookingSummaries(Long eventSessionId,
+                            BookingSearchRequest bookingSearchRequest, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
+                "b.createdAt"));
+        List<BookingStatus> bookingStatuses = new ArrayList<>();
+        if (bookingSearchRequest.getStatus() == BookingStatus.CANCELLED) {
+            bookingStatuses.add(BookingStatus.CANCELLED);
+        } else if (bookingSearchRequest.getStatus() == BookingStatus.PAID) {
+            bookingStatuses.add(BookingStatus.PAID);
+        } else {
+            bookingStatuses.addAll(List.of(BookingStatus.CANCELLED, BookingStatus.PAID));
+        }
+        Page<AppUser> appUserPage = bookingRepository.findUserByEventSession(
+                eventSessionId,
+                bookingStatuses,
+                pageable
+        );
+        List<UserBookingSummaryResponse> responses = new ArrayList<>();
+        if (!appUserPage.isEmpty()) {
+            List<AppUser> usersOnPage = appUserPage.getContent();
+
+            List<Booking> bookings = bookingRepository.findAllByUserInAndEventSession(usersOnPage,
+                    eventSessionId);
+            Map<Long, List<Booking>> bookingsByUserId = bookings.stream().collect(
+                    Collectors.groupingBy(b -> b.getAppUser().getId())
+            );
+            responses = usersOnPage.stream().map(
+                    appUser -> {
+                        List<Booking> userBookings = bookingsByUserId.getOrDefault(appUser.getId(),
+                                Collections.emptyList());
+                        return UserBookingSummaryResponse.builder()
+                                .user(userBasicMapper.toUserBasicResponse(appUser))
+                                .bookings(userBookings.stream().map(bookingBasicMapper::toBookingBasicResponse)
+                                        .toList())
+                                .build();
+                    }
+            ).toList();
+        }
+        return PageResponse.<UserBookingSummaryResponse>builder()
+                .currentPage(page)
+                .totalElements(appUserPage.getTotalElements())
+                .totalPage(appUserPage.getTotalPages())
+                .pageSize(appUserPage.getSize())
+                .data(responses)
+                .build();
+    }
+
+    @Override
+    public UserBookingSummaryResponse getUserBookingSummary(Long eventSessionId, Long userId) {
+        AppUser user = appUserRepository.findById(userId).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        List<Booking> bookings = bookingRepository.findAllByUserInAndEventSession(List.of(user), eventSessionId);
+        if (!bookings.isEmpty()) {
+            return UserBookingSummaryResponse
+                    .builder()
+                    .user(userBasicMapper.toUserBasicResponse(user))
+                    .bookings(bookings.stream().map(bookingBasicMapper::toBookingBasicResponse).toList())
+                    .build();
+        }
+        return null;
+    }
+
+
 }

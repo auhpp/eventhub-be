@@ -43,6 +43,11 @@ public class Ticket {
 
     private Integer soldQuantity;
 
+    @Column(nullable = false)
+    private Integer invitationQuota;
+
+    private Integer invitedQuantity;
+
     @Enumerated(EnumType.STRING)
     private TicketStatus status;
 
@@ -59,4 +64,7 @@ public class Ticket {
 
     @OneToMany(mappedBy = "ticket")
     private List<Attendee> attendees;
+
+    @OneToMany(mappedBy = "ticket")
+    private List<EventInvitation> eventInvitations;
 }

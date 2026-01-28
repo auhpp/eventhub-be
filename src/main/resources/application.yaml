@@ -52,4 +52,6 @@ app:
   admin:
     email: ${ADMIN_EMAIL}
     password: ${ADMIN_PASSWORD}
+  fe:
+    user-url: ${FE_USER_URL}
 

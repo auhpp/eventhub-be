@@ -27,4 +27,5 @@ public interface AttendeeRepository extends JpaRepository<Attendee, Long>, JpaSp
             "AND a.ticket.eventSession.endDateTime < current_timestamp ")
     Page<Attendee> findPastAllByEmailUser(LocalDateTime currentDate, String email, Pageable pageable);
 
+
 }

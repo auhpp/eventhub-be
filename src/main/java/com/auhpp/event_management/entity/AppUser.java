@@ -76,4 +76,7 @@ public class AppUser {
 
     @OneToMany(mappedBy = "appUser")
     private List<Booking> bookings;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<EventInvitation> eventInvitations;
 }

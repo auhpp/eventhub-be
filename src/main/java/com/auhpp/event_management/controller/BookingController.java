@@ -6,6 +6,7 @@ import com.auhpp.event_management.dto.request.BookingSearchRequest;
 import com.auhpp.event_management.dto.request.PendingBookingCreateRequest;
 import com.auhpp.event_management.dto.response.BookingResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
+import com.auhpp.event_management.dto.response.UserBookingSummaryResponse;
 import com.auhpp.event_management.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -75,6 +76,34 @@ public class BookingController {
         BookingResponse response = bookingService.getBookingByEventSessionIdAndCurrentUserAndStatus(
                 eventSessionId, BookingStatus.PENDING
         );
+        return ResponseEntity
+                .status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/event-session/{eventSessionId}/filter")
+    @PreAuthorize("hasAnyRole('ORGANIZER')")
+    public ResponseEntity<PageResponse<UserBookingSummaryResponse>> getUserSummaryBookings(
+            @PathVariable(name = "eventSessionId") Long eventSessionId,
+            @RequestBody BookingSearchRequest bookingSearchRequest,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ) {
+        PageResponse<UserBookingSummaryResponse> response = bookingService.getUserBookingSummaries(
+                eventSessionId,
+                bookingSearchRequest, page, size);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/event-session/{eventSessionId}/user/{userId}")
+    @PreAuthorize("hasAnyRole('ORGANIZER')")
+    public ResponseEntity<UserBookingSummaryResponse> getUserSummaryBooking(
+            @PathVariable(name = "eventSessionId") Long eventSessionId,
+            @PathVariable(name = "userId") Long userId
+    ) {
+        UserBookingSummaryResponse response = bookingService.getUserBookingSummary(
+                eventSessionId,
+                userId);
         return ResponseEntity
                 .status(HttpStatus.OK).body(response);
     }

@@ -1,5 +1,6 @@
 package com.auhpp.event_management.service.impl;
 
+import com.auhpp.event_management.constant.AttendeeSearchStatus;
 import com.auhpp.event_management.constant.AttendeeStatus;
 import com.auhpp.event_management.dto.request.AttendeeCreateRequest;
 import com.auhpp.event_management.dto.request.AttendeeSearchRequest;
@@ -101,11 +102,11 @@ public class AttendeeServiceImpl implements AttendeeService {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
         Page<Attendee> attendees;
-        if (attendeeSearchRequest.getStatus() == AttendeeStatus.COMING) {
+        if (attendeeSearchRequest.getStatus() == AttendeeSearchStatus.COMING) {
             attendees = attendeeRepository.findComingAllByEmailUser(LocalDateTime.now(), email, pageable);
-        } else if (attendeeSearchRequest.getStatus() == AttendeeStatus.PAST) {
+        } else if (attendeeSearchRequest.getStatus() == AttendeeSearchStatus.PAST) {
             attendees = attendeeRepository.findPastAllByEmailUser(LocalDateTime.now(), email, pageable);
-        } else if (attendeeSearchRequest.getStatus() == AttendeeStatus.CANCELLED) {
+        } else if (attendeeSearchRequest.getStatus() == AttendeeSearchStatus.CANCELLED) {
             attendees = attendeeRepository.findAllByStatusAndEmailUser(AttendeeStatus.CANCELLED, email, pageable);
         } else {
             attendees = attendeeRepository.findAllByStatusAndEmailUser(AttendeeStatus.VALID, email, pageable);
@@ -129,6 +130,7 @@ public class AttendeeServiceImpl implements AttendeeService {
         );
         return attendeeMapper.toAttendeeResponse(attendee);
     }
+
 
 
 }

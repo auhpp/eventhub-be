@@ -1,5 +1,6 @@
 package com.auhpp.event_management.entity;
 
+import com.auhpp.event_management.constant.AttendeeType;
 import com.auhpp.event_management.constant.BookingStatus;
 import com.auhpp.event_management.constant.WalletType;
 import jakarta.persistence.*;
@@ -49,6 +50,9 @@ public class Booking {
     @Column(nullable = false)
     private LocalDateTime expiredAt;
 
+    @Column(nullable = false)
+    private AttendeeType type;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -62,4 +66,7 @@ public class Booking {
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private AppUser appUser;
+
+    @OneToMany(mappedBy = "booking")
+    private List<EventInvitation> eventInvitations;
 }

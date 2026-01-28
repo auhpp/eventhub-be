@@ -15,4 +15,5 @@ public interface AttendeeService {
 
     AttendeeResponse getAttendeeById(Long id);
 
+
 }

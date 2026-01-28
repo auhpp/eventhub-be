@@ -32,6 +32,8 @@ public enum ErrorCode {
     INVALID_QUANTITY(1022, "Invalid quantity", HttpStatus.BAD_REQUEST),
     INVALID_BOOKING(1023, "Invalid booking", HttpStatus.BAD_REQUEST),
     INVALID_TIME_BOOKING(1024, "Invalid time booking", HttpStatus.BAD_REQUEST),
+    INVALID_TIME_INVITATION(1025, "Invalid time invitation", HttpStatus.BAD_REQUEST),
+
     ;
 
     private final int code;

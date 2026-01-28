@@ -1,5 +1,6 @@
 package com.auhpp.event_management.dto.response;
 
+
 import com.auhpp.event_management.constant.AttendeeType;
 import com.auhpp.event_management.constant.BookingStatus;
 import com.auhpp.event_management.constant.WalletType;
@@ -15,18 +16,12 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BookingResponse {
+public class BookingBasicResponse {
     private Long id;
-
-    private Double totalAmount;
-
-    private Double discountAmount;
 
     private Double finalAmount;
 
     private BookingStatus status;
-
-    private String transactionId;
 
     private String customerName;
 
@@ -34,21 +29,14 @@ public class BookingResponse {
 
     private String customerPhone;
 
-    private String note;
-
     private AttendeeType type;
 
     private WalletType walletType;
-
-    private LocalDateTime expiredAt;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
 
-    private List<AttendeeResponse> attendees;
+    private List<AttendeeBasicResponse> attendees;
 
-    private UserResponse appUser;
-
-    private EventResponse event;
 }

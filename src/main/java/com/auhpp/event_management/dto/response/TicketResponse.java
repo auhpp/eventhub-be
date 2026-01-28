@@ -36,4 +36,10 @@ public class TicketResponse {
     private LocalDateTime updatedAt;
 
     private Long eventSessionId;
+
+    private Long eventId;
+
+    private Integer invitationQuota;
+
+    private Integer invitedQuantity;
 }
