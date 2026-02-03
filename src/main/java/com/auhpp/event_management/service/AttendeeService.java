@@ -15,5 +15,8 @@ public interface AttendeeService {
 
     AttendeeResponse getAttendeeById(Long id);
 
+    AttendeeResponse assignAttendeeEmail(Long id, String email);
+
+    String getMeetingLink(Long attendeeId);
 
 }

@@ -16,16 +16,20 @@ import java.util.Optional;
 public interface AttendeeRepository extends JpaRepository<Attendee, Long>, JpaSpecificationExecutor<Attendee> {
     Optional<Attendee> findByTicketCode(String ticketCode);
 
-    @Query("SELECT a FROM Attendee a WHERE a.status = :status AND a.booking.appUser.email = :email")
+    @Query("SELECT a FROM Attendee a WHERE a.status = :status " +
+            "AND (a.booking.appUser.email = :email OR a.ownerEmail = :email) ")
     Page<Attendee> findAllByStatusAndEmailUser(AttendeeStatus status, String email, Pageable pageable);
 
-    @Query("SELECT a FROM Attendee a WHERE a.booking.appUser.email = :email " +
+    @Query("SELECT a FROM Attendee a " +
+            "WHERE (a.booking.appUser.email = :email OR a.ownerEmail = :email) " +
             "AND a.ticket.eventSession.startDateTime > :currentDate ")
     Page<Attendee> findComingAllByEmailUser(LocalDateTime currentDate, String email, Pageable pageable);
 
-    @Query("SELECT a FROM Attendee a WHERE a.booking.appUser.email = :email " +
+    @Query("SELECT a FROM Attendee a " +
+            "WHERE (a.booking.appUser.email = :email OR a.ownerEmail = :email) " +
             "AND a.ticket.eventSession.endDateTime < current_timestamp ")
     Page<Attendee> findPastAllByEmailUser(LocalDateTime currentDate, String email, Pageable pageable);
 
+    Optional<Attendee> findByOwnerEmail(String email);
 
 }

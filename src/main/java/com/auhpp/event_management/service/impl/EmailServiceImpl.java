@@ -89,7 +89,7 @@ public class EmailServiceImpl implements EmailService {
         String eventTime = eventStartDate.format(timeFormatter) + " - " + eventEndDate.format(timeFormatter);
 
         String location = event.getType() == EventType.OFFLINE ? event.getLocation() : (
-                event.getMeetingPlatform() == MeetingPlatform.GOOGLE_MEET ? "Google Meet" : "Zoom"
+                eventSession.getMeetingPlatform() == MeetingPlatform.GOOGLE_MEET ? "Google Meet" : "Zoom"
         );
 
         String viewLink = feUserUrl + "/invitation/response?token=" + token + "&eventId=" + event.getId();

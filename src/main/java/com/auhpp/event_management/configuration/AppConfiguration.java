@@ -17,6 +17,9 @@ public class AppConfiguration {
     @Value("${app.fe.user-url}")
     private String feUserUrl;
 
+    @Value("${app.fe.admin-url}")
+    private String feAdminUrl;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
@@ -28,7 +31,7 @@ public class AppConfiguration {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
         config.addAllowedOrigin(feUserUrl);
-        config.addAllowedOrigin("http://localhost:5174");
+        config.addAllowedOrigin(feAdminUrl);
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);

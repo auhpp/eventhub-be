@@ -54,4 +54,7 @@ app:
     password: ${ADMIN_PASSWORD}
   fe:
     user-url: ${FE_USER_URL}
+    admin-url: ${FE_ADMIN_URL}
+  encrypt:
+    encrypt-key-32-bytes: ${ENCRYPT_KEY_32_BYTES}
 

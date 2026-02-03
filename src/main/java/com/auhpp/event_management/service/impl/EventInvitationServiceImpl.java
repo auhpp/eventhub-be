@@ -1,6 +1,7 @@
 package com.auhpp.event_management.service.impl;
 
 import com.auhpp.event_management.constant.InvitationStatus;
+import com.auhpp.event_management.constant.RoleName;
 import com.auhpp.event_management.dto.request.EventInvitationCreateRequest;
 import com.auhpp.event_management.dto.request.EventInvitationRejectRequest;
 import com.auhpp.event_management.dto.request.EventInvitationSearchRequest;
@@ -13,6 +14,7 @@ import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.EventInvitationMapper;
 import com.auhpp.event_management.repository.AppUserRepository;
 import com.auhpp.event_management.repository.EventInvitationRepository;
+import com.auhpp.event_management.repository.RoleRepository;
 import com.auhpp.event_management.repository.TicketRepository;
 import com.auhpp.event_management.service.BookingService;
 import com.auhpp.event_management.service.EmailService;
@@ -47,6 +49,7 @@ public class EventInvitationServiceImpl implements EventInvitationService {
     AppUserRepository appUserRepository;
     PasswordEncoder passwordEncoder;
     BookingService bookingService;
+    RoleRepository roleRepository;
 
     @Override
     @Transactional
@@ -110,10 +113,11 @@ public class EventInvitationServiceImpl implements EventInvitationService {
 
         // Check quantity ticket, date open and end event
         int totalQuantity = eventInvitationCreateRequest.getInitialQuantity() * eventInvitations.size();
-        if (totalQuantity > (ticket.getInvitationQuota() - ticket.getInvitedQuantity())) {
+        int invitedQuan = ticket.getInvitedQuantity() == null ? 0 : ticket.getInvitedQuantity();
+        if (totalQuantity > (ticket.getInvitationQuota() - invitedQuan)) {
             throw new AppException(ErrorCode.NOT_ENOUGH_QUANTITY);
         }
-        ticket.setInvitedQuantity(ticket.getInvitedQuantity() + totalQuantity);
+        ticket.setInvitedQuantity(invitedQuan + totalQuantity);
         ticketRepository.save(ticket);
         // send email
         Event event = eventSession.getEvent();
@@ -148,6 +152,7 @@ public class EventInvitationServiceImpl implements EventInvitationService {
                 .email(eventInvitation.getEmail())
                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .status(false)
+                .role(roleRepository.findByName(RoleName.USER))
                 .build());
         if (appUserOptional.isEmpty()) {
             appUserRepository.save(guest);
@@ -206,7 +211,8 @@ public class EventInvitationServiceImpl implements EventInvitationService {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
         Page<EventInvitation> eventInvitationPage = eventInvitationRepository.findByEventSessionId(
-                request.getEventSessionId(), statuses,
+                statuses,
+                request.getEventSessionId(),
                 pageable);
         List<EventInvitationResponse> responses = eventInvitationPage.stream().map(
                 eventInvitationMapper::toEventInvitationResponse

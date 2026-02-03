@@ -14,4 +14,6 @@ public class UserBasicResponse {
     private String email;
     private String fullName;
     private String avatar;
+    private String biography;
+
 }

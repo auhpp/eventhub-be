@@ -1,7 +1,6 @@
 package com.auhpp.event_management.dto.response;
 
 import com.auhpp.event_management.constant.EventType;
-import com.auhpp.event_management.constant.MeetingPlatform;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventSummaryResponse {
+public class EventBasicResponse {
     private Long id;
 
     private String name;
@@ -24,9 +23,7 @@ public class EventSummaryResponse {
 
     private PointResponse locationCoordinates;
 
-    private String meetingUrl;
-
-    private MeetingPlatform meetingPlatform;
+    private String poster;
 
     private CategoryResponse category;
 

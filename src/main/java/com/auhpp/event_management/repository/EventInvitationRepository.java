@@ -21,8 +21,10 @@ public interface EventInvitationRepository extends JpaRepository<EventInvitation
     @Query("SELECT ei FROM EventInvitation ei " +
             "WHERE  ei.ticket.eventSession.id = :eventSessionId " +
             "AND ei.status IN :statuses")
-    Page<EventInvitation> findByEventSessionId(Long eventSessionId,
-                                               @Param("statuses") List<InvitationStatus> statuses, Pageable pageable);
+    Page<EventInvitation> findByEventSessionId(
+            @Param("statuses") List<InvitationStatus> statuses,
+            Long eventSessionId,
+            Pageable pageable);
 
     List<EventInvitation> findAllByStatusAndExpiredAtBefore(InvitationStatus status, LocalDateTime currentDate);
 }

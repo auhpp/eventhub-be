@@ -47,7 +47,6 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     private WalletType walletType;
 
-    @Column(nullable = false)
     private LocalDateTime expiredAt;
 
     @Column(nullable = false)

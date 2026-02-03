@@ -25,12 +25,16 @@ public class Attendee {
 
     private LocalDateTime checkInAt;
 
+    private Double price;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AttendeeStatus status;
 
     @Column(nullable = false)
     private AttendeeType type;
+
+    private String ownerEmail;
 
     @CreationTimestamp
     @Column(updatable = false)

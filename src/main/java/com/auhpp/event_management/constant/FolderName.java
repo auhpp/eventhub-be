@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public enum FolderName {
     ORGANIZER_REGISTRATION("eventhub/organizer_registration/"), CATEGORY("eventhub/category/"),
-    EVENT("eventhub/event/");
+    EVENT("eventhub/event/"), USER_AVATAR("eventhub/avatar/");
 
     private final String value;
 

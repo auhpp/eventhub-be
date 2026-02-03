@@ -1,5 +1,7 @@
 package com.auhpp.event_management.entity;
 
+import com.auhpp.event_management.constant.MeetingPlatform;
+import com.auhpp.event_management.util.AttributeEncryptor;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -25,6 +27,19 @@ public class EventSession {
     @Column(nullable = false)
     private LocalDateTime endDateTime;
 
+    private LocalDateTime checkinStartTime;
+
+    @Column(columnDefinition = "TEXT")
+    @Convert(converter = AttributeEncryptor.class)
+    private String meetingUrl;
+
+    @Enumerated(EnumType.STRING)
+    private MeetingPlatform meetingPlatform;
+
+    @Column(columnDefinition = "TEXT")
+    @Convert(converter = AttributeEncryptor.class)
+    private String meetingPassword;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -36,6 +51,10 @@ public class EventSession {
     @JoinColumn(nullable = false)
     private Event event;
 
-    @OneToMany(mappedBy = "eventSession")
+    @OneToMany(mappedBy = "eventSession", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Ticket> tickets;
+
+    public boolean isExpired() {
+        return this.getEndDateTime().isBefore(LocalDateTime.now());
+    }
 }

@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring", uses = {
         TicketMapper.class, EventSessionMapper.class,
-        EventSummaryMapper.class, BookingSummaryMapper.class
+        EventBasicMapper.class, BookingSummaryMapper.class
 })
 public interface AttendeeMapper {
     Attendee toAttendee(AttendeeCreateRequest attendeeCreateRequest);

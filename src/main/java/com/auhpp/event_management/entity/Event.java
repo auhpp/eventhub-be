@@ -2,7 +2,6 @@ package com.auhpp.event_management.entity;
 
 import com.auhpp.event_management.constant.EventStatus;
 import com.auhpp.event_management.constant.EventType;
-import com.auhpp.event_management.constant.MeetingPlatform;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -31,6 +30,9 @@ public class Event {
     private EventType type;
 
     @Column(columnDefinition = "TEXT")
+    private String address;
+
+    @Column(columnDefinition = "TEXT")
     private String location;
 
     @Column(columnDefinition = "geometry(Point,4326)")
@@ -42,12 +44,6 @@ public class Event {
     private Double commissionRate;
 
     private Double commissionFixedPerTicket;
-
-    @Column(columnDefinition = "TEXT")
-    private String meetingUrl;
-
-    @Enumerated(EnumType.STRING)
-    private MeetingPlatform meetingPlatform;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -61,6 +57,12 @@ public class Event {
 
     @Column(columnDefinition = "TEXT")
     private String thumbnailPublicId;
+
+    @Column(columnDefinition = "TEXT")
+    private String poster;
+
+    @Column(columnDefinition = "TEXT")
+    private String posterPublicId;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -83,4 +85,13 @@ public class Event {
     @OneToMany(mappedBy = "event")
     private List<EventStaff> eventStaffs;
 
+    public boolean isExpired() {
+        List<EventSession> eventSessions = this.getEventSessions();
+        for (EventSession eventSession : eventSessions) {
+            if (eventSession.getEndDateTime().isAfter(LocalDateTime.now())) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

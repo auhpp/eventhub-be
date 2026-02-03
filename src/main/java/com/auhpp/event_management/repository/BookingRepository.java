@@ -41,8 +41,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "JOIN b.attendees a " +
             "WHERE a.ticket.eventSession.id = :eventSessionId " +
             "AND b.status IN :statuses ")
-    Page<AppUser> findUserByEventSession(Long eventSessionId,
-                                         @Param("statuses") List<BookingStatus> statuses, Pageable pageable);
+    Page<AppUser> findUserByEventSession(@Param("statuses") List<BookingStatus> statuses, Long eventSessionId,
+                                         Pageable pageable);
 
     @Query("SELECT b FROM Booking b " +
             "JOIN b.attendees a " +

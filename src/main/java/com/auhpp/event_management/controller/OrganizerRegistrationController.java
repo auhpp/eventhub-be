@@ -39,7 +39,7 @@ public class OrganizerRegistrationController {
                 .body(result);
     }
 
-    @PostMapping("/{registrationId}")
+    @PutMapping("/{registrationId}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<OrganizerRegistrationResponse> updateOrganizerRegistrationRequest(
             @PathVariable("registrationId") Long id,

@@ -2,7 +2,6 @@ package com.auhpp.event_management.dto.response;
 
 import com.auhpp.event_management.constant.EventStatus;
 import com.auhpp.event_management.constant.EventType;
-import com.auhpp.event_management.constant.MeetingPlatform;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,19 +23,19 @@ public class EventResponse {
 
     private String location;
 
+    private String address;
+
     private PointResponse locationCoordinates;
 
     private String description;
-
-    private String meetingUrl;
-
-    private MeetingPlatform meetingPlatform;
 
     private EventStatus status;
 
     private String rejectionReason;
 
     private String thumbnail;
+
+    private String poster;
 
     private LocalDateTime createdAt;
 

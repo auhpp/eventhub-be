@@ -42,4 +42,25 @@ public class AttendeeController {
         return ResponseEntity
                 .status(HttpStatus.OK).body(response);
     }
+
+    @PostMapping("/{attendeeId}/assign/{email}")
+    @PreAuthorize("hasAnyRole('USER')")
+    public ResponseEntity<AttendeeResponse> assignAttendeeEmail(
+            @PathVariable(name = "attendeeId") Long id,
+            @PathVariable(name = "email") String email
+    ) {
+        AttendeeResponse response = attendeeService.assignAttendeeEmail(id, email);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{attendeeId}/join-link")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
+    public ResponseEntity<String> getMeetingUrl(
+            @PathVariable(name = "attendeeId") Long id
+    ) {
+        String response = attendeeService.getMeetingLink(id);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(response);
+    }
 }

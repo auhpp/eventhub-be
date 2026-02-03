@@ -11,8 +11,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -33,21 +33,17 @@ public class EventCreateRequest {
     @NotEmpty(message = "Event name cannot be empty")
     private String description;
 
+    private String address;
+
     private String location;
 
     private Double locationLongitude;
 
     private Double locationLatitude;
 
-    private String meetingUrl;
-
-    private MeetingPlatform meetingPlatform;
-
     @NotEmpty(message = "Event session cannot be empty")
     @Size(min = 1)
     private List<@Valid EventSessionCreateRequest> eventSessionCreateRequests;
-
-
 
 
 }

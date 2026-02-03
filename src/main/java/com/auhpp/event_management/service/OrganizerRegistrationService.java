@@ -23,5 +23,7 @@ public interface OrganizerRegistrationService {
     PageResponse<OrganizerRegistrationResponse> getOrganizerRegistrations(int page, int size);
 
     PageResponse<OrganizerRegistrationResponse> getOrganizerRegistrationsByUser(int page, int size);
+
     OrganizerRegistrationResponse getOrganizerRegistrationById(Long id);
+
 }

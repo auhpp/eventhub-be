@@ -28,6 +28,8 @@ public class AttendeeResponse {
 
     private LocalDateTime updatedAt;
 
+    private String ownerEmail;
+
     private BookingSummaryResponse booking;
 
     private UserResponse user;
@@ -36,5 +38,5 @@ public class AttendeeResponse {
 
     private TicketResponse ticket;
 
-    private EventSummaryResponse event;
+    private EventBasicResponse event;
 }

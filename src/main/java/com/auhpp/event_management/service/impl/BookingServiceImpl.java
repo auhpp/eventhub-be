@@ -314,8 +314,8 @@ public class BookingServiceImpl implements BookingService {
             bookingStatuses.addAll(List.of(BookingStatus.CANCELLED, BookingStatus.PAID));
         }
         Page<AppUser> appUserPage = bookingRepository.findUserByEventSession(
-                eventSessionId,
                 bookingStatuses,
+                eventSessionId,
                 pageable
         );
         List<UserBookingSummaryResponse> responses = new ArrayList<>();

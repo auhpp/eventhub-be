@@ -1,6 +1,5 @@
 package com.auhpp.event_management.dto.request;
 
-import com.auhpp.event_management.validation.annotation.ValidCreateEvent;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -17,6 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class TicketCreateRequest {
 
+    private String description;
 
     @NotNull(message = "Ticket price cannot be null")
     private Double price;
@@ -37,4 +37,8 @@ public class TicketCreateRequest {
     @NotNull(message = "Ticket maximum per purchase cannot be null")
     @Min(value = 1)
     private Integer maximumPerPurchase;
+
+    @NotNull(message = "Ticket end date cannot be null")
+    private Integer invitationQuota;
+
 }

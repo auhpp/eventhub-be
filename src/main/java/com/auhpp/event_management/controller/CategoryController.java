@@ -2,6 +2,7 @@ package com.auhpp.event_management.controller;
 
 
 import com.auhpp.event_management.dto.request.CategoryCreateRequest;
+import com.auhpp.event_management.dto.request.CategoryUpdateRequest;
 import com.auhpp.event_management.dto.response.CategoryResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.service.CategoryService;
@@ -54,5 +55,28 @@ public class CategoryController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(result);
+    }
+
+    @PutMapping(value = "/{categoryId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CategoryResponse> updateCategory(
+            @PathVariable("categoryId") Long id,
+            @Valid @ModelAttribute CategoryUpdateRequest request
+    ) {
+        CategoryResponse result = categoryService.updateCategory(id, request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(result);
+    }
+
+    @DeleteMapping(value = "/{categoryId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteCategory(
+            @PathVariable("categoryId") Long id
+    ) {
+        categoryService.deleteCategory(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
     }
 }

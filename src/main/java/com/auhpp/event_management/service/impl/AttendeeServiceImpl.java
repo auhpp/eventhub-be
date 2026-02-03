@@ -2,12 +2,14 @@ package com.auhpp.event_management.service.impl;
 
 import com.auhpp.event_management.constant.AttendeeSearchStatus;
 import com.auhpp.event_management.constant.AttendeeStatus;
+import com.auhpp.event_management.constant.EventType;
 import com.auhpp.event_management.dto.request.AttendeeCreateRequest;
 import com.auhpp.event_management.dto.request.AttendeeSearchRequest;
 import com.auhpp.event_management.dto.response.AttendeeResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.entity.Attendee;
 import com.auhpp.event_management.entity.Booking;
+import com.auhpp.event_management.entity.EventSession;
 import com.auhpp.event_management.entity.Ticket;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
@@ -30,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -65,20 +68,22 @@ public class AttendeeServiceImpl implements AttendeeService {
         Ticket ticket = ticketRepository.findById(attendeeCreateRequest.getTicketId()).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
+        attendee.setPrice(ticket.getPrice());
         attendee.setBooking(booking);
         attendee.setTicket(ticket);
 
-        String ticketCode = "";
-        boolean isUnique = false;
+        if (attendee.getTicket().getEventSession().getEvent().getType() == EventType.OFFLINE) {
+            String ticketCode = "";
+            boolean isUnique = false;
+            do {
+                ticketCode = generateRandomString(8);
+                if (attendeeRepository.findByTicketCode(ticketCode).isEmpty()) {
+                    isUnique = true;
+                }
+            } while (!isUnique);
 
-        do {
-            ticketCode = generateRandomString(8);
-            if (attendeeRepository.findByTicketCode(ticketCode).isEmpty()) {
-                isUnique = true;
-            }
-        } while (!isUnique);
-
-        attendee.setTicketCode(ticketCode);
+            attendee.setTicketCode(ticketCode);
+        }
         attendeeRepository.save(attendee);
         return attendeeMapper.toAttendeeResponse(attendee);
     }
@@ -88,6 +93,12 @@ public class AttendeeServiceImpl implements AttendeeService {
         Attendee attendee = attendeeRepository.findById(attendeeId).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
+        String email = SecurityUtils.getCurrentUserLogin();
+        if (attendee.getTicket().getEventSession().getEvent().getType() == EventType.ONLINE) {
+            if (attendeeRepository.findByOwnerEmail(email).isEmpty()) {
+                attendee.setOwnerEmail(email);
+            }
+        }
         attendee.setStatus(AttendeeStatus.VALID);
         attendee.setCreatedAt(LocalDateTime.now());
         attendeeRepository.save(attendee);
@@ -131,6 +142,38 @@ public class AttendeeServiceImpl implements AttendeeService {
         return attendeeMapper.toAttendeeResponse(attendee);
     }
 
+    @Override
+    public AttendeeResponse assignAttendeeEmail(Long id, String email) {
+        Attendee attendee = attendeeRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        String emailAuth = SecurityUtils.getCurrentUserLogin();
+        if (!Objects.equals(attendee.getBooking().getAppUser().getEmail(), emailAuth)) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+        attendee.setOwnerEmail(email);
+        attendeeRepository.save(attendee);
+        return attendeeMapper.toAttendeeResponse(attendee);
+    }
+
+    @Override
+    public String getMeetingLink(Long attendeeId) {
+        Attendee attendee = attendeeRepository.findById(attendeeId).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        if (attendee.getStatus() == AttendeeStatus.VALID) {
+            String email = SecurityUtils.getCurrentUserLogin();
+            if (!Objects.equals(email, attendee.getOwnerEmail())) {
+                throw new AppException(ErrorCode.FORBIDDEN);
+            }
+            EventSession eventSession = attendee.getTicket().getEventSession();
+            if (eventSession.getCheckinStartTime() != null && eventSession.getCheckinStartTime().isBefore(LocalDateTime.now())) {
+                throw new AppException(ErrorCode.INVALID_TIME_JOIN);
+            }
+            return attendee.getTicket().getEventSession().getMeetingUrl();
+        }
+        return "";
+    }
 
 
 }
