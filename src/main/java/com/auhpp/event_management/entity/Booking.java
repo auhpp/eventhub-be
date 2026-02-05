@@ -20,7 +20,7 @@ import java.util.List;
 public class Booking {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
     private Double totalAmount;
@@ -68,4 +68,7 @@ public class Booking {
 
     @OneToMany(mappedBy = "booking")
     private List<EventInvitation> eventInvitations;
+
+    @OneToMany(mappedBy = "booking")
+    private List<TicketGift> ticketGifts;
 }

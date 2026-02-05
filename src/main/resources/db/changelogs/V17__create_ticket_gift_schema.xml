@@ -1,0 +1,108 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1770210058538-1">
+        <modifyDataType columnName="type" newDataType="varchar(255)" tableName="attendee"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-2">
+        <createSequence incrementBy="50" sequenceName="attendee_ticket_gift_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-3">
+        <createSequence incrementBy="50" sequenceName="booking_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-4">
+        <createSequence incrementBy="50" sequenceName="ticket_gift_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-5">
+        <createTable tableName="attendee_ticket_gift">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="attendee_ticket_giftPK"/>
+            </column>
+            <column name="attendee_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ticket_gift_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-6">
+        <createTable tableName="ticket_gift">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="ticket_giftPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="expired_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="rejection_message" type="TEXT"/>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="receiver_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sender_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="booking_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-7">
+        <addColumn tableName="attendee">
+            <column name="owner_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-8">
+        <addColumn tableName="attendee">
+            <column name="source_type" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-9">
+        <addForeignKeyConstraint baseColumnNames="sender_id" baseTableName="ticket_gift"
+                                 constraintName="FK10wtkpohw8ws8od75ghjuoip5" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-10">
+        <addForeignKeyConstraint baseColumnNames="attendee_id" baseTableName="attendee_ticket_gift"
+                                 constraintName="FK1sfu758y1hovxfcfpyfquxota" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="attendee"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-11">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="attendee"
+                                 constraintName="FK20gob2sg1skbdidgqlf4nn9xh" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-12">
+        <addForeignKeyConstraint baseColumnNames="receiver_id" baseTableName="ticket_gift"
+                                 constraintName="FKct4ldsdsolvv9dk766uibl434" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-13">
+        <addForeignKeyConstraint baseColumnNames="ticket_gift_id" baseTableName="attendee_ticket_gift"
+                                 constraintName="FKdu3esoxdt0jhwbtqq9ncrs3ms" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="ticket_gift"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-14">
+        <addForeignKeyConstraint baseColumnNames="booking_id" baseTableName="ticket_gift"
+                                 constraintName="FKb86aykthgu26mnq04o1aj90ai" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="booking"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770210058538-15">
+        <dropColumn columnName="owner_email" tableName="attendee"/>
+        <rollback>
+            <addColumn tableName="attendee">
+                <column name="owner_email" type="varchar"/>
+            </addColumn>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

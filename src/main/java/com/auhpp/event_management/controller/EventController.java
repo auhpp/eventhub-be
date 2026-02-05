@@ -1,10 +1,7 @@
 package com.auhpp.event_management.controller;
 
 import com.auhpp.event_management.dto.request.*;
-import com.auhpp.event_management.dto.response.EventBasicResponse;
-import com.auhpp.event_management.dto.response.EventResponse;
-import com.auhpp.event_management.dto.response.EventSessionResponse;
-import com.auhpp.event_management.dto.response.PageResponse;
+import com.auhpp.event_management.dto.response.*;
 import com.auhpp.event_management.service.EventService;
 import com.auhpp.event_management.service.EventSessionService;
 import jakarta.validation.Valid;
@@ -63,23 +60,13 @@ public class EventController {
                 .status(HttpStatus.OK).build();
     }
 
-    @GetMapping("/current-user")
-    @PreAuthorize("hasRole('ORGANIZER')")
-    public ResponseEntity<PageResponse<EventResponse>> getEventsByUser(
-            @RequestParam(name = "page", defaultValue = "1") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size
-    ) {
-        PageResponse<EventResponse> response = eventService.getEventsByUser(page, size);
-        return ResponseEntity
-                .status(HttpStatus.OK).body(response);
-    }
-
-    @GetMapping
+    @PostMapping("/filter")
     public ResponseEntity<PageResponse<EventResponse>> getEvents(
+            @RequestBody EventSearchRequest request,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int size
     ) {
-        PageResponse<EventResponse> response = eventService.getEvents(page, size);
+        PageResponse<EventResponse> response = eventService.getEvents(request, page, size);
         return ResponseEntity
                 .status(HttpStatus.OK).body(response);
     }

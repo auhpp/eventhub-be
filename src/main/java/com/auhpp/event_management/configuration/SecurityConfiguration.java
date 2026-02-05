@@ -19,11 +19,15 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfiguration {
     private final String[] PUBLIC_POST_ENDPOINTS = {
             "/api/v1/auth/**", "/api/v1/event-invitation/accept/{token}",
-            "/api/v1/event-invitation/reject/{token}"
+            "/api/v1/event-invitation/reject/{token}",
+            "/api/v1/event-staff/reject/{token}",
+            "/api/v1/event/filter"
+
     };
     private final String[] PUBLIC_GET_ENDPOINTS = {
             "/api/v1/category/**", "/api/v1/event/**",
-            "/api/v1/event-invitation/{token}"
+            "/api/v1/event-invitation/{token}",
+            "/api/v1/event-staff/{token}",
     };
 
 

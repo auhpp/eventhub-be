@@ -39,4 +39,8 @@ public class BookingBasicResponse {
 
     private List<AttendeeBasicResponse> attendees;
 
+    private EventBasicResponse event;
+
+    private EventSessionBasicResponse eventSession;
+
 }

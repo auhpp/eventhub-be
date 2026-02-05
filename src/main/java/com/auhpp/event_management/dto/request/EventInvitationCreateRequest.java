@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -19,7 +20,7 @@ public class EventInvitationCreateRequest {
 
     @NotEmpty(message = "Emails cannot be empty")
     @Size(min = 1)
-    private List<String> emails;
+    private Set<String> emails;
 
     @NotNull(message = "Ticket id cannot be null")
     private Long ticketId;

@@ -57,4 +57,14 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .body(responses);
     }
+
+    @GetMapping
+    public ResponseEntity<UserBasicResponse> getByEmail(
+            @RequestParam("email") String email
+    ) {
+        UserBasicResponse result = userService.getByEmail(email);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(result);
+    }
 }

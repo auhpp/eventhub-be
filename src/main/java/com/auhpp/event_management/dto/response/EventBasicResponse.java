@@ -19,6 +19,8 @@ public class EventBasicResponse {
 
     private String location;
 
+    private String address;
+
     private String thumbnail;
 
     private PointResponse locationCoordinates;

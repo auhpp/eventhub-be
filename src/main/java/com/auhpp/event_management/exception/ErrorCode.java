@@ -34,7 +34,11 @@ public enum ErrorCode {
     INVALID_TIME_BOOKING(1024, "Invalid time booking", HttpStatus.BAD_REQUEST),
     INVALID_TIME_INVITATION(1025, "Invalid time invitation", HttpStatus.BAD_REQUEST),
     INVALID_TIME_JOIN(1026, "Invalid time join", HttpStatus.BAD_REQUEST),
-    WRONG_PASSWORD(1027, "Wrong password", HttpStatus.BAD_REQUEST);
+    WRONG_PASSWORD(1027, "Wrong password", HttpStatus.BAD_REQUEST),
+    INVALID_ACCOUNT_LOGIN(1028, "Invalid account login", HttpStatus.BAD_REQUEST),
+    INVALID_EMAIL(1029, "Invalid email", HttpStatus.BAD_REQUEST),
+    EXPIRED_EVENT_SESSION(1030, "Expired event session", HttpStatus.BAD_REQUEST);
+
 
     private final int code;
     private final String message;

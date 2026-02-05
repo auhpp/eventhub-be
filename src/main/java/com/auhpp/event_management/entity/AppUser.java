@@ -79,4 +79,13 @@ public class AppUser {
 
     @OneToMany(mappedBy = "appUser")
     private List<EventInvitation> eventInvitations;
+
+    @OneToMany(mappedBy = "sender")
+    private List<TicketGift> sendTicketGifts;
+
+    @OneToMany(mappedBy = "receiver")
+    private List<TicketGift> receiveTicketGifts;
+
+    @OneToMany(mappedBy = "owner")
+    private List<Attendee> attendees;
 }

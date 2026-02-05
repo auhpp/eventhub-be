@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -17,19 +18,31 @@ public interface AttendeeRepository extends JpaRepository<Attendee, Long>, JpaSp
     Optional<Attendee> findByTicketCode(String ticketCode);
 
     @Query("SELECT a FROM Attendee a WHERE a.status = :status " +
-            "AND (a.booking.appUser.email = :email OR a.ownerEmail = :email) ")
-    Page<Attendee> findAllByStatusAndEmailUser(AttendeeStatus status, String email, Pageable pageable);
+            "AND (a.booking.appUser.email = :email OR a.owner.email = :email) ")
+    Page<Attendee> findAllByStatusAndEmailUser(@Param("status") AttendeeStatus status,
+                                               @Param("email") String email, Pageable pageable);
 
     @Query("SELECT a FROM Attendee a " +
-            "WHERE (a.booking.appUser.email = :email OR a.ownerEmail = :email) " +
+            "WHERE a.owner.email = :email " +
             "AND a.ticket.eventSession.startDateTime > :currentDate ")
-    Page<Attendee> findComingAllByEmailUser(LocalDateTime currentDate, String email, Pageable pageable);
+    Page<Attendee> findComingAllByEmailUser(@Param("currentDate") LocalDateTime currentDate,
+                                            @Param("email") String email, Pageable pageable);
 
     @Query("SELECT a FROM Attendee a " +
-            "WHERE (a.booking.appUser.email = :email OR a.ownerEmail = :email) " +
+            "WHERE (a.booking.appUser.email = :email OR a.owner.email = :email) " +
             "AND a.ticket.eventSession.endDateTime < current_timestamp ")
-    Page<Attendee> findPastAllByEmailUser(LocalDateTime currentDate, String email, Pageable pageable);
+    Page<Attendee> findPastAllByEmailUser(@Param("currentDate") LocalDateTime currentDate,
+                                          @Param("email") String email, Pageable pageable);
 
-    Optional<Attendee> findByOwnerEmail(String email);
+    @Query("SELECT a FROM Attendee a " +
+            "WHERE a.ticket.eventSession.id = :eventSessionId " +
+            "AND a.status = :status ")
+    Page<Attendee> findAllByEventSessionIdAndStatus(@Param("eventSessionId") Long eventSessionId,
+                                                    @Param("status") AttendeeStatus status, Pageable pageable);
+
+
+    @Query("SELECT a FROM Attendee a " +
+            "WHERE a.ticket.eventSession.id = :eventSessionId ")
+    Page<Attendee> findAllByEventSessionId(@Param("eventSessionId") Long eventSessionId, Pageable pageable);
 
 }

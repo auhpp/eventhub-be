@@ -103,6 +103,7 @@ public class BookingServiceImpl implements BookingService {
                         .ticketId(ticket.getId())
                         .type(AttendeeType.BUY)
                         .status(AttendeeStatus.INACTIVE)
+                        .sourceType(SourceType.PURCHASE)
                         .build());
             }
         }

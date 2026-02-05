@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lời mời tham gia ban điều hành</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100% !important;
+                padding: 16px !important;
+            }
+
+            .btn {
+                display: block !important;
+                width: 100% !important;
+                margin-bottom: 8px !important;
+            }
+        }
+    </style>
+</head>
+<body style="background-color: #f8fafc; margin: 0; padding: 40px 0;">
+
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center">
+            <table class="container" border="0" cellpadding="0" cellspacing="0" width="500"
+                   style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+
+                <tr>
+                    <td height="4" style="background-color: #135bec;"></td>
+                </tr>
+
+                <tr>
+                    <td style="padding: 32px 32px 24px 32px;">
+
+                        <table border="0" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td width="40">
+                                    <img th:src="${organizerAvatar}" alt="Avatar"
+                                         style="width: 32px; height: 32px; border-radius: 9999px; display: block;">
+                                </td>
+                                <td style="padding-left: 12px;">
+                                    <span style="font-size: 14px; font-weight: 600; color: #0f172a; display: block;"
+                                          th:text="${organizerName}">Au Phi</span>
+                                    <span style="font-size: 12px; color: #64748b; display: block;">đã mời bạn tham gia đội ngũ tổ chức</span>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <h1 style="margin: 24px 0 8px 0; font-size: 24px; font-weight: 700; color: #0f172a; line-height: 32px;"
+                            th:text="${eventName}">Tên sự kiện</h1>
+
+                        <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 24px; color: #64748b;">
+
+                            Bạn được cấp quyền truy cập vào trang quản lý sự kiện này với tư cách là <strong
+
+                                style="color: #0f172a;">Điều hành viên</strong>. Vui lòng chấp nhận lời mời để bắt đầu
+
+                            công việc.
+
+                        </p>
+
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px;">
+                            <tr>
+                                <td width="24" valign="top"><span style="font-size: 16px;">🛡️</span></td>
+                                <td style="padding-left: 10px;">
+                                    <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #64748b;">
+                                        Vai trò
+                                    </div>
+                                    <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-top: 2px">Điều
+                                        hành viên (Moderator)
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <div style="height: 1px; background-color: #f1f5f9; margin: 0 0 20px 0;"></div>
+
+                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 12px;">
+                            ℹ️ Thông tin sự kiện
+                        </div>
+
+                        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px;">
+                                <tr>
+                                    <td width="24" valign="top"><span style="font-size: 16px;">📍</span></td>
+                                    <td style="padding-left: 10px;">
+                                        <div style="font-size: 13px; font-weight: 600; color: #334155;">Địa điểm tổ
+                                            chức
+                                        </div>
+                                        <div style="font-size: 14px; color: #64748b; margin-top: 4px;"
+                                             th:text="${location}">Hà Nội
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div style="height: 1px; background-color: #e2e8f0; margin: 8px 0 16px 0;"></div>
+
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td width="24" valign="top"><span style="font-size: 16px;">🗓</span></td>
+                                    <td style="padding-left: 10px;">
+                                        <div style="font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px;">
+                                            Khung giờ diễn ra
+                                        </div>
+
+                                        <div th:each="session, iterStat : ${eventSessions}"
+                                             th:style="${!iterStat.last} ? 'margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed #cbd5e1;' : ''">
+
+                                            <div style="font-size: 14px; font-weight: 500; color: #0f172a;"
+                                                 th:text="${session.date}">Thứ 2, 28/01
+                                            </div>
+
+                                            <div style="font-size: 13px; color: #64748b; margin-top: 2px;"
+                                                 th:text="${session.time}">19:30 - 20:00
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </div>
+
+                        <p style="margin: 12px 0 0 0; font-size: 12px; color: #64748b; font-style: italic;">
+                            * Lưu ý: Lịch trình làm việc cụ thể (Call time) của Ban điều hành sẽ được thông báo sau khi
+                            bạn chấp nhận lời mời.
+                        </p>
+
+                        <div style="height: 1px; background-color: #e2e8f0; margin: 24px 0;"></div>
+
+                        <div>
+                            <a th:href="${viewLink}" class="btn"
+                               style="background-color: #135bec; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500; display: inline-block;">
+                                Chấp nhận tham gia
+                            </a>
+                            <a th:href="${eventDetailLink}" class="btn btn-secondary"
+                               style="background-color: #ffffff; color: #0f172a; border: 1px solid #e2e8f0; padding: 11px 24px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500; display: inline-block; margin-left: 8px;">
+                                Xem sự kiện
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 32px; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #94a3b8;">
+                            Không muốn tham gia? <a href="#" style="color: #ef4444; text-decoration: underline;">Từ
+                            chối</a>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+
+            <p style="margin-top: 24px; font-size: 12px; color: #94a3b8; text-align: center;">
+                Email này được gửi đến <span th:text="${recipientEmail}">email@domain.com</span>
+            </p>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

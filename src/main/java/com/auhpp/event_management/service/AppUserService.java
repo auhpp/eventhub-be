@@ -14,4 +14,7 @@ public interface AppUserService {
     void changePassword(Long id, PasswordChangeRequest request);
 
     List<SocialLinkResponse> createSocialLink(List<SocialLinkCreateRequest> requests);
+
+    UserBasicResponse getByEmail(String email);
+
 }

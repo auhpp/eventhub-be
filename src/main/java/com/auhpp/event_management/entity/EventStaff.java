@@ -24,6 +24,18 @@ public class EventStaff {
     @Enumerated(EnumType.STRING)
     private EventStaffStatus status;
 
+    private String email;
+
+    private String token;
+
+    private LocalDateTime expiredAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String message;
+
+    @Column(columnDefinition = "TEXT")
+    private String rejectionMessage;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -39,8 +51,7 @@ public class EventStaff {
     @JoinColumn(nullable = false)
     private Event event;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(nullable = false)
+    @ManyToOne
     private AppUser appUser;
 
     @OneToMany(mappedBy = "eventStaff")

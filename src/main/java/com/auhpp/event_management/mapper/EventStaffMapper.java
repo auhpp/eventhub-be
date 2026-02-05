@@ -9,6 +9,6 @@ import org.mapstruct.Mapping;
 public interface EventStaffMapper {
 
     @Mapping(source = "appUser.fullName", target = "fullName")
-    @Mapping(source = "appUser.email", target = "email")
+    @Mapping(source = "event.id", target = "eventId")
     EventStaffResponse toEventStaffResponse(EventStaff eventStaff);
 }

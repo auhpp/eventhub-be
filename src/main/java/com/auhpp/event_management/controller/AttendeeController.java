@@ -1,6 +1,7 @@
 package com.auhpp.event_management.controller;
 
 import com.auhpp.event_management.dto.request.AttendeeSearchRequest;
+import com.auhpp.event_management.dto.request.CheckinSearchRequest;
 import com.auhpp.event_management.dto.response.AttendeeResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.service.AttendeeService;
@@ -60,6 +61,18 @@ public class AttendeeController {
             @PathVariable(name = "attendeeId") Long id
     ) {
         String response = attendeeService.getMeetingLink(id);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/check-in/filter")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
+    public ResponseEntity<PageResponse<AttendeeResponse>> getAttendees(
+            @Valid @RequestBody CheckinSearchRequest request,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ) {
+        PageResponse<AttendeeResponse> response = attendeeService.getAttendees(request, page, size);
         return ResponseEntity
                 .status(HttpStatus.OK).body(response);
     }

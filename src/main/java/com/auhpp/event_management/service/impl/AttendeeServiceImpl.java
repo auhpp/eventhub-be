@@ -5,15 +5,14 @@ import com.auhpp.event_management.constant.AttendeeStatus;
 import com.auhpp.event_management.constant.EventType;
 import com.auhpp.event_management.dto.request.AttendeeCreateRequest;
 import com.auhpp.event_management.dto.request.AttendeeSearchRequest;
+import com.auhpp.event_management.dto.request.CheckinSearchRequest;
 import com.auhpp.event_management.dto.response.AttendeeResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
-import com.auhpp.event_management.entity.Attendee;
-import com.auhpp.event_management.entity.Booking;
-import com.auhpp.event_management.entity.EventSession;
-import com.auhpp.event_management.entity.Ticket;
+import com.auhpp.event_management.entity.*;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.AttendeeMapper;
+import com.auhpp.event_management.repository.AppUserRepository;
 import com.auhpp.event_management.repository.AttendeeRepository;
 import com.auhpp.event_management.repository.BookingRepository;
 import com.auhpp.event_management.repository.TicketRepository;
@@ -42,6 +41,7 @@ public class AttendeeServiceImpl implements AttendeeService {
     BookingRepository bookingRepository;
     TicketRepository ticketRepository;
     AttendeeMapper attendeeMapper;
+    AppUserRepository appUserRepository;
 
     static String CHAR_LOWER = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     static SecureRandom random = new SecureRandom();
@@ -54,6 +54,19 @@ public class AttendeeServiceImpl implements AttendeeService {
             sb.append(rndChar);
         }
         return sb.toString();
+    }
+
+    @Override
+    public String generateTicketCode() {
+        String ticketCode = "";
+        boolean isUnique = false;
+        do {
+            ticketCode = generateRandomString(8);
+            if (attendeeRepository.findByTicketCode(ticketCode).isEmpty()) {
+                isUnique = true;
+            }
+        } while (!isUnique);
+        return ticketCode;
     }
 
     @Override
@@ -72,17 +85,10 @@ public class AttendeeServiceImpl implements AttendeeService {
         attendee.setBooking(booking);
         attendee.setTicket(ticket);
 
-        if (attendee.getTicket().getEventSession().getEvent().getType() == EventType.OFFLINE) {
-            String ticketCode = "";
-            boolean isUnique = false;
-            do {
-                ticketCode = generateRandomString(8);
-                if (attendeeRepository.findByTicketCode(ticketCode).isEmpty()) {
-                    isUnique = true;
-                }
-            } while (!isUnique);
 
-            attendee.setTicketCode(ticketCode);
+        Event event = attendee.getTicket().getEventSession().getEvent();
+        if (event.getType() == EventType.OFFLINE) {
+            attendee.setTicketCode(generateTicketCode());
         }
         attendeeRepository.save(attendee);
         return attendeeMapper.toAttendeeResponse(attendee);
@@ -94,11 +100,10 @@ public class AttendeeServiceImpl implements AttendeeService {
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
         String email = SecurityUtils.getCurrentUserLogin();
-        if (attendee.getTicket().getEventSession().getEvent().getType() == EventType.ONLINE) {
-            if (attendeeRepository.findByOwnerEmail(email).isEmpty()) {
-                attendee.setOwnerEmail(email);
-            }
-        }
+        AppUser user = appUserRepository.findByEmail(email).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        attendee.setOwner(user);
         attendee.setStatus(AttendeeStatus.VALID);
         attendee.setCreatedAt(LocalDateTime.now());
         attendeeRepository.save(attendee);
@@ -151,7 +156,10 @@ public class AttendeeServiceImpl implements AttendeeService {
         if (!Objects.equals(attendee.getBooking().getAppUser().getEmail(), emailAuth)) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
-        attendee.setOwnerEmail(email);
+        AppUser user = appUserRepository.findByEmail(email).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        attendee.setOwner(user);
         attendeeRepository.save(attendee);
         return attendeeMapper.toAttendeeResponse(attendee);
     }
@@ -163,7 +171,7 @@ public class AttendeeServiceImpl implements AttendeeService {
         );
         if (attendee.getStatus() == AttendeeStatus.VALID) {
             String email = SecurityUtils.getCurrentUserLogin();
-            if (!Objects.equals(email, attendee.getOwnerEmail())) {
+            if (!Objects.equals(email, attendee.getOwner().getEmail())) {
                 throw new AppException(ErrorCode.FORBIDDEN);
             }
             EventSession eventSession = attendee.getTicket().getEventSession();
@@ -173,6 +181,31 @@ public class AttendeeServiceImpl implements AttendeeService {
             return attendee.getTicket().getEventSession().getMeetingUrl();
         }
         return "";
+    }
+
+    @Override
+    public PageResponse<AttendeeResponse> getAttendees(CheckinSearchRequest request, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
+                "createdAt"));
+        Page<Attendee> attendeePage;
+        if (request.getStatus() != null && request.getEventSessionId() != null) {
+            attendeePage = attendeeRepository.findAllByEventSessionIdAndStatus(request.getEventSessionId(),
+                    request.getStatus(), pageable);
+        } else if (request.getEventSessionId() != null) {
+            attendeePage = attendeeRepository.findAllByEventSessionId(request.getEventSessionId(), pageable);
+        } else {
+            attendeePage = attendeeRepository.findAll(pageable);
+        }
+        List<AttendeeResponse> attendeeResponses = attendeePage.getContent().stream().map(
+                attendeeMapper::toAttendeeResponse
+        ).toList();
+        return PageResponse.<AttendeeResponse>builder()
+                .currentPage(page)
+                .totalElements(attendeePage.getTotalElements())
+                .totalPage(attendeePage.getTotalPages())
+                .pageSize(attendeePage.getSize())
+                .data(attendeeResponses)
+                .build();
     }
 
 

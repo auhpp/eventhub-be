@@ -6,8 +6,8 @@ import com.auhpp.event_management.dto.request.EventUpdateRequest;
 import com.auhpp.event_management.dto.request.RejectionRequest;
 import com.auhpp.event_management.dto.response.EventBasicResponse;
 import com.auhpp.event_management.dto.response.EventResponse;
+import com.auhpp.event_management.dto.response.EventSearchRequest;
 import com.auhpp.event_management.dto.response.PageResponse;
-import com.auhpp.event_management.entity.Event;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface EventService {
@@ -21,9 +21,8 @@ public interface EventService {
 
     void rejectEvent(Long id, RejectionRequest rejectionRequest);
 
-    PageResponse<EventResponse> getEvents(int page, int size);
+    PageResponse<EventResponse> getEvents(EventSearchRequest request, int page, int size);
 
-    PageResponse<EventResponse> getEventsByUser(int page, int size);
 
     EventResponse getEventById(Long id);
 

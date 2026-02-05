@@ -104,4 +104,11 @@ public class AppUserServiceImpl implements AppUserService {
         return responses;
     }
 
+    @Override
+    public UserBasicResponse getByEmail(String email) {
+        Optional<AppUser> user = appUserRepository.findByEmail(email);
+        return user.map(userBasicMapper::toUserBasicResponse).orElse(null);
+
+    }
+
 }

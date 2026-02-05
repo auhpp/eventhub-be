@@ -2,6 +2,7 @@ package com.auhpp.event_management.dto.response;
 
 import com.auhpp.event_management.constant.AttendeeStatus;
 import com.auhpp.event_management.constant.AttendeeType;
+import com.auhpp.event_management.constant.SourceType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,11 +25,13 @@ public class AttendeeResponse {
 
     private AttendeeType type;
 
+    private SourceType sourceType;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
 
-    private String ownerEmail;
+    private UserBasicResponse owner;
 
     private BookingSummaryResponse booking;
 
@@ -39,4 +42,6 @@ public class AttendeeResponse {
     private TicketResponse ticket;
 
     private EventBasicResponse event;
+
+
 }

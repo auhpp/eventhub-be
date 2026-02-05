@@ -4,6 +4,7 @@ import com.auhpp.event_management.constant.*;
 import com.auhpp.event_management.dto.request.*;
 import com.auhpp.event_management.dto.response.EventBasicResponse;
 import com.auhpp.event_management.dto.response.EventResponse;
+import com.auhpp.event_management.dto.response.EventSearchRequest;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.entity.AppUser;
 import com.auhpp.event_management.entity.Category;
@@ -22,6 +23,7 @@ import com.auhpp.event_management.service.EventService;
 import com.auhpp.event_management.service.EventSessionService;
 import com.auhpp.event_management.service.EventStaffService;
 import com.auhpp.event_management.util.SecurityUtils;
+import com.auhpp.event_management.util.SpecBuilder;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,12 +34,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 @Service
@@ -88,7 +92,7 @@ public class EventServiceImpl implements EventService {
         eventStaffService.createEventStaff(EventStaffCreateRequest.builder()
                 .eventId(event.getId())
                 .roleName(RoleName.EVENT_OWNER)
-                .userId(appUser.getId())
+                .emails(Set.of(appUser.getEmail()))
                 .build());
 
         // upload thumbnail
@@ -213,10 +217,17 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public PageResponse<EventResponse> getEvents(int page, int size) {
+    public PageResponse<EventResponse> getEvents(EventSearchRequest request, int page, int size) {
+        Specification<Event> spec = Specification.allOf();
+        if (request.getStatus() != null) {
+            spec.and(SpecBuilder.create("status", "=", request.getStatus()));
+        }
+        if (request.getUserId() != null) {
+            spec.and(SpecBuilder.create("id", "=", request.getUserId(), "appUser"));
+        }
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
-        Page<Event> pageData = eventRepository.findAll(pageable);
+        Page<Event> pageData = eventRepository.findAll(spec, pageable);
         List<EventResponse> eventResponses = pageData.getContent().stream().map(
                 eventMapper::toEventResponse
         ).toList();
@@ -229,26 +240,6 @@ public class EventServiceImpl implements EventService {
                 .build();
     }
 
-    @Override
-    public PageResponse<EventResponse> getEventsByUser(int page, int size) {
-        String email = SecurityUtils.getCurrentUserLogin();
-        AppUser user = appUserRepository.findByEmail(email).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_FOUND)
-        );
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
-                "createdAt"));
-        Page<Event> pageData = eventRepository.findAllByUserId(user.getId(), pageable);
-        List<EventResponse> eventResponses = pageData.getContent().stream().map(
-                eventMapper::toEventResponse
-        ).toList();
-        return PageResponse.<EventResponse>builder()
-                .currentPage(page)
-                .totalElements(pageData.getTotalElements())
-                .totalPage(pageData.getTotalPages())
-                .pageSize(pageData.getSize())
-                .data(eventResponses)
-                .build();
-    }
 
     @Override
     public EventResponse getEventById(Long id) {

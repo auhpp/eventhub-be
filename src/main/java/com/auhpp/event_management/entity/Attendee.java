@@ -2,12 +2,14 @@ package com.auhpp.event_management.entity;
 
 import com.auhpp.event_management.constant.AttendeeStatus;
 import com.auhpp.event_management.constant.AttendeeType;
+import com.auhpp.event_management.constant.SourceType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -32,9 +34,11 @@ public class Attendee {
     private AttendeeStatus status;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private AttendeeType type;
 
-    private String ownerEmail;
+    @Enumerated(EnumType.STRING)
+    private SourceType sourceType;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -53,4 +57,12 @@ public class Attendee {
 
     @ManyToOne
     private EventStaff eventStaff;
+
+    @ManyToOne
+    private AppUser owner;
+
+    @OneToMany(mappedBy = "attendee")
+    private List<AttendeeTicketGift> attendeeTicketGifts;
+
+
 }
