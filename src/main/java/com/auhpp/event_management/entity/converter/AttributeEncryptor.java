@@ -1,4 +1,4 @@
-package com.auhpp.event_management.util;
+package com.auhpp.event_management.entity.converter;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

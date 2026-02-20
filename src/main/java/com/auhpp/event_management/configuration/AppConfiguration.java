@@ -20,6 +20,12 @@ public class AppConfiguration {
     @Value("${app.fe.admin-url}")
     private String feAdminUrl;
 
+    @Value("${app.cors.real-app}")
+    private String realAppUrl;
+
+    @Value("${app.cors.emulator-app}")
+    private String emulatorAppUrl;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
@@ -29,9 +35,13 @@ public class AppConfiguration {
     public FilterRegistrationBean<CorsFilter> corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
+
         config.setAllowCredentials(true);
-        config.addAllowedOrigin(feUserUrl);
-        config.addAllowedOrigin(feAdminUrl);
+        config.addAllowedOriginPattern(feUserUrl);
+        config.addAllowedOriginPattern(feAdminUrl);
+        config.addAllowedOriginPattern(emulatorAppUrl);
+        config.addAllowedOriginPattern(realAppUrl);
+
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);

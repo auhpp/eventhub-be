@@ -46,4 +46,6 @@ public class EventResponse {
     private List<EventSessionResponse> eventSessions;
 
     private UserResponse appUser;
+
+    private boolean hasPhotos;
 }

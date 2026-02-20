@@ -3,6 +3,7 @@ package com.auhpp.event_management.controller;
 import com.auhpp.event_management.dto.request.EventSessionUpdateRequest;
 import com.auhpp.event_management.dto.request.TicketCreateRequest;
 import com.auhpp.event_management.dto.response.EventSessionResponse;
+import com.auhpp.event_management.dto.response.EventSessionReportCheckInResponse;
 import com.auhpp.event_management.dto.response.TicketResponse;
 import com.auhpp.event_management.service.EventSessionService;
 import com.auhpp.event_management.service.TicketService;
@@ -62,6 +63,16 @@ public class EventSessionController {
         eventSessionService.deleteById(id);
         return ResponseEntity
                 .status(HttpStatus.OK).build();
+    }
+
+
+    @GetMapping("/report/check-in/{eventSessionId}")
+    public ResponseEntity<EventSessionReportCheckInResponse> reportCheckin(
+            @PathVariable(name = "eventSessionId") Long id
+    ) {
+        EventSessionReportCheckInResponse response = eventSessionService.reportCheckIn(id);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(response);
     }
 
 }

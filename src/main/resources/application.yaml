@@ -1,3 +1,5 @@
+server:
+  port: 8080
 spring:
   application:
     name: event_management
@@ -57,4 +59,9 @@ app:
     admin-url: ${FE_ADMIN_URL}
   encrypt:
     encrypt-key-32-bytes: ${ENCRYPT_KEY_32_BYTES}
+  cors:
+    real-app: ${REAL_APP_CORS_ALLOWED}
+    emulator-app: ${EMULATOR_APP_CORS_ALLOWED}
+  spotter:
+    base-url: ${SPOTTER_BASE_URL}
 

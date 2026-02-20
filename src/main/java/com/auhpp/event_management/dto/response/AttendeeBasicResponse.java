@@ -25,4 +25,6 @@ public class AttendeeBasicResponse {
 
     private TicketBasicResponse ticket;
 
+    private UserBasicResponse owner;
+
 }

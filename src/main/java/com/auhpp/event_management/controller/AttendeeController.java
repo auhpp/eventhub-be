@@ -1,7 +1,9 @@
 package com.auhpp.event_management.controller;
 
 import com.auhpp.event_management.dto.request.AttendeeSearchRequest;
+import com.auhpp.event_management.dto.request.CheckInRequest;
 import com.auhpp.event_management.dto.request.CheckinSearchRequest;
+import com.auhpp.event_management.dto.response.AttendeeBasicResponse;
 import com.auhpp.event_management.dto.response.AttendeeResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.service.AttendeeService;
@@ -73,6 +75,15 @@ public class AttendeeController {
             @RequestParam(name = "size", defaultValue = "10") int size
     ) {
         PageResponse<AttendeeResponse> response = attendeeService.getAttendees(request, page, size);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/check-in")
+    public ResponseEntity<AttendeeBasicResponse> checkIn(
+            @Valid @RequestBody CheckInRequest request
+    ) {
+        AttendeeBasicResponse response = attendeeService.checkIn(request);
         return ResponseEntity
                 .status(HttpStatus.OK).body(response);
     }

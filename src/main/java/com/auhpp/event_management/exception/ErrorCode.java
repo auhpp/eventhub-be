@@ -37,7 +37,10 @@ public enum ErrorCode {
     WRONG_PASSWORD(1027, "Wrong password", HttpStatus.BAD_REQUEST),
     INVALID_ACCOUNT_LOGIN(1028, "Invalid account login", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1029, "Invalid email", HttpStatus.BAD_REQUEST),
-    EXPIRED_EVENT_SESSION(1030, "Expired event session", HttpStatus.BAD_REQUEST);
+    EXPIRED_EVENT_SESSION(1030, "Expired event session", HttpStatus.BAD_REQUEST),
+    INVALID_TICKET(1031, "Invalid ticket", HttpStatus.BAD_REQUEST),
+    WRONG_EVENT(1032, "Wrong event", HttpStatus.BAD_REQUEST),
+    CHECKED_IN_TICKET(1033, "Checked in ticket", HttpStatus.BAD_REQUEST);
 
 
     private final int code;

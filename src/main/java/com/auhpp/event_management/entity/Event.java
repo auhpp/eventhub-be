@@ -85,6 +85,9 @@ public class Event {
     @OneToMany(mappedBy = "event")
     private List<EventStaff> eventStaffs;
 
+    @OneToMany(mappedBy = "event")
+    private List<EventImage> eventImages;
+
     public boolean isExpired() {
         List<EventSession> eventSessions = this.getEventSessions();
         for (EventSession eventSession : eventSessions) {
@@ -93,5 +96,14 @@ public class Event {
             }
         }
         return true;
+    }
+
+    public boolean isEventStaff(String email) {
+        for (EventStaff eventStaff : this.getEventStaffs()) {
+            if (eventStaff.getAppUser().getEmail().equals(email)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

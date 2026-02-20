@@ -1,0 +1,72 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1770890571176-1">
+        <createSequence incrementBy="50" sequenceName="event_image_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770890571176-2">
+        <createSequence incrementBy="50" sequenceName="face_data_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770890571176-3">
+        <createTable tableName="event_image">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="event_imagePK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="image_url" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="process_status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="public_id" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="event_id" type="BIGINT"/>
+            <column name="event_session_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770890571176-4">
+        <createTable tableName="face_data">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="face_dataPK"/>
+            </column>
+            <column name="coordinate" type="JSONB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="detection_score" type="FLOAT(53)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="face_encoding" type="VECTOR">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_image_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770890571176-5">
+        <addForeignKeyConstraint baseColumnNames="event_id" baseTableName="event_image"
+                                 constraintName="FK9oirj7cwmu7k91vr0m13hqh8b" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="event"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770890571176-6">
+        <addForeignKeyConstraint baseColumnNames="event_image_id" baseTableName="face_data"
+                                 constraintName="FKakcua728c0crag55ybhfddmql" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="event_image"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770890571176-7">
+        <addForeignKeyConstraint baseColumnNames="event_session_id" baseTableName="event_image"
+                                 constraintName="FKrco90e6mybo096kb68aog4lrp" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id"
+                                 referencedTableName="event_session" validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1770890571176-8">
+        <dropNotNullConstraint tableName="face_data" columnName="detection_score"/>
+    </changeSet>
+
+</databaseChangeLog>

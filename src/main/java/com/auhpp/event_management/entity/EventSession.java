@@ -1,7 +1,7 @@
 package com.auhpp.event_management.entity;
 
 import com.auhpp.event_management.constant.MeetingPlatform;
-import com.auhpp.event_management.util.AttributeEncryptor;
+import com.auhpp.event_management.entity.converter.AttributeEncryptor;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -53,6 +53,9 @@ public class EventSession {
 
     @OneToMany(mappedBy = "eventSession", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Ticket> tickets;
+
+    @OneToMany(mappedBy = "eventSession")
+    private List<EventImage> eventImages;
 
     public boolean isExpired() {
         return this.getEndDateTime().isBefore(LocalDateTime.now());

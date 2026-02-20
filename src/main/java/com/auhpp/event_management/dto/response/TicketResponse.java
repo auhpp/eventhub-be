@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -42,4 +43,6 @@ public class TicketResponse {
     private Integer invitationQuota;
 
     private Integer invitedQuantity;
+
+    List <AttendeeBasicResponse> attendees;
 }

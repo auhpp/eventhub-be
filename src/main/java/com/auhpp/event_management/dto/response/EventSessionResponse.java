@@ -16,8 +16,6 @@ import java.util.List;
 public class EventSessionResponse {
     private Long id;
 
-    private String name;
-
     private LocalDateTime startDateTime;
 
     private LocalDateTime endDateTime;

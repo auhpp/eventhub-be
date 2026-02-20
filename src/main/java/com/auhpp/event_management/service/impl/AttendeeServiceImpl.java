@@ -5,12 +5,15 @@ import com.auhpp.event_management.constant.AttendeeStatus;
 import com.auhpp.event_management.constant.EventType;
 import com.auhpp.event_management.dto.request.AttendeeCreateRequest;
 import com.auhpp.event_management.dto.request.AttendeeSearchRequest;
+import com.auhpp.event_management.dto.request.CheckInRequest;
 import com.auhpp.event_management.dto.request.CheckinSearchRequest;
+import com.auhpp.event_management.dto.response.AttendeeBasicResponse;
 import com.auhpp.event_management.dto.response.AttendeeResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.entity.*;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
+import com.auhpp.event_management.mapper.AttendeeBasicMapper;
 import com.auhpp.event_management.mapper.AttendeeMapper;
 import com.auhpp.event_management.repository.AppUserRepository;
 import com.auhpp.event_management.repository.AttendeeRepository;
@@ -42,6 +45,7 @@ public class AttendeeServiceImpl implements AttendeeService {
     TicketRepository ticketRepository;
     AttendeeMapper attendeeMapper;
     AppUserRepository appUserRepository;
+    AttendeeBasicMapper attendeeBasicMapper;
 
     static String CHAR_LOWER = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     static SecureRandom random = new SecureRandom();
@@ -67,6 +71,34 @@ public class AttendeeServiceImpl implements AttendeeService {
             }
         } while (!isUnique);
         return ticketCode;
+    }
+
+    @Override
+    @Transactional
+    public AttendeeBasicResponse checkIn(CheckInRequest request) {
+        Attendee attendee = attendeeRepository.findByTicketCode(request.getTicketCode()).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        EventSession eventSession = attendee.getTicket().getEventSession();
+        if (eventSession.isExpired()) {
+            throw new AppException(ErrorCode.EXPIRED_EVENT_SESSION);
+        }
+        String email = SecurityUtils.getCurrentUserLogin();
+        Event event = eventSession.getEvent();
+        if (!event.isEventStaff(email) || !Objects.equals(event.getId(), request.getEventId())) {
+            throw new AppException(ErrorCode.WRONG_EVENT);
+        }
+
+        if (attendee.getStatus() == AttendeeStatus.VALID) {
+            attendee.setStatus(AttendeeStatus.CHECKED_IN);
+            attendee.setCheckInAt(LocalDateTime.now());
+            attendeeRepository.save(attendee);
+            return attendeeBasicMapper.toAttendeeBasicResponse(attendee);
+        } else if (attendee.getStatus() == AttendeeStatus.CHECKED_IN) {
+            throw new AppException(ErrorCode.CHECKED_IN_TICKET);
+        } else {
+            throw new AppException(ErrorCode.INVALID_TICKET);
+        }
     }
 
     @Override

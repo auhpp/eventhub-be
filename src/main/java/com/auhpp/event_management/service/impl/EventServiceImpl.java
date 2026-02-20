@@ -23,7 +23,6 @@ import com.auhpp.event_management.service.EventService;
 import com.auhpp.event_management.service.EventSessionService;
 import com.auhpp.event_management.service.EventStaffService;
 import com.auhpp.event_management.util.SecurityUtils;
-import com.auhpp.event_management.util.SpecBuilder;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -34,11 +33,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -218,16 +217,21 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public PageResponse<EventResponse> getEvents(EventSearchRequest request, int page, int size) {
-        Specification<Event> spec = Specification.allOf();
-        if (request.getStatus() != null) {
-            spec.and(SpecBuilder.create("status", "=", request.getStatus()));
-        }
-        if (request.getUserId() != null) {
-            spec.and(SpecBuilder.create("id", "=", request.getUserId(), "appUser"));
-        }
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
-        Page<Event> pageData = eventRepository.findAll(spec, pageable);
+        Page<Event> pageData = null;
+        if (request.getEventSearchStatus() != null) {
+            if (request.getEventSearchStatus() == EventSearchStatus.COMING) {
+                pageData = eventRepository.findAllByUserIdAndStatusAndComingStatus(request.getUserId(),
+                        request.getStatus(), LocalDateTime.now(), request.getType(), pageable);
+            } else if (request.getEventSearchStatus() == EventSearchStatus.PAST) {
+                pageData = eventRepository.findAllByUserIdAndStatusAndPastStatus(request.getUserId(),
+                        request.getStatus(), LocalDateTime.now(), request.getType(), pageable);
+            }
+        } else {
+            pageData = eventRepository.findAllByUserIdAndStatus(request.getUserId(), request.getStatus(),
+                    request.getType(), pageable);
+        }
         List<EventResponse> eventResponses = pageData.getContent().stream().map(
                 eventMapper::toEventResponse
         ).toList();
@@ -246,7 +250,9 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
-        return eventMapper.toEventResponse(event);
+        EventResponse response = eventMapper.toEventResponse(event);
+        response.setHasPhotos(!event.getEventImages().isEmpty());
+        return response;
     }
 
 

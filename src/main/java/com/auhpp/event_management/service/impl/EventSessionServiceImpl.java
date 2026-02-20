@@ -1,9 +1,13 @@
 package com.auhpp.event_management.service.impl;
 
+import com.auhpp.event_management.constant.AttendeeStatus;
+import com.auhpp.event_management.constant.AttendeeType;
 import com.auhpp.event_management.dto.request.EventSessionCreateRequest;
 import com.auhpp.event_management.dto.request.EventSessionUpdateRequest;
 import com.auhpp.event_management.dto.request.TicketCreateRequest;
+import com.auhpp.event_management.dto.response.EventSessionReportCheckInResponse;
 import com.auhpp.event_management.dto.response.EventSessionResponse;
+import com.auhpp.event_management.dto.response.TicketCheckInResponse;
 import com.auhpp.event_management.entity.Event;
 import com.auhpp.event_management.entity.EventSession;
 import com.auhpp.event_management.entity.Ticket;
@@ -19,6 +23,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -87,6 +94,79 @@ public class EventSessionServiceImpl implements EventSessionService {
         } else {
             throw new AppException(ErrorCode.RESOURCE_NOT_FOUND);
         }
+    }
+
+    @Override
+    public EventSessionReportCheckInResponse reportCheckIn(Long id) {
+        EventSession eventSession = eventSessionRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        List<Ticket> tickets = eventSession.getTickets();
+        int totalQuantity = 0;
+        int soldQuantity = 0;
+        int checkedInQuantity = 0;
+        int outsideQuantity = 0;
+
+        int guestTotalQuantity = 0;
+        int guestInvitedQuantity = 0;
+        int guestCheckedInQuantity = 0;
+        int guestOutsideQuantity = 0;
+
+        List<TicketCheckInResponse> ticketCheckIns = new ArrayList<>();
+        for (Ticket ticket : tickets) {
+            int totalQuantityTmp = ticket.getQuantity();
+            int guestTotalQuantityTmp = ticket.getInvitationQuota();
+            totalQuantity += totalQuantityTmp;
+            guestTotalQuantity += guestTotalQuantityTmp;
+
+            int checkedInQuantityTmp = ticket.getAttendees().stream().filter(
+                    attendee -> attendee.getStatus() == AttendeeStatus.CHECKED_IN &&
+                            attendee.getType() == AttendeeType.BUY
+            ).toList().size();
+            int guestCheckedInQuantityTmp = ticket.getAttendees().stream().filter(
+                    attendee -> attendee.getStatus() == AttendeeStatus.CHECKED_IN &&
+                            attendee.getType() == AttendeeType.INVITE
+            ).toList().size();
+            checkedInQuantity += checkedInQuantityTmp;
+            guestCheckedInQuantity += guestCheckedInQuantityTmp;
+
+            int soldQuantityTmp = ticket.getSoldQuantity() == null ? 0 : ticket.getSoldQuantity();
+            int invitedQuantityTmp = ticket.getInvitedQuantity() == null ? 0 : ticket.getInvitedQuantity();
+            soldQuantity += soldQuantityTmp;
+            guestInvitedQuantity += invitedQuantityTmp;
+
+            int outsideQuantityTmp = ticket.getAttendees().stream().filter(
+                    attendee -> attendee.getStatus() == AttendeeStatus.OUTSIDE &&
+                            attendee.getType() == AttendeeType.BUY
+            ).toList().size();
+            int guestOutsideQuantityTmp = ticket.getAttendees().stream().filter(
+                    attendee -> attendee.getStatus() == AttendeeStatus.OUTSIDE &&
+                            attendee.getType() == AttendeeType.INVITE
+            ).toList().size();
+            outsideQuantity += outsideQuantityTmp;
+            guestOutsideQuantity += guestOutsideQuantityTmp;
+
+            ticketCheckIns.add(TicketCheckInResponse.builder()
+                    .name(ticket.getName())
+                    .totalQuantity(totalQuantityTmp)
+                    .soldQuantity(soldQuantityTmp)
+                    .checkInQuantity(checkedInQuantityTmp)
+                    .guestTotalQuantity(guestTotalQuantityTmp)
+                    .guestInvitedQuantity(invitedQuantityTmp)
+                    .guestCheckedInQuantity(guestCheckedInQuantityTmp)
+                    .build());
+        }
+        return EventSessionReportCheckInResponse.builder()
+                .totalQuantity(totalQuantity)
+                .soldQuantity(soldQuantity)
+                .outsideQuantity(outsideQuantity)
+                .checkedInQuantity(checkedInQuantity)
+                .guestTotalQuantity(guestTotalQuantity)
+                .guestInvitedQuantity(guestInvitedQuantity)
+                .guestCheckedInQuantity(guestCheckedInQuantity)
+                .guestOutsideQuantity(guestOutsideQuantity)
+                .ticketCheckIns(ticketCheckIns)
+                .build();
     }
 
 

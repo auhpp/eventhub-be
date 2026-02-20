@@ -4,5 +4,6 @@ public enum AttendeeStatus {
     INACTIVE,
     VALID,
     CHECKED_IN,
-    CANCELLED
+    CANCELLED,
+    OUTSIDE
 }
