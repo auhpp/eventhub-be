@@ -1,0 +1,44 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet id="1767866033533-1" author="auhpp">
+        <insert tableName="role">
+            <column name="name" value="EVENT_OWNER"/>
+            <column name="description">Chủ sự kiện</column>
+            <column name="type">EVENT</column>
+        </insert>
+        <insert tableName="role">
+            <column name="name" value="EVENT_ADMIN"/>
+            <column name="description">Quản trị viên</column>
+            <column name="type">EVENT</column>
+        </insert>
+        <insert tableName="role">
+            <column name="name" value="EVENT_MANAGER"/>
+            <column name="description">Quản lý</column>
+            <column name="type">EVENT</column>
+        </insert>
+        <insert tableName="role">
+            <column name="name" value="EVENT_STAFF"/>
+            <column name="description">Nhân viên - Checkin</column>
+            <column name="type">EVENT</column>
+        </insert>
+    </changeSet>
+    <changeSet id="1767866033533-2" author="auhpp">
+        <update tableName="role">
+            <column name="description">Quản trị viên</column>
+            <column name="type">SYSTEM</column>
+            <where>name='ADMIN'</where>
+        </update>
+        <update tableName="role">
+            <column name="description">Người dùng</column>
+            <column name="type">SYSTEM</column>
+            <where>name='USER'</where>
+        </update>
+        <update tableName="role">
+            <column name="description">Ban tổ chức</column>
+            <column name="type">SYSTEM</column>
+            <where>name='ORGANIZER'</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>

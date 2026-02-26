@@ -1,0 +1,23 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1768481791767-1">
+        <insert tableName="system_configuration">
+            <column name="key" value="COMMISSION_RATE"/>
+            <column name="value" valueNumeric="0.05"/>
+            <column name="name" value="Tỉ lệ hoa hồng hệ thống"/>
+            <column name="description" value="Phí hoa hồng tính theo phần trăm trên tổng giá trị đơn hàng"/>
+            <column name="unit" value="PERCENT"/>
+        </insert>
+
+        <insert tableName="system_configuration">
+            <column name="key" value="COMMISSION_FIXED_PER_TICKET"/>
+            <column name="value" valueNumeric="2000"/>
+            <column name="name" value="Phí cố định mỗi vé"/>
+            <column name="description" value="Phí dịch vụ cố định tính trên từng vé bán ra"/>
+            <column name="unit" value="VND"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

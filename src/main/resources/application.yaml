@@ -1,0 +1,67 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: event_management
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        naming:
+          physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: true
+  liquibase:
+    enabled: false
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+  jwt:
+    signer-key: ${SIGNER_KEY}
+    valid-duration: 60 # in minute
+    refreshable-duration: 120 # in minute
+  mail:
+    host: ${EMAIL_HOST}
+    port: ${EMAIL_PORT}
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+app:
+  cloudinary:
+    cloud-name: ${CLOUDINARY_CLOUD_NAME}
+    api-key: ${CLOUDINARY_API_KEY}
+    api-secret: ${CLOUDINARY_API_SECRET}
+  tomtom:
+    base-url: ${TOMTOM_BASE_URL}
+    api-key: ${TOMTOM_API_KEY}
+  vnpay:
+    vnp_TmnCode: ${VNP_TMN_CODE}
+    vnp_HashSecret: ${VNP_HASH_SECRET}
+    vnp_ReturnUrl: ${VNP_RETURN_URL}
+    vnp_PayUrl: ${VNP_PAY_URL}
+    vnp_ApiUrl: ${VNP_API_URL}
+  admin:
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}
+  fe:
+    user-url: ${FE_USER_URL}
+    admin-url: ${FE_ADMIN_URL}
+  encrypt:
+    encrypt-key-32-bytes: ${ENCRYPT_KEY_32_BYTES}
+  cors:
+    real-app: ${REAL_APP_CORS_ALLOWED}
+    emulator-app: ${EMULATOR_APP_CORS_ALLOWED}
+  spotter:
+    base-url: ${SPOTTER_BASE_URL}
+

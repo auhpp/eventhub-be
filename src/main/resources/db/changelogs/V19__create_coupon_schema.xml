@@ -1,0 +1,134 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1771918803049-1">
+        <createSequence incrementBy="50" sequenceName="coupon_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1771918803049-2">
+        <createSequence incrementBy="50" sequenceName="coupon_usage_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1771918803049-3">
+        <createSequence incrementBy="50" sequenceName="ticket_coupon_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1771918803049-4">
+        <createTable tableName="coupon">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="couponPK"/>
+            </column>
+            <column name="avatar_public_id" type="VARCHAR(255)"/>
+            <column name="avatar_url" type="VARCHAR(255)"/>
+            <column name="code" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="discount_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date_time" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="has_public" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="maximum_booking" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="maximum_ticket" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="maximum_ticket_in_booking" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="minimum_ticket" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_date_time" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="value" type="FLOAT(53)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1771918803049-5">
+        <createTable tableName="coupon_usage">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="coupon_usagePK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="booking_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ticket_coupon_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1771918803049-6">
+        <createTable tableName="ticket_coupon">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="ticket_couponPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="coupon_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ticket_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1771918803049-7">
+        <addColumn tableName="ticket">
+            <column name="cancel_before_minutes" type="INTEGER"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1771918803049-8">
+        <addColumn tableName="event_session">
+            <column name="status" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1771918803049-9">
+        <addUniqueConstraint columnNames="code" constraintName="UC_COUPONCODE_COL" tableName="coupon"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1771918803049-10">
+        <addForeignKeyConstraint baseColumnNames="coupon_id" baseTableName="ticket_coupon"
+                                 constraintName="FKbtm7hacgdhh0r7f1v2u547whr" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="coupon"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1771918803049-11">
+        <addForeignKeyConstraint baseColumnNames="booking_id" baseTableName="coupon_usage"
+                                 constraintName="FKldhj7q9gfm7m0qmbigp1a7jld" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="booking"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1771918803049-12">
+        <addForeignKeyConstraint baseColumnNames="ticket_coupon_id" baseTableName="coupon_usage"
+                                 constraintName="FKsadd3yasvph6c03kaklq33jvs" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id"
+                                 referencedTableName="ticket_coupon" validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1771918803049-13">
+        <addForeignKeyConstraint baseColumnNames="ticket_id" baseTableName="ticket_coupon"
+                                 constraintName="FKt16u5b74ne7qb4x0wglat8e7k" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="ticket"
+                                 validate="true"/>
+    </changeSet>
+
+
+</databaseChangeLog>

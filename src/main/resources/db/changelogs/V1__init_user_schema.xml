@@ -1,0 +1,76 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="auhpp (generated)" id="1767864824063-1">
+        <createSequence incrementBy="50" sequenceName="app_user_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1767864824063-2">
+        <createSequence incrementBy="50" sequenceName="role_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1767864824063-3">
+        <createSequence incrementBy="50" sequenceName="social_link_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1767864824063-4">
+        <createTable tableName="app_user">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="app_userPK"/>
+            </column>
+            <column name="auth_provider" type="VARCHAR(255)"/>
+            <column name="avatar" type="VARCHAR(255)"/>
+            <column name="biography" type="VARCHAR(1000)"/>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="full_name" type="VARCHAR(255)"/>
+            <column name="is_online" type="BOOLEAN"/>
+            <column name="last_seen" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="password" type="VARCHAR(255)"/>
+            <column name="phone_number" type="VARCHAR(255)"/>
+            <column name="provider_id" type="VARCHAR(255)"/>
+            <column name="status" type="BOOLEAN"/>
+            <column name="role_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1767864824063-5">
+        <createTable tableName="role">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="rolePK"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1767864824063-6">
+        <createTable tableName="social_link">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="social_linkPK"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="url_link" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="app_user_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1767864824063-7">
+        <addUniqueConstraint columnNames="email" constraintName="UC_APP_USEREMAIL_COL" tableName="app_user"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1767864824063-8">
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="app_user"
+                                 constraintName="FK49hx9nj6onfot1fxtonj986ab" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="role"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1767864824063-9">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="social_link"
+                                 constraintName="FKjdwfsaa5awupa1bc3i1xsqy2d" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+</databaseChangeLog>

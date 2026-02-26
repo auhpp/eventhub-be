@@ -1,0 +1,61 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1769680389119-1">
+        <addColumn tableName="event">
+            <column name="address" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769680389119-2">
+        <addColumn tableName="event">
+            <column name="poster" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769680389119-3">
+        <addColumn tableName="event">
+            <column name="poster_public_id" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769680389119-4">
+        <addColumn tableName="event_session">
+            <column name="checkin_start_time" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769680389119-5">
+        <addColumn tableName="event">
+            <column name="meeting_password" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769680389119-6">
+        <addColumn tableName="attendee">
+            <column name="owner_email" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769680389119-7">
+        <addColumn tableName="event_session">
+            <column name="meeting_password" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769680389119-8">
+        <addColumn tableName="event_session">
+            <column name="meeting_platform" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769680389119-9">
+        <addColumn tableName="event_session">
+            <column name="meeting_url" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="auhpp (generated)" id="1769680389119-10">
+        <dropColumn columnName="meeting_password" tableName="event"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769680389119-11">
+        <dropColumn columnName="meeting_platform" tableName="event"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1769680389119-12">
+        <dropColumn columnName="meeting_url" tableName="event"/>
+    </changeSet>
+</databaseChangeLog>
