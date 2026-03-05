@@ -9,12 +9,14 @@ import com.auhpp.event_management.dto.request.CouponUpdateRequest;
 import com.auhpp.event_management.dto.response.CouponReportDetailResponse;
 import com.auhpp.event_management.dto.response.CouponResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
+import com.auhpp.event_management.dto.response.TicketBasicResponse;
 import com.auhpp.event_management.entity.Coupon;
 import com.auhpp.event_management.entity.Ticket;
 import com.auhpp.event_management.entity.TicketCoupon;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.CouponMapper;
+import com.auhpp.event_management.mapper.TicketBasicMapper;
 import com.auhpp.event_management.mapper.TicketStandardMapper;
 import com.auhpp.event_management.repository.CouponRepository;
 import com.auhpp.event_management.repository.TicketCouponRepository;
@@ -31,9 +33,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -45,6 +46,7 @@ public class CouponServiceImpl implements CouponService {
     TicketRepository ticketRepository;
     TicketStandardMapper ticketStandardMapper;
     TicketCouponRepository ticketCouponRepository;
+    TicketBasicMapper ticketBasicMapper;
 
     @Override
     @Transactional
@@ -103,21 +105,39 @@ public class CouponServiceImpl implements CouponService {
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
         couponMapper.updateCoupon(request, coupon);
-        List<TicketCoupon> ticketCoupons = new ArrayList<>();
-        for (Long ticketId : request.getTicketIds()) {
-            if (ticketCouponRepository.findByTicketIdAndCouponId(ticketId, couponId).isPresent()) {
-                continue;
+        List<TicketCoupon> existingTicketCoupons = coupon.getTicketCoupons();
+        if (request.getTicketIds() != null && !request.getTicketIds().isEmpty()) {
+            existingTicketCoupons.removeIf(tc ->
+                    !request.getTicketIds().contains(tc.getTicket().getId()));
+
+            Set<Long> existingTicketIds = existingTicketCoupons.stream().map(
+                    TicketCoupon::getId
+            ).collect(Collectors.toSet());
+
+            for (Long ticketId : request.getTicketIds()) {
+                if (!existingTicketIds.contains(ticketId)) {
+                    Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(
+                            () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+                    );
+                    existingTicketCoupons.add(TicketCoupon.builder()
+                            .coupon(coupon)
+                            .status(CommonStatus.ACTIVE)
+                            .ticket(ticket)
+                            .build());
+                }
             }
-            Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(
-                    () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
-            );
-            ticketCoupons.add(TicketCoupon.builder()
-                    .coupon(coupon)
-                    .status(CommonStatus.ACTIVE)
-                    .ticket(ticket)
-                    .build());
+        } else {
+            existingTicketCoupons.clear();
+            List<Ticket> tickets = ticketRepository.findByEventId(request.getEventId());
+            for (Ticket ticket : tickets) {
+                existingTicketCoupons.add(TicketCoupon.builder()
+                        .coupon(coupon)
+                        .status(CommonStatus.ACTIVE)
+                        .ticket(ticket)
+                        .build());
+            }
         }
-        coupon.setTicketCoupons(ticketCoupons);
+
         if (request.getAvatar() != null) {
             if (coupon.getAvatarUrl() != null && !coupon.getAvatarUrl().isEmpty()) {
                 cloudinaryService.deleteFile(coupon.getAvatarPublicId());
@@ -139,14 +159,7 @@ public class CouponServiceImpl implements CouponService {
         Coupon coupon = couponRepository.findById(couponId).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
-        boolean valid = true;
-        for (TicketCoupon ticketCoupon : coupon.getTicketCoupons()) {
-            if (!ticketCoupon.getCouponUsages().isEmpty()) {
-                valid = false;
-                break;
-            }
-        }
-        if (valid) {
+        if (coupon.getBookings().isEmpty()) {
             if (coupon.getAvatarUrl() != null && !coupon.getAvatarUrl().isEmpty()) {
                 cloudinaryService.deleteFile(coupon.getAvatarPublicId());
             }
@@ -156,13 +169,24 @@ public class CouponServiceImpl implements CouponService {
         }
     }
 
+    private CouponResponse addTicketBasicResponse(Coupon coupon) {
+        CouponResponse res = couponMapper.toCouponResponse(coupon);
+        List<TicketBasicResponse> ticketBasicResponses = coupon.getTicketCoupons()
+                .stream().map(
+                        ticketCoupon -> ticketBasicMapper.toTicketBasicResponse(ticketCoupon.getTicket())
+                ).toList();
+        res.setTickets(ticketBasicResponses);
+        return res;
+    }
+
     @Override
     public PageResponse<CouponResponse> getCoupons(CouponSearchRequest request, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
-        Page<Coupon> pageData = couponRepository.filterCoupon(request.getEventId(), pageable);
+        Page<Coupon> pageData = couponRepository.filterCoupon(request.getEventId(), request.getHasPublic(), pageable);
+
         List<CouponResponse> responses = pageData.getContent().stream().map(
-                couponMapper::toCouponResponse
+                this::addTicketBasicResponse
         ).toList();
         return PageResponse.<CouponResponse>builder()
                 .currentPage(page)
@@ -182,14 +206,36 @@ public class CouponServiceImpl implements CouponService {
         for (TicketCoupon ticketCoupon : coupon.getTicketCoupons()) {
             responses.add(CouponReportDetailResponse.builder()
                     .ticket(ticketStandardMapper.toTicketStandardResponse(ticketCoupon.getTicket()))
-                    .usageQuantity(ticketCoupon.getCouponUsages().size())
+//                    .usageQuantity(ticketCoupon.getCouponUsages().size())
                     .build());
         }
         return responses;
     }
 
     @Override
-    public boolean existsCode(Long eventId, String code) {
-        return couponRepository.findByCodeAndEventId(code, eventId).isPresent();
+    public CouponResponse getByCode(Long eventId, String code) {
+        Optional<Coupon> optionalCoupon = couponRepository.findByCodeAndEventId(code, eventId);
+        return optionalCoupon.map(this::addTicketBasicResponse).orElse(null);
     }
+
+    @Override
+    public Integer cntBookingByUser(Long userId, Long couponId) {
+        return couponRepository.cntBookingByUserId(couponId, userId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTicketCoupon(Long ticketCouponId) {
+        ticketCouponRepository.deleteById(ticketCouponId);
+    }
+
+    @Override
+    public CouponResponse getById(Long id) {
+        Coupon coupon = couponRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+
+        return addTicketBasicResponse(coupon);
+    }
+
 }

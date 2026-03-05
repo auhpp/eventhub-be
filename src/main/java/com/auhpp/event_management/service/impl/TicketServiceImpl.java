@@ -3,11 +3,13 @@ package com.auhpp.event_management.service.impl;
 import com.auhpp.event_management.constant.TicketStatus;
 import com.auhpp.event_management.dto.request.TicketCreateRequest;
 import com.auhpp.event_management.dto.request.TicketUpdateRequest;
+import com.auhpp.event_management.dto.response.TicketBasicResponse;
 import com.auhpp.event_management.dto.response.TicketResponse;
 import com.auhpp.event_management.entity.EventSession;
 import com.auhpp.event_management.entity.Ticket;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
+import com.auhpp.event_management.mapper.TicketBasicMapper;
 import com.auhpp.event_management.mapper.TicketMapper;
 import com.auhpp.event_management.repository.EventSessionRepository;
 import com.auhpp.event_management.repository.TicketRepository;
@@ -18,6 +20,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -26,6 +30,7 @@ public class TicketServiceImpl implements TicketService {
     TicketRepository ticketRepository;
     EventSessionRepository eventSessionRepository;
     TicketMapper ticketMapper;
+    TicketBasicMapper ticketBasicMapper;
 
     @Override
     @Transactional
@@ -78,5 +83,11 @@ public class TicketServiceImpl implements TicketService {
         } else {
             throw new AppException(ErrorCode.RESOURCE_CAN_NOT_DELETE);
         }
+    }
+
+    @Override
+    public List<TicketBasicResponse> getTickets(Long eventSessionId) {
+        List<Ticket> tickets = ticketRepository.findByEventSessionId(eventSessionId);
+        return tickets.stream().map(ticketBasicMapper::toTicketBasicResponse).toList();
     }
 }

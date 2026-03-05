@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -13,10 +14,17 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CouponUsage {
+public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
+
+    private String comment;
+
+    private int editCount;
+
+    @Column(nullable = false)
+    private Integer rating;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -27,9 +35,12 @@ public class CouponUsage {
 
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
-    private TicketCoupon ticketCoupon;
+    private EventSession eventSession;
 
-    @ManyToOne(optional = false)
+    @OneToOne(optional = false)
     @JoinColumn(nullable = false)
-    private Booking booking;
+    private Attendee attendee;
+
+    @OneToMany(mappedBy = "review", cascade = {CascadeType.ALL}, orphanRemoval = true)
+    private List<ReviewImage> reviewImages;
 }

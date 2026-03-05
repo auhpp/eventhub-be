@@ -6,6 +6,7 @@ import com.auhpp.event_management.dto.request.CheckinSearchRequest;
 import com.auhpp.event_management.dto.response.AttendeeBasicResponse;
 import com.auhpp.event_management.dto.response.AttendeeResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
+import com.auhpp.event_management.dto.response.UserAttendeeSummaryResponse;
 import com.auhpp.event_management.service.AttendeeService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -94,6 +95,21 @@ public class AttendeeController {
             @PathVariable(name = "attendeeId") Long id
     ) {
         AttendeeBasicResponse response = attendeeService.cancelAttendee(id);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/event-session/{eventSessionId}/filter")
+    @PreAuthorize("hasAnyRole('ORGANIZER')")
+    public ResponseEntity<PageResponse<UserAttendeeSummaryResponse>> getUserSummaryAttendees(
+            @PathVariable(name = "eventSessionId") Long eventSessionId,
+            @RequestBody AttendeeSearchRequest searchRequest,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ) {
+        PageResponse<UserAttendeeSummaryResponse> response = attendeeService.getUserAttendeeSummaries(
+                eventSessionId,
+                searchRequest, page, size);
         return ResponseEntity
                 .status(HttpStatus.OK).body(response);
     }

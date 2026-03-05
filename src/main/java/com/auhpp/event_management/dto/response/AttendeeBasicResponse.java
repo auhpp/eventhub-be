@@ -27,4 +27,6 @@ public class AttendeeBasicResponse {
 
     private UserBasicResponse owner;
 
+
+
 }

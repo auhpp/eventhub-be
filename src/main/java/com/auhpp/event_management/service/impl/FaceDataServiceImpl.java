@@ -31,7 +31,7 @@ public class FaceDataServiceImpl implements FaceDataService {
 
     @Override
     @Transactional
-    public void processEventImage(Long eventImageId, MultipartFile file) {
+    public void processEventImage(Long eventImageId, MultipartFile file, String url) {
         EventImage eventImage = eventImageRepository.findById(eventImageId).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
@@ -39,9 +39,14 @@ public class FaceDataServiceImpl implements FaceDataService {
         try {
             eventImage.setProcessStatus(ProcessStatus.PROCESSING);
             eventImageRepository.saveAndFlush(eventImage);
+            List<FaceResult> faces = new ArrayList<>();
+            if (file != null) {
+                // call spotter service
+                faces = spotterService.detectFaces(file);
+            } else {
+                faces = spotterService.detectFacesByUrl(url);
 
-            // call spotter service
-            List<FaceResult> faces = spotterService.detectFaces(file);
+            }
 
             List<FaceData> faceDataToSave = new ArrayList<>();
             for (FaceResult face : faces) {

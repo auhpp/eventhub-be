@@ -20,5 +20,12 @@ public interface CouponService {
 
     List<CouponReportDetailResponse> getInfoReportDetail(Long couponId);
 
-    boolean existsCode(Long eventId, String code);
+    CouponResponse getByCode(Long eventId, String code);
+
+    Integer cntBookingByUser(Long userId, Long couponId);
+
+    void deleteTicketCoupon(Long ticketCouponId);
+
+    CouponResponse getById(Long id);
+
 }

@@ -31,7 +31,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -214,7 +217,11 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public PageResponse<EventResponse> getEvents(EventSearchRequest request, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
+        Sort.Direction direction = Sort.Direction.DESC;
+        if (request.getSortType() != null && request.getSortType() == SortType.OLDEST) {
+            direction = Sort.Direction.ASC;
+        }
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,
                 "createdAt"));
         Page<Event> pageData = null;
         if (request.getEventSearchStatus() != null) {
@@ -226,8 +233,24 @@ public class EventServiceImpl implements EventService {
                         request.getStatus(), LocalDateTime.now(), request.getType(), pageable);
             }
         } else {
-            pageData = eventRepository.findAllByUserIdAndStatus(request.getUserId(), request.getStatus(),
-                    request.getType(), pageable);
+            LocalDateTime filterStartDate = request.getFromDate();
+            LocalDateTime filterEndDate = request.getToDate();
+            LocalDateTime now = LocalDateTime.now();
+            if (request.getThisWeek() != null && request.getThisWeek()) {
+                filterStartDate = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                        .truncatedTo(ChronoUnit.DAYS);
+                filterEndDate = now.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
+                        .withHour(23).withMinute(59).withSecond(59);
+            } else if (request.getThisMonth() != null && request.getThisMonth()) {
+                filterStartDate = now.with(TemporalAdjusters.firstDayOfMonth())
+                        .truncatedTo(ChronoUnit.DAYS);
+                filterEndDate = now.with(TemporalAdjusters.lastDayOfMonth())
+                        .withHour(23).withMinute(59).withSecond(59);
+            }
+            pageData = eventRepository.filterEvents(request.getUserId(), request.getStatus(),
+                    request.getType(), filterStartDate, filterEndDate, request.getCategoryIds(),
+                    request.getPriceFrom(), request.getPriceTo(), request.getName(),
+                    pageable);
         }
         List<EventResponse> eventResponses = pageData.getContent().stream().map(
                 eventMapper::toEventResponse

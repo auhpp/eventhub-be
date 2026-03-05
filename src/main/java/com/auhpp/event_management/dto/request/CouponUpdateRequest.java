@@ -15,6 +15,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CouponUpdateRequest {
+    private Long eventId;
+
     private String name;
 
     private LocalDateTime startDateTime;
@@ -29,11 +31,13 @@ public class CouponUpdateRequest {
 
     private Double value;
 
-    private Integer maximumTicket;
+    private Integer maxDiscountAmount;
+
+    private Integer maximumUsage;
 
     private Integer maximumBooking;
 
-    private Integer minimumTicket;
+    private Integer minimumTicketInBooking;
 
     private Integer maximumTicketInBooking;
 

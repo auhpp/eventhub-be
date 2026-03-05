@@ -10,11 +10,13 @@ import com.auhpp.event_management.dto.request.CheckinSearchRequest;
 import com.auhpp.event_management.dto.response.AttendeeBasicResponse;
 import com.auhpp.event_management.dto.response.AttendeeResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
+import com.auhpp.event_management.dto.response.UserAttendeeSummaryResponse;
 import com.auhpp.event_management.entity.*;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.AttendeeBasicMapper;
 import com.auhpp.event_management.mapper.AttendeeMapper;
+import com.auhpp.event_management.mapper.UserBasicMapper;
 import com.auhpp.event_management.repository.AppUserRepository;
 import com.auhpp.event_management.repository.AttendeeRepository;
 import com.auhpp.event_management.repository.BookingRepository;
@@ -33,8 +35,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -46,6 +48,7 @@ public class AttendeeServiceImpl implements AttendeeService {
     AttendeeMapper attendeeMapper;
     AppUserRepository appUserRepository;
     AttendeeBasicMapper attendeeBasicMapper;
+    UserBasicMapper userBasicMapper;
 
     static String CHAR_LOWER = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     static SecureRandom random = new SecureRandom();
@@ -141,7 +144,8 @@ public class AttendeeServiceImpl implements AttendeeService {
         attendee.setPrice(ticket.getPrice());
         attendee.setBooking(booking);
         attendee.setTicket(ticket);
-
+        attendee.setDiscountAmount(0D);
+        attendee.setFinalPrice(ticket.getPrice());
 
         Event event = attendee.getTicket().getEventSession().getEvent();
         if (event.getType() == EventType.OFFLINE) {
@@ -175,14 +179,19 @@ public class AttendeeServiceImpl implements AttendeeService {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
         Page<Attendee> attendees;
-        if (attendeeSearchRequest.getStatus() == AttendeeSearchStatus.COMING) {
+        if (attendeeSearchRequest.getSearchStatus() == AttendeeSearchStatus.COMING) {
             attendees = attendeeRepository.findComingAllByEmailUser(LocalDateTime.now(), email, pageable);
-        } else if (attendeeSearchRequest.getStatus() == AttendeeSearchStatus.PAST) {
+        } else if (attendeeSearchRequest.getSearchStatus() == AttendeeSearchStatus.PAST) {
             attendees = attendeeRepository.findPastAllByEmailUser(LocalDateTime.now(), email, pageable);
-        } else if (attendeeSearchRequest.getStatus() == AttendeeSearchStatus.CANCELLED) {
-            attendees = attendeeRepository.findAllByStatusAndEmailUser(AttendeeStatus.CANCELLED_BY_USER, email, pageable);
+        } else if (attendeeSearchRequest.getSearchStatus() == AttendeeSearchStatus.CANCELLED) {
+            attendees = attendeeRepository.findAllByStatusAndEmailUser(
+                    List.of(AttendeeStatus.CANCELLED_BY_USER, AttendeeStatus.CANCELLED_BY_EVENT), email, pageable);
+        } else if (attendeeSearchRequest.getSearchStatus() == AttendeeSearchStatus.CHECKED_IN) {
+            attendees = attendeeRepository.findAllByStatusAndEmailUser(
+                    List.of(AttendeeStatus.CHECKED_IN), email, pageable);
         } else {
-            attendees = attendeeRepository.findAllByStatusAndEmailUser(AttendeeStatus.VALID, email, pageable);
+            attendees = attendeeRepository.findAllByStatusAndEmailUser(
+                    List.of(AttendeeStatus.VALID), email, pageable);
         }
         List<AttendeeResponse> attendeeResponses = attendees.getContent().stream().map(
                 attendeeMapper::toAttendeeResponse
@@ -265,5 +274,43 @@ public class AttendeeServiceImpl implements AttendeeService {
                 .build();
     }
 
+    @Override
+    public PageResponse<UserAttendeeSummaryResponse>
+    getUserAttendeeSummaries(Long eventSessionId,
+                             AttendeeSearchRequest searchRequest, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.Direction.ASC, "email");
+        Page<AppUser> appUserPage = attendeeRepository.findUserByEventSession(
+                searchRequest.getStatus(),
+                eventSessionId,
+                pageable
+        );
+        List<UserAttendeeSummaryResponse> responses = new ArrayList<>();
+        if (!appUserPage.isEmpty()) {
+            List<AppUser> usersOnPage = appUserPage.getContent();
 
+            List<Attendee> attendees = attendeeRepository.findAllByUserInAndEventSession(null, usersOnPage,
+                    eventSessionId);
+            Map<Long, List<Attendee>> attendeesByUserId = attendees.stream().collect(
+                    Collectors.groupingBy(a -> a.getOwner().getId())
+            );
+            responses = usersOnPage.stream().map(
+                    appUser -> {
+                        List<Attendee> userAttendees = attendeesByUserId.getOrDefault(appUser.getId(),
+                                Collections.emptyList());
+                        return UserAttendeeSummaryResponse.builder()
+                                .user(userBasicMapper.toUserBasicResponse(appUser))
+                                .attendees(userAttendees.stream().map(attendeeBasicMapper::toAttendeeBasicResponse)
+                                        .toList())
+                                .build();
+                    }
+            ).toList();
+        }
+        return PageResponse.<UserAttendeeSummaryResponse>builder()
+                .currentPage(page)
+                .totalElements(appUserPage.getTotalElements())
+                .totalPage(appUserPage.getTotalPages())
+                .pageSize(appUserPage.getSize())
+                .data(responses)
+                .build();
+    }
 }

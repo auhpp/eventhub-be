@@ -1,6 +1,7 @@
 package com.auhpp.event_management.controller;
 
 import com.auhpp.event_management.dto.request.TicketUpdateRequest;
+import com.auhpp.event_management.dto.response.TicketBasicResponse;
 import com.auhpp.event_management.dto.response.TicketResponse;
 import com.auhpp.event_management.service.TicketService;
 import jakarta.validation.Valid;
@@ -11,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/ticket")
@@ -40,4 +43,13 @@ public class TicketController {
                 .status(HttpStatus.OK).build();
     }
 
+    @GetMapping
+    @PreAuthorize("hasRole('ORGANIZER')")
+    public ResponseEntity<List<TicketBasicResponse>> getTicketByEventSessionId(
+            @RequestParam("eventSessionId") Long eventSessionId
+    ) {
+        List<TicketBasicResponse> response = ticketService.getTickets(eventSessionId);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(response);
+    }
 }

@@ -44,13 +44,15 @@ public class CouponCreateRequest {
     @NotNull(message = "Value cannot null")
     private Double value;
 
-    private Integer maximumTicket;
+    private Integer maxDiscountAmount;
+
+    private Integer maximumUsage;
 
     @NotNull(message = "Maximum booking cannot null")
     private Integer maximumBooking;
 
     @NotNull(message = "Minimum ticket cannot null")
-    private Integer minimumTicket;
+    private Integer minimumTicketInBooking;
 
     @NotNull(message = "Maximum ticket in booking cannot null")
     private Integer maximumTicketInBooking;

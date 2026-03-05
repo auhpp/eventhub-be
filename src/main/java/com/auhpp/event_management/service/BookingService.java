@@ -29,15 +29,11 @@ public interface BookingService {
     BookingResponse updatePaymentBooking(Long id);
 
     PageResponse<BookingResponse> getBookings(BookingSearchRequest bookingSearchRequest,
-                                                           int page, int size);
+                                              int page, int size);
 
     void cleanupExpiredBookings();
 
     BookingResponse getBookingByEventSessionIdAndCurrentUserAndStatus(Long eventId, BookingStatus status);
-
-    PageResponse<UserBookingSummaryResponse> getUserBookingSummaries(Long eventSessionId,
-                                                                     BookingSearchRequest bookingSearchRequest,
-                                                                     int page, int size);
 
     UserBookingSummaryResponse getUserBookingSummary(Long eventSessionId, Long userId);
 }

@@ -16,6 +16,7 @@ public class EventStaffResponse {
     private Long id;
     private String fullName;
     private String email;
+    private String avatar;
     private RoleResponse role;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

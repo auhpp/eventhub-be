@@ -21,4 +21,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
             "JOIN t.eventSession es " +
             "WHERE es.event.id = :eventId")
     List<Ticket> findByEventId(@Param("eventId") Long eventId);
+
+    List<Ticket> findByEventSessionId(Long eventSessionId);
 }

@@ -87,6 +87,11 @@ public class EventStaffServiceImpl implements EventStaffService {
             Optional<AppUser> user = appUserRepository.findByEmail(email);
             if (user.isPresent()) {
                 eventStaff.setAppUser(user.get());
+            } else {
+                response.setMessage("Email chưa đăng ký tài khoản trên hệ thống");
+                response.setSendSuccess(false);
+                responses.add(response);
+                continue;
             }
             eventStaff.setRole(role);
             eventStaff.setMessage(request.getMessage());

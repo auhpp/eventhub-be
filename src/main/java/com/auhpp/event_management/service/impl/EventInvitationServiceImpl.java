@@ -1,7 +1,6 @@
 package com.auhpp.event_management.service.impl;
 
 import com.auhpp.event_management.constant.InvitationStatus;
-import com.auhpp.event_management.constant.RoleName;
 import com.auhpp.event_management.dto.request.EventInvitationCreateRequest;
 import com.auhpp.event_management.dto.request.EventInvitationRejectRequest;
 import com.auhpp.event_management.dto.request.EventInvitationSearchRequest;
@@ -19,6 +18,7 @@ import com.auhpp.event_management.repository.TicketRepository;
 import com.auhpp.event_management.service.BookingService;
 import com.auhpp.event_management.service.EmailService;
 import com.auhpp.event_management.service.EventInvitationService;
+import com.auhpp.event_management.util.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,10 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -67,11 +64,7 @@ public class EventInvitationServiceImpl implements EventInvitationService {
         }
         for (String email : eventInvitationCreateRequest.getEmails()) {
             // Check valid email
-//            Optional<Attendee> attendeeOptional = attendeeRepository.findByTicketIdAndEmailUserAndStatus(
-//                    eventInvitationCreateRequest.getTicketId(), email, AttendeeStatus.VALID
-//            );
             EventInvitationResponse response;
-//            if (attendeeOptional.isEmpty()) {
             String token = UUID.randomUUID().toString();
             LocalDateTime next2Days = LocalDateTime.now().plusDays(2);
             LocalDateTime eventSessionStartDateTime = eventSession.getStartDateTime();
@@ -101,13 +94,6 @@ public class EventInvitationServiceImpl implements EventInvitationService {
                     eventInvitation
             );
             response.setSendSuccess(true);
-//            }
-//        else {
-//                response = EventInvitationResponse.builder()
-//                        .email(email)
-//                        .isSendSuccess(false)
-//                        .build();
-//            }
             invitationResponses.add(response);
         }
 
@@ -137,6 +123,10 @@ public class EventInvitationServiceImpl implements EventInvitationService {
         EventInvitation eventInvitation = eventInvitationRepository.findByToken(token).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
+        String currentUserEmail = SecurityUtils.getCurrentUserLogin();
+        if (!Objects.equals(eventInvitation.getEmail(), currentUserEmail)) {
+            throw new AppException(ErrorCode.INVALID_ACCOUNT_LOGIN);
+        }
         //Check expired time
         if (eventInvitation.getExpiredAt().isBefore(LocalDateTime.now())) {
             throw new AppException(ErrorCode.INVALID_TIME_INVITATION);
@@ -147,19 +137,12 @@ public class EventInvitationServiceImpl implements EventInvitationService {
         eventInvitation.setStatus(InvitationStatus.ACCEPTED);
 
         //Check user
-        Optional<AppUser> appUserOptional = appUserRepository.findByEmail(eventInvitation.getEmail());
-        AppUser guest = appUserOptional.orElseGet(() -> AppUser.builder()
-                .email(eventInvitation.getEmail())
-                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-                .status(false)
-                .role(roleRepository.findByName(RoleName.USER))
-                .build());
-        if (appUserOptional.isEmpty()) {
-            appUserRepository.save(guest);
-        }
+        AppUser guest = appUserRepository.findByEmail(eventInvitation.getEmail()).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
         eventInvitation.setAppUser(guest);
 
-        // create attendee and booking
+        // create attendee
         Booking booking = bookingService.createInvitationBooking(InvitationBookingCreateRequest
                 .builder()
                 .user(guest)

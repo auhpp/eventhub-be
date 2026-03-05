@@ -61,6 +61,8 @@ public class EventSession {
     @OneToMany(mappedBy = "eventSession")
     private List<EventImage> eventImages;
 
+    @OneToMany(mappedBy = "eventSession")
+    private List<Review> reviews;
 
     public boolean isExpired() {
         return this.getEndDateTime().isBefore(LocalDateTime.now());

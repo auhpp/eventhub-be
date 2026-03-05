@@ -42,18 +42,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                                                                   @Param("status") BookingStatus status);
 
     @Query("SELECT b FROM Booking b " +
-            "WHERE b.appUser.email = :email ")
-    Page<Booking> findAllByEmailUser(@Param("email") String email, Pageable pageable);
-
-    @Query("SELECT DISTINCT b.appUser, b.createdAt as bookingCreatedAt FROM Booking b " +
-            "JOIN b.attendees a " +
-            "WHERE a.ticket.eventSession.id = :eventSessionId " +
-            "AND b.status IN :statuses ")
-    Page<AppUser> findUserByEventSession(@Param("statuses") List<BookingStatus> statuses,
-                                         @Param("eventSessionId") Long eventSessionId,
-                                         Pageable pageable);
-
-    @Query("SELECT b FROM Booking b " +
             "JOIN b.attendees a " +
             "WHERE a.ticket.eventSession.id = :eventSessionId " +
             "AND b.appUser IN :users " +

@@ -43,7 +43,12 @@ public enum ErrorCode {
     CHECKED_IN_TICKET(1033, "Checked in ticket", HttpStatus.BAD_REQUEST),
     EVENT_ON_GOING(1034, "Event on going", HttpStatus.BAD_REQUEST),
     CANNOT_CANCEL_TICKET(1035, "Cannot cancel ticket", HttpStatus.BAD_REQUEST),
-    CODE_EXISTS(1036, "Code exists", HttpStatus.BAD_REQUEST);
+    CODE_EXISTS(1036, "Code exists", HttpStatus.BAD_REQUEST),
+    NOT_EXPIRED_EVENT_SESSION(1037, "Not Expired event session", HttpStatus.BAD_REQUEST),
+    MAX_BOOKING_PER_USER(1038, "Max booking per user", HttpStatus.BAD_REQUEST),
+    MIN_TICKET_IN_BOOKING(1039, "Min ticket in booking", HttpStatus.BAD_REQUEST),
+    MAX_COUPON_USAGE(1040, "Max coupon usage", HttpStatus.BAD_REQUEST),
+    MAX_TICKET_IN_BOOKING(1041, "Max ticket in booking", HttpStatus.BAD_REQUEST),;
 
 
     private final int code;

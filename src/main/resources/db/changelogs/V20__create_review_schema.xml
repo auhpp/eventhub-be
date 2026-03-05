@@ -1,0 +1,96 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1772097583483-1">
+        <createSequence incrementBy="50" sequenceName="review_image_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-2">
+        <createSequence incrementBy="50" sequenceName="review_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-3">
+        <createTable tableName="review">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="reviewPK"/>
+            </column>
+            <column name="comment" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="rating" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="attendee_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_session_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="edit_count" type="integer" defaultValue="0"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-4">
+        <createTable tableName="review_image">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="review_imagePK"/>
+            </column>
+            <column name="image_public_id" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="review_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-5">
+        <addUniqueConstraint columnNames="attendee_id" constraintName="UC_REVIEWATTENDEE_ID_COL" tableName="review"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-6">
+        <addForeignKeyConstraint baseColumnNames="review_id" baseTableName="review_image"
+                                 constraintName="FK16wp089tx9nm0obc217gvdd6l" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="review"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-7">
+        <addForeignKeyConstraint baseColumnNames="event_session_id" baseTableName="review"
+                                 constraintName="FK8fkp04007mpwv1tqt7ib7o26x" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id"
+                                 referencedTableName="event_session" validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-8">
+        <addForeignKeyConstraint baseColumnNames="attendee_id" baseTableName="review"
+                                 constraintName="FKdvuddmvr4vx8a6ylikwo2ce7p" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="attendee"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-9">
+        <addColumn tableName="coupon">
+            <column name="maximum_usage" type="INTEGER">
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-10">
+        <addColumn tableName="coupon">
+            <column name="minimum_ticket_in_booking" type="INTEGER">
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-11">
+        <dropColumn columnName="maximum_ticket" tableName="coupon"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-12">
+        <dropColumn columnName="minimum_ticket" tableName="coupon"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-13">
+        <addColumn tableName="coupon">
+            <column name="max_discount_amount" type="INTEGER"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772097583483-14">
+        <addColumn tableName="coupon">
+            <column name="used_usages" type="INTEGER" defaultValue="0"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

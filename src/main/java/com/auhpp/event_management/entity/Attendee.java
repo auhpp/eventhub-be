@@ -29,6 +29,10 @@ public class Attendee {
 
     private Double price;
 
+    private Double discountAmount;
+
+    private Double finalPrice;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AttendeeStatus status;
@@ -64,5 +68,7 @@ public class Attendee {
     @OneToMany(mappedBy = "attendee")
     private List<AttendeeTicketGift> attendeeTicketGifts;
 
+    @OneToOne(mappedBy = "attendee")
+    private Review review;
 
 }

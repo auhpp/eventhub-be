@@ -37,7 +37,7 @@ public class CouponController {
                 .body(result);
     }
 
-    @PostMapping(path = "/{couponId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(path = "/{couponId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ORGANIZER')")
     public ResponseEntity<CouponResponse> updateCoupon(
             @PathVariable("couponId") Long couponId,
@@ -84,13 +84,46 @@ public class CouponController {
     }
 
     @PostMapping("/exists/{eventId}")
-    public ResponseEntity<Boolean> exitsCode(
+    public ResponseEntity<CouponResponse> getByCode(
             @PathVariable("eventId") Long eventId,
             @RequestParam("code") String code
     ) {
-        Boolean result = couponService.existsCode(eventId, code);
+        CouponResponse result = couponService.getByCode(eventId, code);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(result);
+    }
+
+    @DeleteMapping(path = "/{couponId}/ticket-coupon/{ticketCouponId}")
+    @PreAuthorize("hasRole('ORGANIZER')")
+    public ResponseEntity<Void> deleteTicketCoupon(
+            @PathVariable("ticketCouponId") Long ticketCouponId
+    ) {
+        couponService.deleteTicketCoupon(ticketCouponId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+
+    @GetMapping(path = "/{couponId}/count-booking/{userId}")
+    public ResponseEntity<Integer> countBookingByUserId(
+            @PathVariable("userId") Long userId,
+            @PathVariable("couponId") Long couponId
+    ) {
+        Integer cnt = couponService.cntBookingByUser(userId, couponId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(cnt);
+    }
+
+    @GetMapping(path = "/{couponId}")
+    public ResponseEntity<CouponResponse> getById(
+            @PathVariable("couponId") Long couponId
+    ) {
+        CouponResponse cnt = couponService.getById(couponId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(cnt);
     }
 }

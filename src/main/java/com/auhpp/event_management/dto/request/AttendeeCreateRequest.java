@@ -3,6 +3,7 @@ package com.auhpp.event_management.dto.request;
 import com.auhpp.event_management.constant.AttendeeStatus;
 import com.auhpp.event_management.constant.AttendeeType;
 import com.auhpp.event_management.constant.SourceType;
+import com.auhpp.event_management.entity.AppUser;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,8 @@ public class AttendeeCreateRequest {
 
     @NotNull(message = "Attendee status cannot be null")
     private AttendeeStatus status;
+
+    private AppUser owner;
 
     @NotNull(message = "Booking id cannot be null")
     private Long bookingId;

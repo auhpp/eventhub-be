@@ -80,20 +80,7 @@ public class BookingController {
                 .status(HttpStatus.OK).body(response);
     }
 
-    @PostMapping("/event-session/{eventSessionId}/filter")
-    @PreAuthorize("hasAnyRole('ORGANIZER')")
-    public ResponseEntity<PageResponse<UserBookingSummaryResponse>> getUserSummaryBookings(
-            @PathVariable(name = "eventSessionId") Long eventSessionId,
-            @RequestBody BookingSearchRequest bookingSearchRequest,
-            @RequestParam(name = "page", defaultValue = "1") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size
-    ) {
-        PageResponse<UserBookingSummaryResponse> response = bookingService.getUserBookingSummaries(
-                eventSessionId,
-                bookingSearchRequest, page, size);
-        return ResponseEntity
-                .status(HttpStatus.OK).body(response);
-    }
+
 
     @GetMapping("/event-session/{eventSessionId}/user/{userId}")
     @PreAuthorize("hasAnyRole('ORGANIZER')")

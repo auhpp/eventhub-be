@@ -7,6 +7,7 @@ import com.auhpp.event_management.dto.request.CheckinSearchRequest;
 import com.auhpp.event_management.dto.response.AttendeeBasicResponse;
 import com.auhpp.event_management.dto.response.AttendeeResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
+import com.auhpp.event_management.dto.response.UserAttendeeSummaryResponse;
 
 public interface AttendeeService {
     AttendeeResponse createAttendee(AttendeeCreateRequest attendeeCreateRequest);
@@ -30,5 +31,8 @@ public interface AttendeeService {
 
     AttendeeBasicResponse cancelAttendee(Long id);
 
+    PageResponse<UserAttendeeSummaryResponse>
+    getUserAttendeeSummaries(Long eventSessionId,
+                             AttendeeSearchRequest searchRequest, int page, int size);
 
 }

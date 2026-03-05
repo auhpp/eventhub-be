@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -85,8 +86,8 @@ public class EmailServiceImpl implements EmailService {
         Locale vnLocale = new Locale("vi", "VN");
         DateTimeFormatter fullDateFormatter = DateTimeFormatter.ofPattern("EEEE, dd 'tháng' MM, yyyy", vnLocale);
 
-        LocalDateTime eventStartDate = eventSession.getStartDateTime();
-        LocalDateTime eventEndDate = eventSession.getEndDateTime();
+        LocalDate eventStartDate = eventSession.getStartDateTime().toLocalDate();
+        LocalDate eventEndDate = eventSession.getEndDateTime().toLocalDate();
         if (eventStartDate.equals(eventEndDate)) {
             eventDate = eventStartDate.format(fullDateFormatter);
         } else {
@@ -111,7 +112,7 @@ public class EmailServiceImpl implements EmailService {
         String eventDate = formatEventDate(eventSession);
         String eventTime = formatEventTime(eventSession);
 
-        String location = event.getType() == EventType.OFFLINE ? event.getLocation() : (
+        String location = event.getType() == EventType.OFFLINE ? event.getAddress() + ", " + event.getLocation() : (
                 eventSession.getMeetingPlatform() == MeetingPlatform.GOOGLE_MEET ? "Google Meet" : "Zoom"
         );
 
@@ -145,7 +146,8 @@ public class EmailServiceImpl implements EmailService {
                     return sessionInfo;
                 }
         ).toList();
-        String location = event.getType() == EventType.OFFLINE ? event.getLocation() : "Sự kiện online";
+        String location = event.getType() == EventType.OFFLINE ? event.getAddress() + ", " + event.getLocation() :
+                "Sự kiện online";
 
         String viewLink = feUserUrl + "/invitation/event-staff/response?token=" + request.getToken() + "&eventId=" + event.getId();
         String eventDetailLink = feUserUrl + "/event/" + event.getId();

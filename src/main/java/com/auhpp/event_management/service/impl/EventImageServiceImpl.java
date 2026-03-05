@@ -90,7 +90,7 @@ public class EventImageServiceImpl implements EventImageService {
             responses.add(eventImageMapper.toEventImageResponse(eventImage));
 
             // call AI service handle image
-            faceDataService.processEventImage(eventImage.getId(), file);
+            faceDataService.processEventImage(eventImage.getId(), file, "");
         }
         return responses;
     }
@@ -133,6 +133,16 @@ public class EventImageServiceImpl implements EventImageService {
                 .pageSize(pageData.getSize())
                 .data(responses)
                 .build();
+    }
+
+    @Override
+    public void refreshProcessImages(Long eventId) {
+        List<EventImage> eventImages = eventImageRepository.findAllByProcessStatusAndEventId(
+                ProcessStatus.FAILED, eventId);
+        // call AI service handle image
+        for (EventImage eventImage : eventImages) {
+            faceDataService.processEventImage(eventImage.getId(), null, eventImage.getImageUrl());
+        }
     }
 
 }

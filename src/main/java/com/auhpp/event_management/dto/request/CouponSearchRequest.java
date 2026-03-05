@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CouponSearchRequest {
     private Long eventId;
-
+    private Boolean hasPublic;
 }

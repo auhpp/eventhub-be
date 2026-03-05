@@ -18,7 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
     private final String[] PUBLIC_POST_ENDPOINTS = {
-            "/api/v1/auth/**", "/api/v1/event-invitation/accept/{token}",
+            "/api/v1/auth/**",
             "/api/v1/event-invitation/reject/{token}",
             "/api/v1/event-staff/reject/{token}",
             "/api/v1/event/filter"

@@ -13,4 +13,6 @@ public interface EventImageService {
     List<EventImageResponse> searchPhotos(Long eventId, MultipartFile selfie);
 
     PageResponse<EventImageResponse> findAll(Long eventId, ProcessStatus status, int page, int size);
+
+    void refreshProcessImages(Long eventId);
 }

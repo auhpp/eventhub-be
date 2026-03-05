@@ -2,22 +2,18 @@ package com.auhpp.event_management.service.impl;
 
 import com.auhpp.event_management.constant.*;
 import com.auhpp.event_management.dto.request.*;
+import com.auhpp.event_management.dto.response.BookingBasicResponse;
 import com.auhpp.event_management.dto.response.BookingResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.UserBookingSummaryResponse;
-import com.auhpp.event_management.entity.AppUser;
-import com.auhpp.event_management.entity.Attendee;
-import com.auhpp.event_management.entity.Booking;
-import com.auhpp.event_management.entity.Ticket;
+import com.auhpp.event_management.entity.*;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
+import com.auhpp.event_management.mapper.AttendeeBasicMapper;
 import com.auhpp.event_management.mapper.BookingBasicMapper;
 import com.auhpp.event_management.mapper.BookingMapper;
 import com.auhpp.event_management.mapper.UserBasicMapper;
-import com.auhpp.event_management.mapper.UserMapper;
-import com.auhpp.event_management.repository.AppUserRepository;
-import com.auhpp.event_management.repository.BookingRepository;
-import com.auhpp.event_management.repository.TicketRepository;
+import com.auhpp.event_management.repository.*;
 import com.auhpp.event_management.service.AttendeeService;
 import com.auhpp.event_management.service.BookingService;
 import com.auhpp.event_management.util.SecurityUtils;
@@ -48,9 +44,12 @@ public class BookingServiceImpl implements BookingService {
     RedisTemplate<String, String> stringValueRedisTemplate;
     AttendeeService attendeeService;
     AppUserRepository appUserRepository;
-    UserMapper userMapper;
     BookingBasicMapper bookingBasicMapper;
     UserBasicMapper userBasicMapper;
+    CouponRepository couponRepository;
+    AttendeeRepository attendeeRepository;
+    AttendeeBasicMapper attendeeBasicMapper;
+    TicketGiftRepository ticketGiftRepository;
 
     private boolean checkValidDateSellTicket(Ticket ticket) {
         LocalDateTime currentDateTime = LocalDateTime.now();
@@ -101,6 +100,7 @@ public class BookingServiceImpl implements BookingService {
                 attendeeService.createAttendee(AttendeeCreateRequest.builder()
                         .bookingId(booking.getId())
                         .ticketId(ticket.getId())
+
                         .type(AttendeeType.BUY)
                         .status(AttendeeStatus.INACTIVE)
                         .sourceType(SourceType.PURCHASE)
@@ -108,6 +108,8 @@ public class BookingServiceImpl implements BookingService {
             }
         }
         booking.setTotalAmount(totalAmount);
+        booking.setDiscountAmount(0D);
+        booking.setFinalAmount(totalAmount);
         bookingRepository.save(booking);
 
         String key = RedisPrefix.BOOKING_EXPIRATION.getValue() + booking.getId();
@@ -135,6 +137,8 @@ public class BookingServiceImpl implements BookingService {
             attendeeService.createAttendee(
                     AttendeeCreateRequest.builder()
                             .bookingId(booking.getId())
+                            .sourceType(SourceType.INVITATION)
+                            .owner(bookingCreateRequest.getUser())
                             .ticketId(bookingCreateRequest.getTicketId())
                             .type(AttendeeType.INVITE)
                             .status(AttendeeStatus.VALID)
@@ -203,12 +207,91 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Double calculateFinalAmount(Long id, BookingPaymentRequest bookingPaymentRequest) {
+    @Transactional
+    public Double calculateFinalAmount(Long id, BookingPaymentRequest request) {
         Booking booking = bookingRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
         // handle voucher
-        return booking.getTotalAmount();
+        if (request.getCouponId() != null) {
+            List<Attendee> attendees = booking.getAttendees();
+            Coupon coupon = couponRepository.findById(request.getCouponId()).orElseThrow(
+                    () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+            );
+            // validate coupon
+            if (coupon.getBookings().size() == coupon.getMaximumUsage()) {
+                throw new AppException(ErrorCode.MAX_COUPON_USAGE);
+            }
+
+            // Validate booking
+            List<Booking> bookings = couponRepository.findByCouponIdAndUserId(
+                    coupon.getId(), booking.getAppUser().getId(), BookingStatus.PAID
+            );
+            if (bookings.size() == coupon.getMaximumBooking()) {
+                throw new AppException(ErrorCode.MAX_BOOKING_PER_USER);
+            }
+            if (booking.getAttendees().size() < coupon.getMinimumTicketInBooking()) {
+                throw new AppException(ErrorCode.MIN_TICKET_IN_BOOKING);
+            }
+            if (booking.getAttendees().size() > coupon.getMaximumTicketInBooking()) {
+                throw new AppException(ErrorCode.MAX_TICKET_IN_BOOKING);
+            }
+            // attendee valid
+            List<Ticket> tickets = coupon.getTicketCoupons().stream()
+                    .filter(ticketCoupon -> ticketCoupon.getStatus() == CommonStatus.ACTIVE)
+                    .map(TicketCoupon::getTicket).toList();
+
+            List<Attendee> validAttendees = new ArrayList<>();
+            for (Attendee attendee : attendees) {
+                if (validAttendees.size() == coupon.getMaximumTicketInBooking()) {
+                    break;
+                }
+                Optional<Ticket> foundTicket = tickets.stream().filter(
+                                ticket -> Objects.equals(ticket.getId(), attendee.getTicket().getId()))
+                        .findAny();
+                if (foundTicket.isPresent()) {
+                    validAttendees.add(attendee);
+                }
+            }
+            // Handle calculate price
+            if (!validAttendees.isEmpty()) {
+                double totalValidPrice = validAttendees.stream().mapToDouble(Attendee::getPrice).sum();
+                double totalDiscountAmount = 0;
+                if (coupon.getDiscountType() == DiscountType.PERCENTAGE) {
+                    totalDiscountAmount = totalValidPrice * (coupon.getValue() / 100.0);
+                    if (coupon.getMaxDiscountAmount() != null && totalDiscountAmount > coupon.getMaxDiscountAmount()) {
+                        totalDiscountAmount = coupon.getMaxDiscountAmount();
+                    }
+                } else {
+                    totalDiscountAmount = coupon.getValue();
+                }
+                if (totalDiscountAmount > totalValidPrice) {
+                    totalDiscountAmount = totalValidPrice;
+                }
+
+                // proration
+                double remainingDiscount = totalDiscountAmount;
+                for (int i = 0; i < validAttendees.size(); i++) {
+                    Attendee currentAttendee = validAttendees.get(i);
+                    double discountForThisTicket = 0;
+                    if (i == validAttendees.size() - 1) {
+                        discountForThisTicket = remainingDiscount;
+                    } else {
+                        double weight = currentAttendee.getPrice() / totalValidPrice;
+                        discountForThisTicket = Math.round(weight * totalDiscountAmount);
+                    }
+                    currentAttendee.setDiscountAmount(discountForThisTicket);
+                    currentAttendee.setFinalPrice(currentAttendee.getPrice() - discountForThisTicket);
+
+                    remainingDiscount -= discountForThisTicket;
+                }
+                booking.setDiscountAmount(totalDiscountAmount);
+                booking.setFinalAmount(booking.getTotalAmount() - totalDiscountAmount);
+                booking.setCoupon(coupon);
+                bookingRepository.save(booking);
+            }
+        }
+        return booking.getFinalAmount();
     }
 
     @Override
@@ -295,69 +378,68 @@ public class BookingServiceImpl implements BookingService {
         return booking.map(bookingMapper::toBookingResponse).orElse(null);
     }
 
-    @Override
-    public PageResponse<UserBookingSummaryResponse>
-    getUserBookingSummaries(Long eventSessionId,
-                            BookingSearchRequest bookingSearchRequest, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
-                "b.createdAt"));
-        List<BookingStatus> bookingStatuses = new ArrayList<>();
-        if (bookingSearchRequest.getStatus() == BookingStatus.CANCELLED) {
-            bookingStatuses.add(BookingStatus.CANCELLED);
-        } else if (bookingSearchRequest.getStatus() == BookingStatus.PAID) {
-            bookingStatuses.add(BookingStatus.PAID);
-        } else {
-            bookingStatuses.addAll(List.of(BookingStatus.CANCELLED, BookingStatus.PAID));
-        }
-        Page<AppUser> appUserPage = bookingRepository.findUserByEventSession(
-                bookingStatuses,
-                eventSessionId,
-                pageable
-        );
-        List<UserBookingSummaryResponse> responses = new ArrayList<>();
-        if (!appUserPage.isEmpty()) {
-            List<AppUser> usersOnPage = appUserPage.getContent();
-
-            List<Booking> bookings = bookingRepository.findAllByUserInAndEventSession(usersOnPage,
-                    eventSessionId);
-            Map<Long, List<Booking>> bookingsByUserId = bookings.stream().collect(
-                    Collectors.groupingBy(b -> b.getAppUser().getId())
-            );
-            responses = usersOnPage.stream().map(
-                    appUser -> {
-                        List<Booking> userBookings = bookingsByUserId.getOrDefault(appUser.getId(),
-                                Collections.emptyList());
-                        return UserBookingSummaryResponse.builder()
-                                .user(userBasicMapper.toUserBasicResponse(appUser))
-                                .bookings(userBookings.stream().map(bookingBasicMapper::toBookingBasicResponse)
-                                        .toList())
-                                .build();
-                    }
-            ).toList();
-        }
-        return PageResponse.<UserBookingSummaryResponse>builder()
-                .currentPage(page)
-                .totalElements(appUserPage.getTotalElements())
-                .totalPage(appUserPage.getTotalPages())
-                .pageSize(appUserPage.getSize())
-                .data(responses)
-                .build();
-    }
 
     @Override
     public UserBookingSummaryResponse getUserBookingSummary(Long eventSessionId, Long userId) {
         AppUser user = appUserRepository.findById(userId).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
+        List<BookingBasicResponse> responses = new ArrayList<>();
+
+        // Handle gift attendee
+        List<TicketGift> ticketGifts = ticketGiftRepository.findAllByUserInAndEventSession(
+                TicketGiftStatus.ACCEPTED, List.of(user), eventSessionId
+        );
+        if (!ticketGifts.isEmpty()) {
+            Map<Long, List<TicketGift>> mapGiverId = ticketGifts.stream().collect(
+                    Collectors.groupingBy(t -> t.getSender().getId())
+            );
+            Map<Long, Boolean> checkValidGiver = new HashMap<>();
+            for (TicketGift ticketGift : ticketGifts) {
+                Long senderId = ticketGift.getSender().getId();
+                if (!checkValidGiver.getOrDefault(senderId, false)) {
+                    List<Attendee> giftAttendees = mapGiverId.get(senderId).stream().flatMap(
+                                    tg -> tg.getAttendeeTicketGifts().stream()
+                            ).toList().stream()
+                            .map(AttendeeTicketGift::getAttendee).toList();
+                    BookingBasicResponse giftBooking = BookingBasicResponse.builder()
+                            .sourceType(SourceType.GIFT)
+                            .giver(userBasicMapper.toUserBasicResponse(ticketGift.getSender()))
+                            .attendees(giftAttendees.stream().map(attendeeBasicMapper::toAttendeeBasicResponse).toList())
+                            .build();
+                    responses.add(giftBooking);
+                    checkValidGiver.put(senderId, true);
+                }
+            }
+        }
+
+        // Handle invitation attendee
+        List<Attendee> invitationAttendees = attendeeRepository.findAllByUserInAndEventSession(
+                SourceType.INVITATION, List.of(user), eventSessionId
+        );
+        if (!invitationAttendees.isEmpty()) {
+            BookingBasicResponse invitedBooking = BookingBasicResponse.builder()
+                    .sourceType(SourceType.INVITATION)
+                    .attendees(invitationAttendees.stream().map(attendeeBasicMapper::toAttendeeBasicResponse).toList())
+                    .build();
+            responses.add(invitedBooking);
+        }
+
+        // handle purchase booking
         List<Booking> bookings = bookingRepository.findAllByUserInAndEventSession(List.of(user), eventSessionId);
         if (!bookings.isEmpty()) {
-            return UserBookingSummaryResponse
-                    .builder()
-                    .user(userBasicMapper.toUserBasicResponse(user))
-                    .bookings(bookings.stream().map(bookingBasicMapper::toBookingBasicResponse).toList())
-                    .build();
+            for (Booking booking : bookings) {
+                BookingBasicResponse basicResponse = bookingBasicMapper.toBookingBasicResponse(booking);
+                basicResponse.setSourceType(SourceType.PURCHASE);
+                responses.add(basicResponse);
+            }
         }
-        return null;
+
+        return UserBookingSummaryResponse
+                .builder()
+                .user(userBasicMapper.toUserBasicResponse(user))
+                .bookings(responses)
+                .build();
     }
 
 

@@ -39,6 +39,8 @@ public class EventInvitationResponse {
 
     private TicketBasicResponse ticket;
 
+    private EventSessionBasicResponse eventSession;
+
     private boolean isSendSuccess;
 
 }

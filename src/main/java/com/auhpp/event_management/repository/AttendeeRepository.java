@@ -1,9 +1,9 @@
 package com.auhpp.event_management.repository;
 
 import com.auhpp.event_management.constant.AttendeeStatus;
-import com.auhpp.event_management.constant.BookingStatus;
+import com.auhpp.event_management.constant.SourceType;
+import com.auhpp.event_management.entity.AppUser;
 import com.auhpp.event_management.entity.Attendee;
-import com.auhpp.event_management.entity.Booking;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,9 +20,9 @@ import java.util.Optional;
 public interface AttendeeRepository extends JpaRepository<Attendee, Long>, JpaSpecificationExecutor<Attendee> {
     Optional<Attendee> findByTicketCode(String ticketCode);
 
-    @Query("SELECT a FROM Attendee a WHERE a.status = :status " +
+    @Query("SELECT a FROM Attendee a WHERE a.status IN :statuses " +
             "AND (a.booking.appUser.email = :email OR a.owner.email = :email) ")
-    Page<Attendee> findAllByStatusAndEmailUser(@Param("status") AttendeeStatus status,
+    Page<Attendee> findAllByStatusAndEmailUser(@Param("statuses") List<AttendeeStatus> statuses,
                                                @Param("email") String email, Pageable pageable);
 
     @Query("SELECT a FROM Attendee a " +
@@ -55,7 +55,7 @@ public interface AttendeeRepository extends JpaRepository<Attendee, Long>, JpaSp
             "WHERE es.event.id = :eventId " +
             "AND  a.status = :status")
     List<Attendee> findAllByEventId(@Param("eventId") Long eventId,
-                                   @Param("status") AttendeeStatus status);
+                                    @Param("status") AttendeeStatus status);
 
     @Query("SELECT a FROM Attendee a " +
             "JOIN a.ticket t " +
@@ -63,5 +63,24 @@ public interface AttendeeRepository extends JpaRepository<Attendee, Long>, JpaSp
             "WHERE es.id = :eventSessionId " +
             "AND  a.status = :status")
     List<Attendee> findAllByEventSessionId(@Param("eventSessionId") Long eventSessionId,
-                                    @Param("status") AttendeeStatus status);
+                                           @Param("status") AttendeeStatus status);
+
+    @Query("SELECT DISTINCT a.owner, a.owner.email as email FROM Attendee a " +
+            "WHERE a.ticket.eventSession.id = :eventSessionId " +
+            "AND (:status IS NULL OR a.status = :status) ")
+    Page<AppUser> findUserByEventSession(@Param("status") AttendeeStatus status,
+                                         @Param("eventSessionId") Long eventSessionId,
+                                         Pageable pageable);
+
+    @Query("SELECT a FROM Attendee a " +
+            "WHERE a.ticket.eventSession.id = :eventSessionId " +
+            "AND a.owner IN :users " +
+            "AND (:sourceType IS NULL OR a.sourceType = :sourceType) " +
+            "ORDER BY a.createdAt DESC ")
+    List<Attendee> findAllByUserInAndEventSession(
+            @Param("sourceType") SourceType sourceType,
+            @Param("users") List<AppUser> users,
+            @Param("eventSessionId") Long eventSessionId);
+
+
 }

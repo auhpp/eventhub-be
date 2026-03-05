@@ -1,0 +1,64 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1772119615008-5">
+        <dropForeignKeyConstraint baseTableName="coupon_usage" constraintName="FKldhj7q9gfm7m0qmbigp1a7jld"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772119615008-1">
+        <addColumn tableName="coupon_usage">
+            <column name="attendee_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772119615008-2">
+        <addColumn tableName="attendee">
+            <column name="discount_amount" type="FLOAT(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772119615008-3">
+        <addColumn tableName="attendee">
+            <column name="final_price" type="FLOAT(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772119615008-4">
+        <addForeignKeyConstraint baseColumnNames="attendee_id" baseTableName="coupon_usage"
+                                 constraintName="FK2gwj58d3yuyjq13oirgure43m" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="attendee"
+                                 validate="true"/>
+    </changeSet>
+
+    <changeSet author="auhpp (generated)" id="1772119615008-6">
+        <dropColumn columnName="booking_id" tableName="coupon_usage"/>
+    </changeSet>
+
+    <changeSet author="auhpp (generated)" id="1772119615008-7">
+        <dropForeignKeyConstraint baseTableName="coupon_usage" constraintName="FK2gwj58d3yuyjq13oirgure43m"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772119615008-8">
+        <dropForeignKeyConstraint baseTableName="coupon_usage" constraintName="FKsadd3yasvph6c03kaklq33jvs"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772119615008-9">
+        <addColumn tableName="booking">
+            <column name="coupon_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772119615008-10">
+        <addForeignKeyConstraint baseColumnNames="coupon_id" baseTableName="booking"
+                                 constraintName="FK7fkb6ko1k4q1loj2kjjrgbymc" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="coupon"
+                                 validate="true"/>
+    </changeSet>
+
+    <changeSet author="auhpp (generated)" id="1772119615008-11">
+        <dropTable tableName="coupon_usage"/>
+    </changeSet>
+
+    <changeSet author="auhpp (generated)" id="1772119615008-12">
+        <dropColumn columnName="used_usages" tableName="coupon"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772119615008-13">
+        <dropSequence sequenceName="coupon_usage_seq"/>
+    </changeSet>
+</databaseChangeLog>

@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface EventImageRepository extends JpaRepository<EventImage, Long> {
 
@@ -18,4 +20,10 @@ public interface EventImageRepository extends JpaRepository<EventImage, Long> {
     Page<EventImage> findByProcessStatusAndEventId(@Param("processStatus") ProcessStatus processStatus,
                                                    @Param("eventId") Long eventId,
                                                    Pageable pageable);
+
+    @Query("SELECT ei FROM EventImage ei " +
+            "WHERE (:processStatus IS NULL OR ei.processStatus = :processStatus) " +
+            "AND ei.event.id = :eventId ")
+    List<EventImage> findAllByProcessStatusAndEventId(@Param("processStatus") ProcessStatus processStatus,
+                                                      @Param("eventId") Long eventId);
 }

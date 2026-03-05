@@ -19,4 +19,8 @@ public class TicketBasicResponse {
     private Long eventSessionId;
 
     private Long eventId;
+
+    private Integer invitationQuota;
+
+    private Integer invitedQuantity;
 }

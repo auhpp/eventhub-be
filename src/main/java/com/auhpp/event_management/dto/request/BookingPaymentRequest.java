@@ -1,7 +1,6 @@
 package com.auhpp.event_management.dto.request;
 
 import com.auhpp.event_management.constant.WalletType;
-import com.auhpp.event_management.validation.annotation.ValidCreateEvent;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -9,12 +8,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookingPaymentRequest {
     private Double finalAmount;
+
+    private Long couponId;
 
     @NotEmpty(message = "Customer name cannot be empty")
     private String customerName;

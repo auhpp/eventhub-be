@@ -16,11 +16,34 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SpotterServiceImpl implements SpotterService {
     final RestClient restClient;
+
+    @Override
+    public List<FaceResult> detectFacesByUrl(String url) {
+        try {
+            // prepare body
+            Map<String, String> body = Map.of("url", url);
+
+            FaceResponse response = restClient.post()
+                    .uri("/extract-faces-by-url")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .body(FaceResponse.class);
+            if (response != null && response.getCode() == 200) {
+                return response.getFaces();
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi gọi AI spotter Service: " + e.getMessage());
+            throw e;
+        }
+        return Collections.emptyList();
+    }
 
     public SpotterServiceImpl(@Qualifier("spotterRestClient") RestClient restClient) {
         this.restClient = restClient;

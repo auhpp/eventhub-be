@@ -46,14 +46,14 @@ public class Coupon {
     @Column(nullable = false)
     private Double value;
 
-    @Column(nullable = false)
-    private Integer maximumTicket;
+    private Integer maxDiscountAmount;
+
+    private Integer maximumUsage;
 
     @Column(nullable = false)
     private Integer maximumBooking;
 
-    @Column(nullable = false)
-    private Integer minimumTicket;
+    private Integer minimumTicketInBooking;
 
     @Column(nullable = false)
     private Integer maximumTicketInBooking;
@@ -74,4 +74,7 @@ public class Coupon {
 
     @OneToMany(mappedBy = "coupon", cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
     private List<TicketCoupon> ticketCoupons;
+
+    @OneToMany(mappedBy = "coupon")
+    private List<Booking> bookings;
 }

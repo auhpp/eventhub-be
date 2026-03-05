@@ -1,9 +1,6 @@
 package com.auhpp.event_management.dto.response;
 
 import com.auhpp.event_management.constant.DiscountType;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,15 +32,19 @@ public class CouponResponse {
 
     private Double value;
 
-    private Integer maximumTicket;
+    private Integer maxDiscountAmount;
+
+    private Integer quantityUsage;
+
+    private Integer maximumUsage;
 
     private Integer maximumBooking;
 
-    private Integer minimumTicket;
+    private Integer minimumTicketInBooking;
 
     private Integer maximumTicketInBooking;
 
     private Boolean hasPublic;
 
-    private List<EventSessionBasicResponse> eventSessions;
+    private List<TicketBasicResponse> tickets;
 }

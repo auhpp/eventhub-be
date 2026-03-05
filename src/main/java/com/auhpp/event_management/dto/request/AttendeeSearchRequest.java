@@ -12,5 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AttendeeSearchRequest {
-    private AttendeeSearchStatus status;
+    private AttendeeStatus status;
+    private AttendeeSearchStatus searchStatus;
+
 }

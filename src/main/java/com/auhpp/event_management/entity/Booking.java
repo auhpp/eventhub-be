@@ -73,6 +73,7 @@ public class Booking {
     @OneToMany(mappedBy = "booking")
     private List<TicketGift> ticketGifts;
 
-    @OneToMany(mappedBy = "booking")
-    private List<CouponUsage> couponUsages;
+    @ManyToOne
+    private Coupon coupon;
+
 }

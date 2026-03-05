@@ -88,6 +88,7 @@ public class Event {
     @OneToMany(mappedBy = "event")
     private List<EventImage> eventImages;
 
+
     public boolean isExpired() {
         List<EventSession> eventSessions = this.getEventSessions();
         for (EventSession eventSession : eventSessions) {

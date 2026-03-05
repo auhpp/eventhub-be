@@ -39,7 +39,6 @@ public class EventImageController {
     }
 
     @GetMapping("/filter/{eventId}")
-    @PreAuthorize("hasRole('ORGANIZER')")
     public ResponseEntity<PageResponse<EventImageResponse>> findAll(
             @PathVariable(name = "eventId") Long eventId,
             @RequestParam(name = "processStatus", required = false) ProcessStatus status,
@@ -63,5 +62,17 @@ public class EventImageController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(result);
+    }
+
+    @PostMapping(path = "/refresh/{eventId}")
+    @PreAuthorize("hasRole('ORGANIZER')")
+    public ResponseEntity<Void> refreshProcessImages(
+            @PathVariable(name = "eventId") Long eventId) {
+        eventImageService.refreshProcessImages(
+                eventId
+        );
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
     }
 }

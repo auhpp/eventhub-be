@@ -39,6 +39,4 @@ public class TicketCoupon {
     @JoinColumn(nullable = false)
     private Coupon coupon;
 
-    @OneToMany(mappedBy = "ticketCoupon")
-    private List<CouponUsage> couponUsages;
 }
