@@ -1,0 +1,63 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1772895925535-1">
+        <createSequence incrementBy="50" sequenceName="category_follower_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772895925535-2">
+        <createSequence incrementBy="50" sequenceName="user_follower_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772895925535-3">
+        <createTable tableName="category_follower">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="category_followerPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772895925535-4">
+        <createTable tableName="user_follower">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="user_followerPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="followed_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="follower_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772895925535-5">
+        <addForeignKeyConstraint baseColumnNames="follower_id" baseTableName="user_follower"
+                                 constraintName="FKhmggcad2pjgndfhxy7xcal4a0" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772895925535-6">
+        <addForeignKeyConstraint baseColumnNames="followed_id" baseTableName="user_follower"
+                                 constraintName="FKpl042typvekyyb6d99vaom523" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772895925535-7">
+        <addForeignKeyConstraint baseColumnNames="category_id" baseTableName="category_follower"
+                                 constraintName="FKq5u4ylemyecqpodi1bcorxgfp" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="category"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772895925535-8">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="category_follower"
+                                 constraintName="FKsowh4nnvwuvomhhawvco89502" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+</databaseChangeLog>

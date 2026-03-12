@@ -21,13 +21,24 @@ public class SecurityConfiguration {
             "/api/v1/auth/**",
             "/api/v1/event-invitation/reject/{token}",
             "/api/v1/event-staff/reject/{token}",
-            "/api/v1/event/filter"
-
+            "/api/v1/event/filter",
+            "/api/v1/review/filter",
+            "/api/v1/category/count",
+            "/api/v1/event/count",
+            "/api/v1/category-follower/filter",
+            "/api/v1/category-follower/count",
+            "/api/v1/event-series/filter",
+            "/api/v1/event-series-follower/filter",
+            "/api/v1/event-series-follower/count"
     };
     private final String[] PUBLIC_GET_ENDPOINTS = {
             "/api/v1/category/**", "/api/v1/event/**",
             "/api/v1/event-invitation/{token}",
             "/api/v1/event-staff/{token}",
+            "/api/v1/review/stats/{eventSessionId}",
+            "/api/v1/event-image/filter/{eventId}",
+            "/api/v1/event-series/{id}",
+            "/ws/**"
     };
 
 

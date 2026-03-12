@@ -4,7 +4,6 @@ import com.auhpp.event_management.constant.*;
 import com.auhpp.event_management.dto.request.*;
 import com.auhpp.event_management.dto.response.EventBasicResponse;
 import com.auhpp.event_management.dto.response.EventResponse;
-import com.auhpp.event_management.dto.response.EventSearchRequest;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.entity.*;
 import com.auhpp.event_management.exception.AppException;
@@ -57,6 +56,7 @@ public class EventServiceImpl implements EventService {
     EventBasicMapper eventBasicMapper;
     BookingRepository bookingRepository;
     AttendeeRepository attendeeRepository;
+    EventSeriesRepository eventSeriesRepository;
 
     @Override
     @Transactional
@@ -74,6 +74,13 @@ public class EventServiceImpl implements EventService {
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
         event.setCategory(category);
+
+        if (eventCreateRequest.getEventSeriesId() != null) {
+            EventSeries eventSeries = eventSeriesRepository.findById(eventCreateRequest.getEventSeriesId()).orElseThrow(
+                    () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+            );
+            event.setEventSeries(eventSeries);
+        }
 
         // handle geometry location data
         if (eventCreateRequest.getType() == EventType.OFFLINE) {
@@ -112,7 +119,9 @@ public class EventServiceImpl implements EventService {
 
         eventRepository.save(event);
 
-        for (EventSessionCreateRequest eventSessionCreateRequest : eventCreateRequest.getEventSessionCreateRequests()) {
+        for (EventSessionCreateRequest eventSessionCreateRequest :
+                eventCreateRequest.getEventSessionCreateRequests()) {
+            eventSessionCreateRequest.setStatus(EventSessionStatus.PENDING);
             eventSessionService.createEventSession(eventSessionCreateRequest, event.getId());
         }
         return eventMapper.toEventResponse(event);
@@ -127,10 +136,17 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
-        if (event.isExpired()) {
-            throw new AppException(ErrorCode.RESOURCE_CAN_NOT_UPDATE);
-        }
+//        if (event.isExpired()) {
+//            throw new AppException(ErrorCode.RESOURCE_CAN_NOT_UPDATE);
+//        }
         eventMapper.updateEventFromRequest(request, event);
+        if (request.getEventSeriesId() != null) {
+            EventSeries eventSeries = eventSeriesRepository.findById(request.getEventSeriesId()).orElseThrow(
+                    () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+            );
+            event.setEventSeries(eventSeries);
+        }
+
         if (event.getType() == EventType.OFFLINE && request.getLocationLatitude() != null
                 && request.getLocationLongitude() != null) {
             GeometryFactory geometryFactory = new GeometryFactory();
@@ -187,11 +203,18 @@ public class EventServiceImpl implements EventService {
 
             event.setCommissionRate(eventApproveRequest.getCommissionRate());
             event.setCommissionFixedPerTicket(eventApproveRequest.getCommissionFixedPerTicket());
-            List<Ticket> tickets = event.getEventSessions().stream().flatMap(
+
+            List<EventSession> eventSessions = event.getEventSessions();
+            for (EventSession es : eventSessions) {
+                es.setStatus(EventSessionStatus.APPROVED);
+            }
+
+            List<Ticket> tickets = eventSessions.stream().flatMap(
                     eventSession -> eventSession.getTickets().stream().peek(
                             ticket -> ticket.setStatus(TicketStatus.ACTIVE)
                     )
             ).toList();
+
             ticketRepository.saveAll(tickets);
             eventRepository.save(event);
 
@@ -209,6 +232,12 @@ public class EventServiceImpl implements EventService {
         if (event.getStatus() == EventStatus.PENDING) {
             event.setStatus(EventStatus.REJECTED);
             event.setRejectionReason(rejectionRequest.getReason());
+
+            List<EventSession> eventSessions = event.getEventSessions();
+            for (EventSession es : eventSessions) {
+                es.setStatus(EventSessionStatus.REJECTED);
+            }
+
             eventRepository.save(event);
         } else {
             throw new AppException(ErrorCode.RESOURCE_CAN_NOT_UPDATE);
@@ -227,10 +256,14 @@ public class EventServiceImpl implements EventService {
         if (request.getEventSearchStatus() != null) {
             if (request.getEventSearchStatus() == EventSearchStatus.COMING) {
                 pageData = eventRepository.findAllByUserIdAndStatusAndComingStatus(request.getUserId(),
-                        request.getStatus(), LocalDateTime.now(), request.getType(), pageable);
+                        request.getStatus(), LocalDateTime.now(), request.getType(),
+                        request.getEventSeriesId(), request.getFromDate(), request.getToDate(), request.getName(),
+                        pageable);
             } else if (request.getEventSearchStatus() == EventSearchStatus.PAST) {
                 pageData = eventRepository.findAllByUserIdAndStatusAndPastStatus(request.getUserId(),
-                        request.getStatus(), LocalDateTime.now(), request.getType(), pageable);
+                        request.getStatus(), LocalDateTime.now(), request.getType(),
+                        request.getEventSeriesId(), request.getFromDate(), request.getToDate(), request.getName(),
+                        pageable);
             }
         } else {
             LocalDateTime filterStartDate = request.getFromDate();
@@ -249,7 +282,7 @@ public class EventServiceImpl implements EventService {
             }
             pageData = eventRepository.filterEvents(request.getUserId(), request.getStatus(),
                     request.getType(), filterStartDate, filterEndDate, request.getCategoryIds(),
-                    request.getPriceFrom(), request.getPriceTo(), request.getName(),
+                    request.getPriceFrom(), request.getPriceTo(), request.getName(), request.getEventSeriesId(),
                     pageable);
         }
         List<EventResponse> eventResponses = pageData.getContent().stream().map(
@@ -295,7 +328,7 @@ public class EventServiceImpl implements EventService {
             event.setStatus(EventStatus.CANCELLED);
             eventRepository.save(event);
 
-            List<Booking> bookings = bookingRepository.findAllByEventId(event.getId(), BookingStatus.PAID);
+            List<Booking> bookings = bookingRepository.findAllByEventId(event.getId(), BookingStatus.PAID, null);
             for (Booking booking : bookings) {
                 booking.setStatus(BookingStatus.CANCELLED_BY_EVENT);
             }
@@ -307,6 +340,11 @@ public class EventServiceImpl implements EventService {
             }
             attendeeRepository.saveAll(attendees);
         }
+    }
+
+    @Override
+    public Integer countEvent(EventCountRequest request) {
+        return eventRepository.countEvent(request.getCategoryId(), request.getStatuses());
     }
 
 

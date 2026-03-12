@@ -1,7 +1,11 @@
 package com.auhpp.event_management.controller;
 
+import com.auhpp.event_management.constant.EventSessionStatus;
 import com.auhpp.event_management.dto.request.*;
-import com.auhpp.event_management.dto.response.*;
+import com.auhpp.event_management.dto.response.EventBasicResponse;
+import com.auhpp.event_management.dto.response.EventResponse;
+import com.auhpp.event_management.dto.response.EventSessionResponse;
+import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.service.EventService;
 import com.auhpp.event_management.service.EventSessionService;
 import jakarta.validation.Valid;
@@ -100,6 +104,7 @@ public class EventController {
             @PathVariable(name = "eventId") Long id,
             @Valid @RequestBody EventSessionCreateRequest request
     ) {
+        request.setStatus(EventSessionStatus.APPROVED);
         EventSessionResponse response = eventSessionService.createEventSession(request, id);
         return ResponseEntity
                 .status(HttpStatus.OK).body(response);
@@ -113,6 +118,15 @@ public class EventController {
         eventService.cancelEvent(id);
         return ResponseEntity
                 .status(HttpStatus.OK).build();
+    }
+
+    @PostMapping("/count")
+    public ResponseEntity<Integer> countEvent(
+            @RequestBody EventCountRequest request
+    ) {
+        Integer result = eventService.countEvent(request);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(result);
     }
 
 }

@@ -16,6 +16,8 @@ public class EventUpdateRequest {
 
     private Long categoryId;
 
+    private Long eventSeriesId;
+
     private String description;
 
     private String address;

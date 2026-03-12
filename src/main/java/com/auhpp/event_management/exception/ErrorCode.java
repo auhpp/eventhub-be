@@ -48,7 +48,9 @@ public enum ErrorCode {
     MAX_BOOKING_PER_USER(1038, "Max booking per user", HttpStatus.BAD_REQUEST),
     MIN_TICKET_IN_BOOKING(1039, "Min ticket in booking", HttpStatus.BAD_REQUEST),
     MAX_COUPON_USAGE(1040, "Max coupon usage", HttpStatus.BAD_REQUEST),
-    MAX_TICKET_IN_BOOKING(1041, "Max ticket in booking", HttpStatus.BAD_REQUEST),;
+    MAX_TICKET_IN_BOOKING(1041, "Max ticket in booking", HttpStatus.BAD_REQUEST),
+    EVENT_SERIES_NOT_ACTIVE(1042, "Event series not active", HttpStatus.BAD_REQUEST),
+    ;
 
 
     private final int code;

@@ -6,7 +6,9 @@ import com.auhpp.event_management.dto.request.ReviewCreateRequest;
 import com.auhpp.event_management.dto.request.ReviewSearchRequest;
 import com.auhpp.event_management.dto.request.ReviewUpdateRequest;
 import com.auhpp.event_management.dto.response.PageResponse;
+import com.auhpp.event_management.dto.response.RatingBreakdownResponse;
 import com.auhpp.event_management.dto.response.ReviewResponse;
+import com.auhpp.event_management.dto.response.ReviewStatsResponse;
 import com.auhpp.event_management.entity.Attendee;
 import com.auhpp.event_management.entity.EventSession;
 import com.auhpp.event_management.entity.Review;
@@ -159,6 +161,42 @@ public class ReviewServiceImpl implements ReviewService {
                 .totalPage(pageData.getTotalPages())
                 .pageSize(pageData.getSize())
                 .data(responses)
+                .build();
+    }
+
+    @Override
+    public ReviewStatsResponse getReviewStats(Long eventSessionId) {
+        List<Object[]> ratingCounts = reviewRepository.countReviewsByRating(eventSessionId);
+        long totalReview = 0;
+        long totalScore = 0;
+
+        long[] starCounts = new long[6];
+        for (Object[] row : ratingCounts) {
+            int star = (Integer) row[0];
+            long count = (Long) row[1];
+            starCounts[star] = count;
+
+            totalReview += count;
+            totalScore += (star * count);
+        }
+
+        double averageRating = totalReview > 0 ? ((double) totalScore / totalReview) : 0.0;
+
+        List<RatingBreakdownResponse> breakdownList = new ArrayList<>();
+        for (int i = 5; i >= 1; i--) {
+            long count = starCounts[i];
+            double percent = totalReview > 0 ? ((double) count / totalReview) * 100 : 0.0;
+
+            breakdownList.add(RatingBreakdownResponse.builder()
+                    .count(count)
+                    .percent(Math.round(percent * 10.0) / 10.0)
+                    .stars(i)
+                    .build());
+        }
+        return ReviewStatsResponse.builder()
+                .averageRating(Math.round(averageRating * 10.0) / 10.0)
+                .totalReviews(totalReview)
+                .breakdown(breakdownList)
                 .build();
     }
 }

@@ -40,4 +40,7 @@ public class Category {
 
     @OneToMany(mappedBy = "category")
     private List<Event> events;
+
+    @OneToMany(mappedBy = "category", cascade = {CascadeType.REMOVE}, orphanRemoval = true)
+    private List<CategoryFollower> categoryFollowers;
 }

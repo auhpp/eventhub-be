@@ -1,0 +1,59 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1773237304784-1">
+        <createSequence incrementBy="50" sequenceName="notification_recipient_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773237304784-2">
+        <createSequence incrementBy="50" sequenceName="notification_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773237304784-3">
+        <createTable tableName="notification">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="notificationPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="message" type="TEXT"/>
+            <column name="subject" type="VARCHAR(255)"/>
+            <column name="subject_avatar" type="VARCHAR(255)"/>
+            <column name="subject_id" type="BIGINT"/>
+            <column name="subject_type" type="VARCHAR(255)"/>
+            <column name="target" type="VARCHAR(255)"/>
+            <column name="target_avatar" type="VARCHAR(255)"/>
+            <column name="target_id" type="BIGINT"/>
+            <column name="target_type" type="VARCHAR(255)"/>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773237304784-4">
+        <createTable tableName="notification_recipient">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="notification_recipientPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="seen" type="boolean" defaultValue="false"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notification_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773237304784-5">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="notification_recipient"
+                                 constraintName="FKdmbnsh7qr0x1stm3dmsoukbl" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773237304784-6">
+        <addForeignKeyConstraint baseColumnNames="notification_id" baseTableName="notification_recipient"
+                                 constraintName="FKsb691ohcapb481gtapcm6humu" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="notification"
+                                 validate="true"/>
+    </changeSet>
+
+</databaseChangeLog>

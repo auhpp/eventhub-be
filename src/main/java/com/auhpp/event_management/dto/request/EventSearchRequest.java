@@ -1,4 +1,4 @@
-package com.auhpp.event_management.dto.response;
+package com.auhpp.event_management.dto.request;
 
 import com.auhpp.event_management.constant.EventSearchStatus;
 import com.auhpp.event_management.constant.EventStatus;
@@ -30,4 +30,5 @@ public class EventSearchRequest {
     private Double priceFrom;
     private Double priceTo;
     private SortType sortType;
+    private Long eventSeriesId;
 }

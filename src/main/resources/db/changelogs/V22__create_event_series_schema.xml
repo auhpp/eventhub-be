@@ -1,0 +1,83 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1772892606070-1">
+        <createSequence incrementBy="50" sequenceName="event_series_follower_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772892606070-2">
+        <createSequence incrementBy="50" sequenceName="event_series_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772892606070-3">
+        <createTable tableName="event_series">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="event_seriesPK"/>
+            </column>
+            <column name="avatar" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="avatar_public_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cover_image" type="VARCHAR(255)"/>
+            <column name="cover_image_public_id" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="description" type="TEXT"/>
+            <column name="has_public" type="BOOLEAN"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772892606070-4">
+        <createTable tableName="event_series_follower">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="event_series_followerPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_series_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772892606070-5">
+        <addColumn tableName="event">
+            <column name="event_series_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772892606070-6">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="event_series"
+                                 constraintName="FK1leremhnpumw6my46b73j595r" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772892606070-7">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="event_series_follower"
+                                 constraintName="FKe5pg6pll634vsbtvmpsi4yq2x" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772892606070-8">
+        <addForeignKeyConstraint baseColumnNames="event_series_id" baseTableName="event_series_follower"
+                                 constraintName="FKg589ca7dlfhgfbd7ubjsjbv40" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="event_series"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1772892606070-9">
+        <addForeignKeyConstraint baseColumnNames="event_series_id" baseTableName="event"
+                                 constraintName="FKqfjhp5q41chh1hkoejindk0xr" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="event_series"
+                                 validate="true"/>
+    </changeSet>
+
+</databaseChangeLog>

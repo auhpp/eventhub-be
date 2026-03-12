@@ -1,7 +1,6 @@
 package com.auhpp.event_management.dto.request;
 
 import com.auhpp.event_management.constant.EventType;
-import com.auhpp.event_management.constant.MeetingPlatform;
 import com.auhpp.event_management.validation.annotation.ValidCreateEvent;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -12,7 +11,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -36,6 +34,8 @@ public class EventCreateRequest {
     private String address;
 
     private String location;
+
+    private Long eventSeriesId;
 
     private Double locationLongitude;
 

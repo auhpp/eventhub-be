@@ -52,8 +52,6 @@ public class Booking {
     @Column(nullable = false)
     private AttendeeType type;
 
-    @CreationTimestamp
-    @Column(updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp

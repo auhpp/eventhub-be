@@ -312,11 +312,14 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public BookingResponse updatePaymentBooking(Long id) {
+    public BookingResponse updatePaymentBooking(Long id, LocalDateTime vnpPayDate) {
         Booking booking = bookingRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
         if (booking.getStatus() == BookingStatus.PENDING) {
+            if (vnpPayDate != null) {
+                booking.setCreatedAt(vnpPayDate);
+            }
             existsBookingExpirationRedisKey(id);
             booking.setStatus(BookingStatus.PAID);
             booking.setCreatedAt(LocalDateTime.now());

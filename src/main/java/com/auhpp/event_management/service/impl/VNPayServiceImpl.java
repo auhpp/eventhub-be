@@ -1,6 +1,8 @@
 package com.auhpp.event_management.service.impl;
 
 import com.auhpp.event_management.configuration.VNPayConfiguration;
+import com.auhpp.event_management.constant.AttendeeStatus;
+import com.auhpp.event_management.constant.AttendeeType;
 import com.auhpp.event_management.constant.BookingStatus;
 import com.auhpp.event_management.constant.WalletType;
 import com.auhpp.event_management.dto.request.BookingPaymentRequest;
@@ -9,12 +11,14 @@ import com.auhpp.event_management.dto.response.BookingConfirmPaymentResponse;
 import com.auhpp.event_management.dto.response.BookingResponse;
 import com.auhpp.event_management.dto.response.RefundBookingResponse;
 import com.auhpp.event_management.dto.response.VnPayQueryDrResponse;
+import com.auhpp.event_management.entity.Attendee;
 import com.auhpp.event_management.entity.Booking;
 import com.auhpp.event_management.repository.BookingRepository;
 import com.auhpp.event_management.service.BookingService;
 import com.auhpp.event_management.service.VNPayService;
 import com.auhpp.event_management.util.SecurityUtils;
 import com.nimbusds.jose.shaded.gson.Gson;
+import com.nimbusds.jose.shaded.gson.JsonObject;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
@@ -51,7 +55,7 @@ public class VNPayServiceImpl implements VNPayService {
         Double finalAmount = bookingService.calculateFinalAmount(bookingId, request);
         if (finalAmount == 0) {
             bookingService.updatePaymentInfoBooking(bookingId, request);
-            bookingService.updatePaymentBooking(bookingId);
+            bookingService.updatePaymentBooking(bookingId, null);
             return "";
         }
         String vnp_Version = "2.1.0";
@@ -177,7 +181,8 @@ public class VNPayServiceImpl implements VNPayService {
         if (response != null) {
             bookingResponse = bookingService.getBookingByTransactionId(vnp_TxnRef, WalletType.VNPay);
             if (response.getTransactionStatus().equals("00")) {
-                bookingResponse = bookingService.updatePaymentBooking(bookingResponse.getId());
+                bookingResponse = bookingService.updatePaymentBooking(bookingResponse.getId(),
+                        checkPaymentRequest.getVnpPayDate());
             }
             return BookingConfirmPaymentResponse.builder()
                     .transactionCode(response.getTransactionStatus())
@@ -191,51 +196,55 @@ public class VNPayServiceImpl implements VNPayService {
 
     @Override
     public List<RefundBookingResponse> refund(Long eventId, HttpServletRequest httpServletRequest) {
-        List<Booking> bookings = bookingRepository.findAllByEventId(eventId, BookingStatus.CANCELLED_BY_EVENT);
+        List<Booking> bookings = bookingRepository.findAllByEventId(eventId, BookingStatus.CANCELLED_BY_EVENT,
+                AttendeeType.BUY);
         List<RefundBookingResponse> responses = new ArrayList<>();
+
         for (Booking booking : bookings) {
-            // refund money
-            String randomUUID = UUID.randomUUID().toString();
-            String vnp_RequestId = randomUUID.replace("-", "");
+            // 1. Áp dụng lại các giá trị chính xác từ code cũ đã chạy thành công
+            String vnp_RequestId = vnpConfig.getRandomNumber(8); // Dùng lại random 8 số thay vì UUID
             String vnp_Version = "2.1.0";
             String vnp_Command = "refund";
             String vnp_TmnCode = vnpConfig.vnp_TmnCode;
-            String vnp_TxnRef = booking.getTransactionId();
-            String vnp_OrderInfo = "Hoan tien GD OrderId:" + vnp_TxnRef;
             String vnp_TransactionType = "02";
+            String vnp_TxnRef = booking.getTransactionId();
             String vnp_Amount = String.valueOf((long) (booking.getFinalAmount() * 100));
+            String vnp_OrderInfo = "Hoan tien GD OrderId:" + vnp_TxnRef;
             String vnp_TransactionNo = "";
-            String vnp_CreateBy = SecurityUtils.getCurrentUserLogin();
+            String vnp_CreateBy = "user"; // Hardcode chữ "user" như code cũ để tránh lỗi ký tự đặc biệt của email
 
+            // 2. Format thời gian giống y hệt code cũ
             Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
             SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
             String vnp_CreateDate = formatter.format(cld.getTime());
-            String vnp_TransactionDate = formatter.format(cld.getTime());
-//            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-//            String vnp_TransactionDate = booking.getCreatedAt().format(dtf);
 
-            String vnp_IpAddr = vnpConfig.getIpAddress(httpServletRequest);
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+            String vnp_TransactionDate = booking.getCreatedAt().format(dtf);// Code cũ dùng thời gian hiện tại
 
-            Map<String, Object> vnp_Params = new HashMap<>();
+            // Fix cứng IPv4 nếu đang chạy ở Localhost (để tránh lỗi định dạng IPv6 0:0:0:0:0:0:0:1)
+            String vnp_IpAddr = "127.0.0.1"; // Khi up lên server thật có thể đổi lại thành vnpConfig.getIpAddress(httpServletRequest)
 
-            vnp_Params.put("vnp_RequestId", vnp_RequestId);
-            vnp_Params.put("vnp_Version", vnp_Version);
-            vnp_Params.put("vnp_Command", vnp_Command);
-            vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-            vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-            vnp_Params.put("vnp_OrderInfo", vnp_OrderInfo);
+            // 3. Sử dụng JsonObject thay cho HashMap như code cũ
+            JsonObject vnp_Params = new JsonObject();
+            vnp_Params.addProperty("vnp_RequestId", vnp_RequestId);
+            vnp_Params.addProperty("vnp_Version", vnp_Version);
+            vnp_Params.addProperty("vnp_Command", vnp_Command);
+            vnp_Params.addProperty("vnp_TmnCode", vnp_TmnCode);
+            vnp_Params.addProperty("vnp_TransactionType", vnp_TransactionType);
+            vnp_Params.addProperty("vnp_TxnRef", vnp_TxnRef);
+            vnp_Params.addProperty("vnp_Amount", vnp_Amount);
+            vnp_Params.addProperty("vnp_OrderInfo", vnp_OrderInfo);
 
             if (vnp_TransactionNo != null && !vnp_TransactionNo.isEmpty()) {
-                vnp_Params.put("vnp_TransactionNo", "{get value of vnp_TransactionNo}");
+                vnp_Params.addProperty("vnp_TransactionNo", vnp_TransactionNo);
             }
-            vnp_Params.put("vnp_Amount", vnp_Amount);
-            vnp_Params.put("vnp_TransactionType", vnp_TransactionType);
-            vnp_Params.put("vnp_TransactionDate", vnp_TransactionDate);
-            vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-            vnp_Params.put("vnp_CreateBy", vnp_CreateBy);
 
-            vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+            vnp_Params.addProperty("vnp_TransactionDate", vnp_TransactionDate);
+            vnp_Params.addProperty("vnp_CreateBy", vnp_CreateBy);
+            vnp_Params.addProperty("vnp_CreateDate", vnp_CreateDate);
+            vnp_Params.addProperty("vnp_IpAddr", vnp_IpAddr);
 
+            // 4. Tạo mã Hash (Giữ nguyên)
             String hash_Data = String.join("|",
                     vnp_RequestId, vnp_Version, vnp_Command, vnp_TmnCode,
                     vnp_TransactionType, vnp_TxnRef, vnp_Amount, vnp_TransactionNo,
@@ -243,27 +252,38 @@ public class VNPayServiceImpl implements VNPayService {
                     vnp_IpAddr, vnp_OrderInfo);
 
             String vnp_SecureHash = vnpConfig.hmacSHA512(vnpConfig.vnp_HashSecret, hash_Data);
+            vnp_Params.addProperty("vnp_SecureHash", vnp_SecureHash);
 
-            vnp_Params.put("vnp_SecureHash", vnp_SecureHash);
-
-            Gson gson = new Gson();
-            String jsonBody = gson.toJson(vnp_Params);
-            VnPayQueryDrResponse response = restClient.post()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(jsonBody)
-                    .retrieve()
-                    .body(VnPayQueryDrResponse.class);
+            // Chuẩn bị Response nội bộ
             RefundBookingResponse bookingResponse = RefundBookingResponse.builder()
                     .hasSuccess(false)
                     .bookingId(booking.getId())
                     .build();
-            if (response != null) {
-                if (response.getResponseCode().equals("00")) {
-                    bookingResponse.setHasSuccess(true);
-                } else {
-                    bookingResponse.setHasSuccess(false);
+
+            try {
+                // 5. Gọi API bằng RestClient nhưng truyền vào vnp_Params.toString() của JsonObject
+                VnPayQueryDrResponse response = restClient.post()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(vnp_Params.toString()) // Trực tiếp parse JsonObject sang String
+                        .retrieve()
+                        .body(VnPayQueryDrResponse.class);
+
+                if (response != null) {
+                    if ("00".equals(response.getResponseCode())) {
+                        bookingResponse.setHasSuccess(true);
+                        booking.setStatus(BookingStatus.REFUNDED_CANCELLED_BY_EVENT);
+                        for (Attendee attendee : booking.getAttendees()) {
+                            attendee.setStatus(AttendeeStatus.REFUNDED_CANCELLED_BY_EVENT);
+                        }
+                        bookingRepository.save(booking);
+                    } else {
+                        System.out.println("VNPAY Refund Failed! Code: " + response.getResponseCode() + ", Message: " + response.getMessage());
+                    }
                 }
+            } catch (Exception e) {
+                System.err.println("Error calling VNPAY Refund API: " + e.getMessage());
             }
+
             responses.add(bookingResponse);
         }
         return responses;

@@ -1,12 +1,8 @@
 package com.auhpp.event_management.service;
 
-import com.auhpp.event_management.dto.request.EventApproveRequest;
-import com.auhpp.event_management.dto.request.EventCreateRequest;
-import com.auhpp.event_management.dto.request.EventUpdateRequest;
-import com.auhpp.event_management.dto.request.RejectionRequest;
+import com.auhpp.event_management.dto.request.*;
 import com.auhpp.event_management.dto.response.EventBasicResponse;
 import com.auhpp.event_management.dto.response.EventResponse;
-import com.auhpp.event_management.dto.response.EventSearchRequest;
 import com.auhpp.event_management.dto.response.PageResponse;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,5 +22,7 @@ public interface EventService {
     EventResponse getEventById(Long id);
 
     void cancelEvent(Long id);
+
+    Integer countEvent(EventCountRequest request);
 
 }

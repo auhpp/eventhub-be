@@ -5,6 +5,7 @@ import com.auhpp.event_management.dto.request.ReviewSearchRequest;
 import com.auhpp.event_management.dto.request.ReviewUpdateRequest;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.ReviewResponse;
+import com.auhpp.event_management.dto.response.ReviewStatsResponse;
 import com.auhpp.event_management.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -51,6 +52,16 @@ public class ReviewController {
             @RequestParam(name = "size", defaultValue = "10") int size
     ) {
         PageResponse<ReviewResponse> result = reviewService.getReviews(request, page, size);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(result);
+    }
+
+    @GetMapping("/stats/{eventSessionId}")
+    public ResponseEntity<ReviewStatsResponse> getReviewStats(
+            @PathVariable(name = "eventSessionId") Long eventSessionId
+    ) {
+        ReviewStatsResponse result = reviewService.getReviewStats(eventSessionId);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(result);

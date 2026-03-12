@@ -79,7 +79,7 @@ public class Event {
     @JoinColumn(nullable = false)
     private AppUser appUser;
 
-    @OneToMany(mappedBy = "event")
+    @OneToMany(mappedBy = "event", cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<EventSession> eventSessions;
 
     @OneToMany(mappedBy = "event")
@@ -87,6 +87,9 @@ public class Event {
 
     @OneToMany(mappedBy = "event")
     private List<EventImage> eventImages;
+
+    @ManyToOne
+    private EventSeries eventSeries;
 
 
     public boolean isExpired() {

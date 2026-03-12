@@ -1,5 +1,6 @@
 package com.auhpp.event_management.repository;
 
+import com.auhpp.event_management.constant.AttendeeType;
 import com.auhpp.event_management.constant.BookingStatus;
 import com.auhpp.event_management.constant.WalletType;
 import com.auhpp.event_management.entity.AppUser;
@@ -54,9 +55,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "JOIN a.ticket t " +
             "JOIN t.eventSession es " +
             "WHERE es.event.id = :eventId " +
-            "AND  b.status = :status")
+            "AND  b.status = :status " +
+            "AND (:type IS NULL OR b.type = :type)")
     List<Booking> findAllByEventId(@Param("eventId") Long eventId,
-                                   @Param("status") BookingStatus status);
+                                   @Param("status") BookingStatus status,
+                                   @Param("type") AttendeeType type);
 
     @Query("SELECT b FROM Booking b " +
             "JOIN b.attendees a " +
@@ -65,5 +68,5 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "WHERE es.id = :eventSessionId " +
             "AND  b.status = :status")
     List<Booking> findAllByEventSessionId(@Param("eventSessionId") Long eventSessionId,
-                                   @Param("status") BookingStatus status);
+                                          @Param("status") BookingStatus status);
 }

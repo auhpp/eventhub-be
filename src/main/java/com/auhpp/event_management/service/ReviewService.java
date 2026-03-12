@@ -5,6 +5,7 @@ import com.auhpp.event_management.dto.request.ReviewSearchRequest;
 import com.auhpp.event_management.dto.request.ReviewUpdateRequest;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.ReviewResponse;
+import com.auhpp.event_management.dto.response.ReviewStatsResponse;
 
 public interface ReviewService {
     ReviewResponse createReview(ReviewCreateRequest request);
@@ -13,4 +14,5 @@ public interface ReviewService {
 
     PageResponse<ReviewResponse> getReviews(ReviewSearchRequest request, int page, int size);
 
+    ReviewStatsResponse getReviewStats(Long eventSessionId);
 }

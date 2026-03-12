@@ -79,4 +79,14 @@ public class CategoryController {
                 .status(HttpStatus.OK)
                 .build();
     }
+
+    @GetMapping(value = "/{categoryId}")
+    public ResponseEntity<CategoryResponse> getCategoryById(
+            @PathVariable("categoryId") Long id
+    ) {
+        CategoryResponse result = categoryService.getCategoryById(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(result);
+    }
 }

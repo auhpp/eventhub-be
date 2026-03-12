@@ -1,5 +1,6 @@
 package com.auhpp.event_management.dto.request;
 
+import com.auhpp.event_management.constant.EventSessionStatus;
 import com.auhpp.event_management.constant.MeetingPlatform;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -32,6 +33,8 @@ public class EventSessionCreateRequest {
     private MeetingPlatform meetingPlatform;
 
     private String meetingPassword;
+
+    private EventSessionStatus status;
 
     @NotEmpty(message = "Event session ticket cannot be empty")
     @Size(min = 1)

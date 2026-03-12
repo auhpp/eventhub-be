@@ -1,12 +1,7 @@
 package com.auhpp.event_management.service.impl;
 
-import com.auhpp.event_management.constant.AttendeeStatus;
-import com.auhpp.event_management.constant.SourceType;
-import com.auhpp.event_management.constant.TicketGiftStatus;
-import com.auhpp.event_management.dto.request.EventInvitationRejectRequest;
-import com.auhpp.event_management.dto.request.TicketGiftCreateRequest;
-import com.auhpp.event_management.dto.request.TicketGiftEmailRequest;
-import com.auhpp.event_management.dto.request.TicketGiftSearchRequest;
+import com.auhpp.event_management.constant.*;
+import com.auhpp.event_management.dto.request.*;
 import com.auhpp.event_management.dto.response.AttendeeBasicResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.TicketGiftResponse;
@@ -21,6 +16,7 @@ import com.auhpp.event_management.repository.BookingRepository;
 import com.auhpp.event_management.repository.TicketGiftRepository;
 import com.auhpp.event_management.service.AttendeeService;
 import com.auhpp.event_management.service.EmailService;
+import com.auhpp.event_management.service.NotificationService;
 import com.auhpp.event_management.service.TicketGiftService;
 import com.auhpp.event_management.util.SecurityUtils;
 import com.auhpp.event_management.util.SpecBuilder;
@@ -39,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -53,6 +50,7 @@ public class TicketGiftServiceImpl implements TicketGiftService {
     EmailService emailService;
     AttendeeService attendeeService;
     AttendeeBasicMapper attendeeBasicMapper;
+    NotificationService notificationService;
 
     @Override
     @Transactional
@@ -115,6 +113,23 @@ public class TicketGiftServiceImpl implements TicketGiftService {
                 .eventName(event.getName())
                 .sender(sender)
                 .build());
+
+        // notification
+        notificationService.createNotification(
+                NotificationRequest.builder()
+                        .message("")
+                        .recipientIds(List.of(receiver.getId()))
+                        .type(NotificationType.GIFT_TICKET)
+                        .subjectAvatar(sender.getAvatar())
+                        .subjectType(NotificationSubjectType.USER)
+                        .subjectId(sender.getId())
+                        .subject(!Objects.equals(sender.getFullName(), null) ? sender.getFullName() : sender.getEmail())
+                        .targetAvatar(event.getPoster())
+                        .targetId(event.getId())
+                        .targetType(NotificationTargetType.EVENT)
+                        .target(event.getName())
+                        .build()
+        );
 
         return ticketGiftMapper.toTicketGiftResponse(ticketGift);
     }

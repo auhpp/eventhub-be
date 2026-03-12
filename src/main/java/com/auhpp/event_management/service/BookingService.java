@@ -11,6 +11,8 @@ import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.UserBookingSummaryResponse;
 import com.auhpp.event_management.entity.Booking;
 
+import java.time.LocalDateTime;
+
 public interface BookingService {
     BookingResponse createPendingBooking(PendingBookingCreateRequest pendingBookingCreateRequest);
 
@@ -26,7 +28,7 @@ public interface BookingService {
 
     BookingResponse getBookingByTransactionId(String transactionId, WalletType walletType);
 
-    BookingResponse updatePaymentBooking(Long id);
+    BookingResponse updatePaymentBooking(Long id, LocalDateTime vnpPayDate);
 
     PageResponse<BookingResponse> getBookings(BookingSearchRequest bookingSearchRequest,
                                               int page, int size);

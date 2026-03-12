@@ -1,5 +1,6 @@
 package com.auhpp.event_management.dto.response;
 
+import com.auhpp.event_management.constant.EventSessionStatus;
 import com.auhpp.event_management.constant.MeetingPlatform;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,6 +26,8 @@ public class EventSessionResponse {
     private MeetingPlatform meetingPlatform;
 
     private String meetingUrl;
+
+    private EventSessionStatus status;
 
     private String meetingPassword;
 

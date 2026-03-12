@@ -109,4 +109,10 @@ public class CategoryServiceImpl implements CategoryService {
             throw new AppException(ErrorCode.RESOURCE_CAN_NOT_DELETE);
         }
     }
+
+    @Override
+    public CategoryResponse getCategoryById(Long id) {
+        Category category = categoryRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
+        return categoryMapper.toCategoryResponse(category);
+    }
 }

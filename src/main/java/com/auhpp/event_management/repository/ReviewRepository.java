@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
@@ -19,4 +21,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
                               @Param("userId") Long userId,
                               @Param("attendeeId") Long attendeeId,
                               Pageable pageable);
+
+    @Query("SELECT r.rating, COUNT(r.id) FROM Review r " +
+            "WHERE r.eventSession.id = :eventSessionId " +
+            "GROUP BY r.rating ")
+    List<Object[]> countReviewsByRating(@Param("eventSessionId") Long eventSessionId);
 }

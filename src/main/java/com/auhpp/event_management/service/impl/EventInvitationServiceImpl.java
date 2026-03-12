@@ -44,9 +44,7 @@ public class EventInvitationServiceImpl implements EventInvitationService {
     EventInvitationMapper eventInvitationMapper;
     EmailService emailService;
     AppUserRepository appUserRepository;
-    PasswordEncoder passwordEncoder;
     BookingService bookingService;
-    RoleRepository roleRepository;
 
     @Override
     @Transactional

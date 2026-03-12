@@ -88,4 +88,16 @@ public class AppUser {
 
     @OneToMany(mappedBy = "owner")
     private List<Attendee> attendees;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<EventSeriesFollower> eventSeriesFollowers;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<EventSeries> eventSeries;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<CategoryFollower> categoryFollowers;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<NotificationRecipient> notificationRecipients;
 }
