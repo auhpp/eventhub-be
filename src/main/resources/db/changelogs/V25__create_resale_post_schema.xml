@@ -1,0 +1,79 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1773734667860-1">
+        <createSequence incrementBy="50" sequenceName="resale_post_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773734667860-2">
+        <createTable tableName="resale_post">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="resale_postPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="has_retail" type="BOOLEAN" defaultValue="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price_per_ticket" type="FLOAT(53)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rejection_message" type="TEXT"/>
+            <column name="status" type="SMALLINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773734667860-3">
+        <addColumn tableName="event">
+            <column name="has_resalable" type="BOOLEAN" defaultValue="true"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773734667860-4">
+        <addColumn tableName="attendee">
+            <column name="parent_attendee_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773734667860-5">
+        <addColumn tableName="attendee">
+            <column name="resale_post_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773734667860-6">
+        <addColumn tableName="booking">
+            <column name="resale_post_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773734667860-7">
+        <addUniqueConstraint columnNames="parent_attendee_id" constraintName="UC_ATTENDEEPARENT_ATTENDEE_ID_COL"
+                             tableName="attendee"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773734667860-8">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="resale_post"
+                                 constraintName="FK1e4042l7av01nni8dv1ho8o8k" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773734667860-9">
+        <addForeignKeyConstraint baseColumnNames="resale_post_id" baseTableName="attendee"
+                                 constraintName="FKfyhfj6ebd8o1mcfto6y3ngu64" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="resale_post"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773734667860-10">
+        <addForeignKeyConstraint baseColumnNames="resale_post_id" baseTableName="booking"
+                                 constraintName="FKl79et4pp2yhbomk53vb74wpqb" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="resale_post"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1773734667860-11">
+        <addForeignKeyConstraint baseColumnNames="parent_attendee_id" baseTableName="attendee"
+                                 constraintName="FKnrlxcgbykttcmxy4sph2xoke7" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="attendee"
+                                 validate="true"/>
+    </changeSet>
+
+</databaseChangeLog>

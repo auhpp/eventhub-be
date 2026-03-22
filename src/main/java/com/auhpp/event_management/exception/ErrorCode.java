@@ -50,6 +50,13 @@ public enum ErrorCode {
     MAX_COUPON_USAGE(1040, "Max coupon usage", HttpStatus.BAD_REQUEST),
     MAX_TICKET_IN_BOOKING(1041, "Max ticket in booking", HttpStatus.BAD_REQUEST),
     EVENT_SERIES_NOT_ACTIVE(1042, "Event series not active", HttpStatus.BAD_REQUEST),
+    ATTENDEE_STATUS_INVALID(1043, "Attendee status invalid", HttpStatus.BAD_REQUEST),
+    ATTENDEE_TYPE_INVALID(1044, "Attendee type invalid", HttpStatus.BAD_REQUEST),
+    ATTENDEE_OWNER_INVALID(1045, "Attendee owner invalid", HttpStatus.BAD_REQUEST),
+    RESALE_PRICE_INVALID(1046, "Resale price invalid", HttpStatus.BAD_REQUEST),
+    ATTENDEE_SOURCE_TYPE_INVALID(1047, "Attendee source type invalid", HttpStatus.BAD_REQUEST),
+    OWNER_CANNOT_BUY(1048, "Owner cannot buy", HttpStatus.BAD_REQUEST),
+
     ;
 
 

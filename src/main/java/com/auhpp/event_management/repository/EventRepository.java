@@ -22,6 +22,7 @@ public interface EventRepository extends JpaRepository<Event, Long>,
             "LEFT JOIN e.eventStaffs es " +
             "LEFT JOIN e.eventSessions evs " +
             "LEFT JOIN evs.tickets t " +
+            "LEFT JOIN t.attendees a " +
             "WHERE (:userId IS NULL OR es.appUser.id = :userId) " +
             "AND (:status IS NULL OR e.status = :status) " +
             "AND (:eventType IS NULL OR e.type = :eventType) " +
@@ -31,7 +32,8 @@ public interface EventRepository extends JpaRepository<Event, Long>,
             "AND (:priceFrom IS NULL OR t.price >= :priceFrom) " +
             "AND (:priceTo IS NULL OR t.price <= :priceTo) " +
             "AND (:eventSeriesId IS NULL OR e.eventSeries.id = :eventSeriesId) " +
-            "AND (CAST(:name AS string ) IS NULL OR LOWER(e.name) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) ")
+            "AND (CAST(:name AS string ) IS NULL OR LOWER(e.name) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) " +
+            "AND (:hasResale IS NULL OR a.resalePost IS NOT NULL) ")
     Page<Event> filterEvents(@Param("userId") Long userId,
                              @Param("status") EventStatus status,
                              @Param("eventType") EventType type,
@@ -42,6 +44,7 @@ public interface EventRepository extends JpaRepository<Event, Long>,
                              @Param("priceTo") Double priceTo,
                              @Param("name") String name,
                              @Param("eventSeriesId") Long eventSeriesId,
+                             @Param("hasResale") Boolean hasResale,
                              Pageable pageable);
 
     @Query("SELECT e FROM Event e " +

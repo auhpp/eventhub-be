@@ -4,6 +4,8 @@ package com.auhpp.event_management.controller;
 import com.auhpp.event_management.constant.BookingStatus;
 import com.auhpp.event_management.dto.request.BookingSearchRequest;
 import com.auhpp.event_management.dto.request.PendingBookingCreateRequest;
+import com.auhpp.event_management.dto.request.PendingResaleBookingCreateRequest;
+import com.auhpp.event_management.dto.response.BookingBasicResponse;
 import com.auhpp.event_management.dto.response.BookingResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.UserBookingSummaryResponse;
@@ -35,14 +37,25 @@ public class BookingController {
                 .body(result);
     }
 
+    @PostMapping("/resale/pending")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
+    public ResponseEntity<BookingResponse> createResalePendingBooking(
+            @Valid @RequestBody PendingResaleBookingCreateRequest request
+    ) {
+        BookingResponse result = bookingService.createPendingResaleBooking(request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(result);
+    }
+
     @PostMapping("/filter")
     @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
-    public ResponseEntity<PageResponse<BookingResponse>> getBookings(
+    public ResponseEntity<PageResponse<BookingBasicResponse>> getBookings(
             @RequestBody BookingSearchRequest bookingSearchRequest,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int size
     ) {
-        PageResponse<BookingResponse> response = bookingService.getBookings(
+        PageResponse<BookingBasicResponse> response = bookingService.getBookings(
                 bookingSearchRequest, page, size);
         return ResponseEntity
                 .status(HttpStatus.OK).body(response);
@@ -80,6 +93,17 @@ public class BookingController {
                 .status(HttpStatus.OK).body(response);
     }
 
+    @GetMapping("/resale/{resalePostId}")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
+    public ResponseEntity<BookingResponse> getExistsPendingResaleBooking(
+            @PathVariable(name = "resalePostId") Long resalePostId
+    ) {
+        BookingResponse response = bookingService.getBookingByResalePostIdAndCurrentUserAndStatus(
+                resalePostId, BookingStatus.PENDING
+        );
+        return ResponseEntity
+                .status(HttpStatus.OK).body(response);
+    }
 
 
     @GetMapping("/event-session/{eventSessionId}/user/{userId}")

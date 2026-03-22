@@ -14,5 +14,6 @@ public class BookingSearchRequest {
     private BookingStatus status;
     private Long userId;
     private Long eventSessionId;
+    private Boolean upcoming;
 
 }

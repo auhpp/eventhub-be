@@ -50,6 +50,7 @@ public class BookingServiceImpl implements BookingService {
     AttendeeRepository attendeeRepository;
     AttendeeBasicMapper attendeeBasicMapper;
     TicketGiftRepository ticketGiftRepository;
+    ResalePostRepository resalePostRepository;
 
     private boolean checkValidDateSellTicket(Ticket ticket) {
         LocalDateTime currentDateTime = LocalDateTime.now();
@@ -100,7 +101,6 @@ public class BookingServiceImpl implements BookingService {
                 attendeeService.createAttendee(AttendeeCreateRequest.builder()
                         .bookingId(booking.getId())
                         .ticketId(ticket.getId())
-
                         .type(AttendeeType.BUY)
                         .status(AttendeeStatus.INACTIVE)
                         .sourceType(SourceType.PURCHASE)
@@ -109,6 +109,62 @@ public class BookingServiceImpl implements BookingService {
         }
         booking.setTotalAmount(totalAmount);
         booking.setDiscountAmount(0D);
+        booking.setFinalAmount(totalAmount);
+        bookingRepository.save(booking);
+
+        String key = RedisPrefix.BOOKING_EXPIRATION.getValue() + booking.getId();
+        stringValueRedisTemplate.opsForValue().set(key, "waiting_payment", 5, TimeUnit.MINUTES);
+
+        return bookingMapper.toBookingResponse(booking);
+    }
+
+    @Override
+    @Transactional
+    public BookingResponse createPendingResaleBooking(PendingResaleBookingCreateRequest request) {
+        String email = SecurityUtils.getCurrentUserLogin();
+        AppUser appUser = appUserRepository.findByEmail(email).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+
+        ResalePost resalePost = resalePostRepository.findById(request.getResalePostId()).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        if (Objects.equals(resalePost.getAppUser().getId(), appUser.getId())) {
+            throw new AppException(ErrorCode.OWNER_CANNOT_BUY);
+        }
+
+        Booking booking = new Booking();
+        booking.setAppUser(appUser);
+        booking.setResalePost(resalePost);
+        booking.setStatus(BookingStatus.PENDING);
+        booking.setType(BookingType.RESALE);
+        booking.setExpiredAt(LocalDateTime.now().plusMinutes(5));
+        booking.setCustomerEmail(appUser.getEmail());
+        bookingRepository.save(booking);
+
+        double totalAmount = 0;
+        for (Long attendeeId : request.getAttendeeIds()) {
+            Attendee attendee = attendeeRepository.findById(attendeeId).orElseThrow(
+                    () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+            );
+            // check status
+            if (attendee.getStatus() != AttendeeStatus.ON_RESALE) {
+                throw new AppException(ErrorCode.ATTENDEE_STATUS_INVALID);
+            }
+            attendee.setStatus(AttendeeStatus.RESOLD);
+            totalAmount += attendee.getPrice();
+            attendeeRepository.save(attendee);
+
+            attendeeService.createAttendee(AttendeeCreateRequest.builder()
+                    .bookingId(booking.getId())
+                    .ticketId(attendee.getTicket().getId())
+                    .type(AttendeeType.RESALE)
+                    .status(AttendeeStatus.INACTIVE)
+                    .sourceType(SourceType.RESALE)
+                    .attendeeParentId(attendeeId)
+                    .build());
+        }
+        booking.setTotalAmount(totalAmount);
         booking.setFinalAmount(totalAmount);
         bookingRepository.save(booking);
 
@@ -129,7 +185,7 @@ public class BookingServiceImpl implements BookingService {
                 .customerEmail(bookingCreateRequest.getUser().getEmail())
                 .customerName(bookingCreateRequest.getUser().getFullName())
                 .customerPhone(bookingCreateRequest.getUser().getPhoneNumber())
-                .type(AttendeeType.INVITE)
+                .type(BookingType.INVITE)
                 .appUser(bookingCreateRequest.getUser())
                 .build();
         bookingRepository.save(booking);
@@ -155,19 +211,27 @@ public class BookingServiceImpl implements BookingService {
         if (bookingOptional.isPresent()) {
             Booking booking = bookingOptional.get();
             if (booking.getStatus() == BookingStatus.PENDING) {
-                Map<Long, Integer> ticketMap = new HashMap<>();
-                booking.getAttendees().forEach(
-                        attendee -> {
-                            Ticket ticket = attendee.getTicket();
-                            if (!ticketMap.containsKey(ticket.getId())) {
-                                ticketMap.put(ticket.getId(), ticket.getSoldQuantity());
+                if (booking.getType() == BookingType.BUY) {
+                    Map<Long, Integer> ticketMap = new HashMap<>();
+                    booking.getAttendees().forEach(
+                            attendee -> {
+                                Ticket ticket = attendee.getTicket();
+                                if (!ticketMap.containsKey(ticket.getId())) {
+                                    ticketMap.put(ticket.getId(), ticket.getSoldQuantity());
+                                }
+                                ticketMap.put(ticket.getId(), ticketMap.get(ticket.getId()) - 1);
                             }
-                            ticketMap.put(ticket.getId(), ticketMap.get(ticket.getId()) - 1);
-                        }
-                );
-                ticketMap.forEach(
-                        ticketRepository::updateSoldQuantity
-                );
+                    );
+                    ticketMap.forEach(
+                            ticketRepository::updateSoldQuantity
+                    );
+                } else if (booking.getType() == BookingType.RESALE) {
+                    for (Attendee attendee : booking.getAttendees()) {
+                        Attendee attendeeParent = attendee.getParentAttendee();
+                        attendeeParent.setStatus(AttendeeStatus.ON_RESALE);
+                        attendeeRepository.save(attendeeParent);
+                    }
+                }
                 bookingRepository.deleteById(id);
             } else {
                 throw new AppException(ErrorCode.RESOURCE_CAN_NOT_DELETE);
@@ -192,14 +256,16 @@ public class BookingServiceImpl implements BookingService {
         );
         if (booking.getStatus() == BookingStatus.PENDING) {
             bookingMapper.updateBookingFromRequest(bookingPaymentRequest, booking);
-            booking.getAttendees().forEach(
-                    attendee -> {
-                        if (!checkValidDateSellTicket(attendee.getTicket())) {
-                            deleteBooking(id);
-                            throw new AppException(ErrorCode.INVALID_TIME_BOOKING);
+            if (booking.getType() == BookingType.BUY) {
+                booking.getAttendees().forEach(
+                        attendee -> {
+                            if (!checkValidDateSellTicket(attendee.getTicket())) {
+                                deleteBooking(id);
+                                throw new AppException(ErrorCode.INVALID_TIME_BOOKING);
+                            }
                         }
-                    }
-            );
+                );
+            }
             return bookingMapper.toBookingResponse(booking);
         } else {
             throw new AppException(ErrorCode.RESOURCE_CAN_NOT_UPDATE);
@@ -299,6 +365,12 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
+        String email = SecurityUtils.getCurrentUserLogin();
+        if (!Objects.equals(email, booking.getAppUser().getEmail())) {
+            booking.setAttendees(booking.getAttendees().stream().filter(
+                    attendee -> Objects.equals(attendee.getOwner().getEmail(), email)
+            ).toList());
+        }
         return bookingMapper.toBookingResponse(booking);
     }
 
@@ -319,10 +391,23 @@ public class BookingServiceImpl implements BookingService {
         if (booking.getStatus() == BookingStatus.PENDING) {
             if (vnpPayDate != null) {
                 booking.setCreatedAt(vnpPayDate);
+            } else {
+                booking.setCreatedAt(LocalDateTime.now());
             }
             existsBookingExpirationRedisKey(id);
             booking.setStatus(BookingStatus.PAID);
-            booking.setCreatedAt(LocalDateTime.now());
+            if (booking.getType() == BookingType.RESALE) {
+                ResalePost resalePost = booking.getResalePost();
+                boolean soldAll = true;
+                for (Attendee attendee : resalePost.getAttendees()) {
+                    if (attendee.getStatus() != AttendeeStatus.RESOLD) {
+                        soldAll = false;
+                    }
+                }
+                if (soldAll) {
+                    resalePost.setStatus(ResalePostStatus.SOLD);
+                }
+            }
             for (Attendee attendee : booking.getAttendees()) {
                 if (!checkValidDateSellTicket(attendee.getTicket())) {
                     deleteBooking(id);
@@ -336,18 +421,19 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public PageResponse<BookingResponse> getBookings(BookingSearchRequest bookingSearchRequest,
-                                                     int page, int size) {
+    public PageResponse<BookingBasicResponse> getBookings(BookingSearchRequest request,
+                                                          int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
-        Page<Booking> bookings = bookingRepository.filterAll(bookingSearchRequest.getUserId(),
-                bookingSearchRequest.getEventSessionId(),
-                bookingSearchRequest.getStatus(),
+        Page<Booking> bookings = bookingRepository.filterAll(request.getUserId(),
+                request.getEventSessionId(),
+                request.getStatus(),
+                request.getUpcoming(),
                 pageable);
-        List<BookingResponse> bookingResponse = bookings.getContent().stream().map(
-                bookingMapper::toBookingResponse
+        List<BookingBasicResponse> bookingResponse = bookings.getContent().stream().map(
+                bookingBasicMapper::toBookingBasicResponse
         ).toList();
-        return PageResponse.<BookingResponse>builder()
+        return PageResponse.<BookingBasicResponse>builder()
                 .currentPage(page)
                 .totalElements(bookings.getTotalElements())
                 .totalPage(bookings.getTotalPages())
@@ -377,6 +463,15 @@ public class BookingServiceImpl implements BookingService {
         String email = SecurityUtils.getCurrentUserLogin();
         Optional<Booking> booking = bookingRepository.findByEventSessionIdAndCurrentUserAndStatus(
                 eventSessionId, email, status
+        );
+        return booking.map(bookingMapper::toBookingResponse).orElse(null);
+    }
+
+    @Override
+    public BookingResponse getBookingByResalePostIdAndCurrentUserAndStatus(Long resalePostId, BookingStatus status) {
+        String email = SecurityUtils.getCurrentUserLogin();
+        Optional<Booking> booking = bookingRepository.findByResalePostIdAndCurrentUserAndStatus(
+                resalePostId, email, status
         );
         return booking.map(bookingMapper::toBookingResponse).orElse(null);
     }

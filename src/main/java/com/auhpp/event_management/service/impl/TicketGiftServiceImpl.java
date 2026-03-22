@@ -10,10 +10,7 @@ import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.AttendeeBasicMapper;
 import com.auhpp.event_management.mapper.TicketGiftMapper;
-import com.auhpp.event_management.repository.AppUserRepository;
-import com.auhpp.event_management.repository.AttendeeRepository;
-import com.auhpp.event_management.repository.BookingRepository;
-import com.auhpp.event_management.repository.TicketGiftRepository;
+import com.auhpp.event_management.repository.*;
 import com.auhpp.event_management.service.AttendeeService;
 import com.auhpp.event_management.service.EmailService;
 import com.auhpp.event_management.service.NotificationService;
@@ -51,6 +48,7 @@ public class TicketGiftServiceImpl implements TicketGiftService {
     AttendeeService attendeeService;
     AttendeeBasicMapper attendeeBasicMapper;
     NotificationService notificationService;
+    AttendeeTicketGiftRepository attendeeTicketGiftRepository;
 
     @Override
     @Transactional
@@ -84,7 +82,7 @@ public class TicketGiftServiceImpl implements TicketGiftService {
             if (eventSession.isExpired()) {
                 throw new AppException(ErrorCode.EXPIRED_EVENT_SESSION);
             }
-            attendee.setSourceType(SourceType.GIFT);
+            attendee.setType(AttendeeType.GIFT);
             attendeeRepository.save(attendee);
 
             if (event == null) {
@@ -94,6 +92,7 @@ public class TicketGiftServiceImpl implements TicketGiftService {
                 attendeeTicketGifts.add(AttendeeTicketGift.builder()
                         .ticketGift(ticketGift)
                         .attendee(attendee)
+                        .status(TicketGiftStatus.PENDING)
                         .build());
             }
         }
@@ -150,6 +149,7 @@ public class TicketGiftServiceImpl implements TicketGiftService {
             // Handle attendee
             List<Attendee> attendees = ticketGift.getAttendeeTicketGifts().stream().map(
                     attendeeTicketGift -> {
+                        attendeeTicketGift.setStatus(TicketGiftStatus.ACCEPTED);
                         Attendee attendee = attendeeTicketGift.getAttendee();
                         EventSession eventSession = attendee.getTicket().getEventSession();
                         if (eventSession.isExpired()) {
@@ -169,7 +169,7 @@ public class TicketGiftServiceImpl implements TicketGiftService {
         }
     }
 
-    private void resetSourceType(TicketGift ticketGift, boolean checkExpired) {
+    private void resetAttendeeType(TicketGift ticketGift, boolean checkExpired) {
         List<Attendee> attendees = ticketGift.getAttendeeTicketGifts().stream().map(
                 attendeeTicketGift -> {
                     Attendee attendee = attendeeTicketGift.getAttendee();
@@ -179,7 +179,7 @@ public class TicketGiftServiceImpl implements TicketGiftService {
                             throw new AppException(ErrorCode.EXPIRED_EVENT_SESSION);
                         }
                     }
-                    attendee.setSourceType(SourceType.PURCHASE);
+                    attendee.setType(attendee.getSourceType() == SourceType.PURCHASE ? AttendeeType.BUY : AttendeeType.RESALE);
                     return attendee;
                 }
         ).toList();
@@ -197,8 +197,11 @@ public class TicketGiftServiceImpl implements TicketGiftService {
         }
         if (ticketGift.getStatus() == TicketGiftStatus.PENDING) {
             ticketGift.setStatus(TicketGiftStatus.REJECTED);
-            resetSourceType(ticketGift, true);
+            resetAttendeeType(ticketGift, true);
             ticketGift.setRejectionMessage(eventInvitationRejectRequest.getRejectionMessage());
+            ticketGift.getAttendeeTicketGifts().forEach(
+                    attendeeTicketGift -> attendeeTicketGift.setStatus(TicketGiftStatus.REJECTED)
+            );
             ticketGiftRepository.save(ticketGift);
             return ticketGiftMapper.toTicketGiftResponse(ticketGift);
         } else {
@@ -217,7 +220,10 @@ public class TicketGiftServiceImpl implements TicketGiftService {
         }
         if (ticketGift.getStatus() == TicketGiftStatus.PENDING) {
             ticketGift.setStatus(TicketGiftStatus.REVOKED);
-            resetSourceType(ticketGift, false);
+            resetAttendeeType(ticketGift, false);
+            ticketGift.getAttendeeTicketGifts().forEach(
+                    attendeeTicketGift -> attendeeTicketGift.setStatus(TicketGiftStatus.REVOKED)
+            );
             ticketGiftRepository.save(ticketGift);
             return ticketGiftMapper.toTicketGiftResponse(ticketGift);
         } else {
@@ -288,8 +294,29 @@ public class TicketGiftServiceImpl implements TicketGiftService {
         }
         for (TicketGift ticketGift : expiredTicketGifts) {
             ticketGift.setStatus(TicketGiftStatus.EXPIRED);
-            resetSourceType(ticketGift, false);
+            ticketGift.getAttendeeTicketGifts().forEach(
+                    attendeeTicketGift -> attendeeTicketGift.setStatus(TicketGiftStatus.EXPIRED)
+            );
+            resetAttendeeType(ticketGift, false);
             ticketGiftRepository.save(ticketGift);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void refundTicket(List<Long> attendeeIds) {
+        for (Long id : attendeeIds) {
+            AttendeeTicketGift attendeeTicketGift = attendeeTicketGiftRepository.findByAttendeeIdAndStatus(id,
+                    TicketGiftStatus.ACCEPTED).orElseThrow(
+                    () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+            );
+            attendeeTicketGift.setStatus(TicketGiftStatus.REFUNDED);
+            Attendee attendee = attendeeTicketGift.getAttendee();
+            attendee.setOwner(attendeeTicketGift.getTicketGift().getSender());
+            attendee.setType(attendee.getSourceType() == SourceType.PURCHASE ? AttendeeType.BUY : AttendeeType.RESALE);
+            // change ticket code
+            attendee.setTicketCode(attendeeService.generateTicketCode());
+            attendeeRepository.save(attendee);
         }
     }
 }

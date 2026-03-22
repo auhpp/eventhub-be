@@ -113,4 +113,14 @@ public class AttendeeController {
         return ResponseEntity
                 .status(HttpStatus.OK).body(response);
     }
+
+    @GetMapping("/ticket-code/{attendeeId}")
+    public ResponseEntity<String> getTicketCode(
+            @PathVariable(name = "attendeeId") Long id
+    ) {
+        String response = attendeeService.getTicketCode(id);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(response);
+    }
+
 }

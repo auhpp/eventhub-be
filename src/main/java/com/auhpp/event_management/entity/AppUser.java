@@ -100,4 +100,7 @@ public class AppUser {
 
     @OneToMany(mappedBy = "appUser")
     private List<NotificationRecipient> notificationRecipients;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<ResalePost> resalePosts;
 }

@@ -20,15 +20,19 @@ import java.util.Optional;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     Optional<Booking> findByTransactionIdAndWalletType(String transactionId, WalletType walletType);
 
-    @Query("SELECT b FROM Booking b " +
+    @Query("SELECT DISTINCT b FROM Booking b " +
             "JOIN b.attendees a " +
             "WHERE (:eventSessionId IS NULL OR a.ticket.eventSession.id = :eventSessionId) " +
             "AND (:status IS NULL OR b.status = :status) " +
-            "AND (:userId IS NULL OR b.appUser.id = :userId) ")
+            "AND (:userId IS NULL OR  a.owner.id = :userId) " +
+            "AND (:upcoming IS NULL " +
+            "   OR (:upcoming = true AND a.ticket.eventSession.startDateTime >= current_timestamp )" +
+            "   OR (:upcoming = false AND a.ticket.eventSession.startDateTime < current_timestamp ))")
     Page<Booking> filterAll(
             @Param("userId") Long userId,
             @Param("eventSessionId") Long eventSessionId,
             @Param("status") BookingStatus status,
+            @Param("upcoming") Boolean upcoming,
             Pageable pageable);
 
     List<Booking> findAllByStatusAndExpiredAtBefore(BookingStatus status, LocalDateTime currentDateTime);
@@ -69,4 +73,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "AND  b.status = :status")
     List<Booking> findAllByEventSessionId(@Param("eventSessionId") Long eventSessionId,
                                           @Param("status") BookingStatus status);
+
+    @Query("SELECT DISTINCT b FROM Booking b " +
+            "JOIN b.attendees a " +
+            "WHERE b.appUser.email = :email " +
+            "AND b.status = :status " +
+            "AND b.resalePost.id = :resalePostId")
+    Optional<Booking> findByResalePostIdAndCurrentUserAndStatus(@Param("resalePostId") Long resalePostId,
+                                                                @Param("email") String email,
+                                                                @Param("status") BookingStatus status);
 }

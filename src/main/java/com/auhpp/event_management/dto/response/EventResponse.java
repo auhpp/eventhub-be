@@ -35,6 +35,10 @@ public class EventResponse {
 
     private String thumbnail;
 
+    private Double commissionRate;
+
+    private Double commissionFixedPerTicket;
+
     private String poster;
 
     private LocalDateTime createdAt;

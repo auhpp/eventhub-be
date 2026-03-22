@@ -31,4 +31,6 @@ public class EventSearchRequest {
     private Double priceTo;
     private SortType sortType;
     private Long eventSeriesId;
+    private Boolean hasResale;
+
 }

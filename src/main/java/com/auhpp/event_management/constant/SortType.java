@@ -1,5 +1,5 @@
 package com.auhpp.event_management.constant;
 
 public enum SortType {
-    NEWEST, OLDEST
+    NEWEST, OLDEST, PRICE_LOWEST, PRICE_HIGHEST
 }

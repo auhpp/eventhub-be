@@ -1,7 +1,7 @@
 package com.auhpp.event_management.dto.response;
 
-import com.auhpp.event_management.constant.AttendeeType;
 import com.auhpp.event_management.constant.BookingStatus;
+import com.auhpp.event_management.constant.BookingType;
 import com.auhpp.event_management.constant.WalletType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,7 +36,7 @@ public class BookingResponse {
 
     private String note;
 
-    private AttendeeType type;
+    private BookingType type;
 
     private WalletType walletType;
 
@@ -48,7 +48,7 @@ public class BookingResponse {
 
     private List<AttendeeResponse> attendees;
 
-    private UserResponse appUser;
+    private UserBasicResponse appUser;
 
     private EventResponse event;
 }

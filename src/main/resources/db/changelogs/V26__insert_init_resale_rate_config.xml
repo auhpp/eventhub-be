@@ -1,0 +1,50 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1773735448449-1">
+        <insert tableName="system_configuration">
+            <column name="key" value="MIN_RESALE_RATE"/>
+            <column name="value" valueNumeric="80"/>
+            <column name="name" value="Tỉ lệ giá bán lại tối thiểu"/>
+            <column name="description"
+                    value="Mức giá sàn khi người dùng bán lại vé, tính theo tỷ lệ so với giá vé gốc"/>
+            <column name="unit" value="PERCENT"/>
+        </insert>
+
+        <insert tableName="system_configuration">
+            <column name="key" value="MAX_RESALE_RATE"/>
+            <column name="value" valueNumeric="100"/>
+            <column name="name" value="Tỉ lệ giá bán lại tối đa"/>
+            <column name="description"
+                    value="Mức giá trần khi bán lại vé, tính theo tỷ lệ so với giá vé gốc nhằm chống đầu cơ cò vé"/>
+            <column name="unit" value="PERCENT"/>
+        </insert>
+
+    </changeSet>
+    <changeSet id="1773735448449-2" author="auhpp (generated)">
+        <insert tableName="system_configuration">
+            <column name="key" value="RESALE_COMMISSION_RATE"/>
+            <column name="value" valueNumeric="10"/>
+            <column name="name" value="Tỉ lệ phí hoa hồng bán lại"/>
+            <column name="description"
+                    value="Phí dịch vụ hệ thống thu theo phần trăm trên giá trị của mỗi chiếc vé bán lại thành công"/>
+            <column name="unit" value="PERCENT"/>
+        </insert>
+    </changeSet>
+    <changeSet id="1773735448449-3" author="auhpp (generated)">
+        <addColumn tableName="resale_post">
+            <column name="commission_rate" type="FLOAT(53)">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="1773735448449-4" author="auhpp (generated)">
+        <addColumn tableName="attendee_ticket_gift">
+            <column name="status" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="1773735448449-5" author="auhpp (generated)">
+        <modifyDataType tableName="resale_post" columnName="status" newDataType="VARCHAR(255)"/>
+    </changeSet>
+</databaseChangeLog>

@@ -35,4 +35,7 @@ public interface AttendeeService {
     getUserAttendeeSummaries(Long eventSessionId,
                              AttendeeSearchRequest searchRequest, int page, int size);
 
+    String getTicketCode(Long id);
+
+
 }

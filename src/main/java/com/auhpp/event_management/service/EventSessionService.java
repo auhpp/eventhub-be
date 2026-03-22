@@ -1,9 +1,12 @@
 package com.auhpp.event_management.service;
 
+import com.auhpp.event_management.constant.TimeFilter;
 import com.auhpp.event_management.dto.request.EventSessionCreateRequest;
 import com.auhpp.event_management.dto.request.EventSessionUpdateRequest;
-import com.auhpp.event_management.dto.response.EventSessionResponse;
+import com.auhpp.event_management.dto.response.EventChartStatsResponse;
+import com.auhpp.event_management.dto.response.EventOverviewStatsResponse;
 import com.auhpp.event_management.dto.response.EventSessionReportCheckInResponse;
+import com.auhpp.event_management.dto.response.EventSessionResponse;
 
 public interface EventSessionService {
     EventSessionResponse createEventSession(EventSessionCreateRequest eventSessionCreateRequest, Long eventId);
@@ -17,4 +20,8 @@ public interface EventSessionService {
     EventSessionReportCheckInResponse reportCheckIn(Long id);
 
     void cancelEventSession(Long id);
+
+    EventOverviewStatsResponse getEventStats(Long eventSessionId);
+
+    EventChartStatsResponse getEventChartStats(Long eventSessionId, TimeFilter filter);
 }

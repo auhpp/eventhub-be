@@ -283,6 +283,7 @@ public class EventServiceImpl implements EventService {
             pageData = eventRepository.filterEvents(request.getUserId(), request.getStatus(),
                     request.getType(), filterStartDate, filterEndDate, request.getCategoryIds(),
                     request.getPriceFrom(), request.getPriceTo(), request.getName(), request.getEventSeriesId(),
+                    request.getHasResale(),
                     pageable);
         }
         List<EventResponse> eventResponses = pageData.getContent().stream().map(

@@ -16,7 +16,6 @@ import com.auhpp.event_management.entity.Booking;
 import com.auhpp.event_management.repository.BookingRepository;
 import com.auhpp.event_management.service.BookingService;
 import com.auhpp.event_management.service.VNPayService;
-import com.auhpp.event_management.util.SecurityUtils;
 import com.nimbusds.jose.shaded.gson.Gson;
 import com.nimbusds.jose.shaded.gson.JsonObject;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,7 +24,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -51,7 +49,8 @@ public class VNPayServiceImpl implements VNPayService {
     }
 
     @Override
-    public String createPaymentUrl(Long bookingId, BookingPaymentRequest request, HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
+    public String createPaymentUrl(Long bookingId, BookingPaymentRequest request,
+                                   HttpServletRequest httpServletRequest) {
         Double finalAmount = bookingService.calculateFinalAmount(bookingId, request);
         if (finalAmount == 0) {
             bookingService.updatePaymentInfoBooking(bookingId, request);

@@ -16,11 +16,14 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PendingBookingCreateRequest {
-    @NotEmpty(message = "Booking ticket cannot be empty")
+public class PendingResaleBookingCreateRequest {
+    @NotEmpty(message = "Attendees cannot empty")
     @Size(min = 1)
-    private List<@Valid BookingTicketRequest> bookingTicketRequests;
+    private List<Long> attendeeIds;
 
     @NotNull(message = "Type cannot be null")
     private BookingType type;
+
+    @NotNull(message = "Resale post id cannot be null")
+    private Long resalePostId;
 }

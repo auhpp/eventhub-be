@@ -1,10 +1,9 @@
 package com.auhpp.event_management.controller;
 
+import com.auhpp.event_management.constant.TimeFilter;
 import com.auhpp.event_management.dto.request.EventSessionUpdateRequest;
 import com.auhpp.event_management.dto.request.TicketCreateRequest;
-import com.auhpp.event_management.dto.response.EventSessionReportCheckInResponse;
-import com.auhpp.event_management.dto.response.EventSessionResponse;
-import com.auhpp.event_management.dto.response.TicketResponse;
+import com.auhpp.event_management.dto.response.*;
 import com.auhpp.event_management.service.EventSessionService;
 import com.auhpp.event_management.service.TicketService;
 import jakarta.validation.Valid;
@@ -83,6 +82,27 @@ public class EventSessionController {
         eventSessionService.cancelEventSession(id);
         return ResponseEntity
                 .status(HttpStatus.OK).build();
+    }
+
+    @GetMapping("/{eventSessionId}/stats/overview")
+    @PreAuthorize("hasRole('ORGANIZER')")
+    public ResponseEntity<EventOverviewStatsResponse> getEventStats(
+            @PathVariable(name = "eventSessionId") Long id
+    ) {
+        EventOverviewStatsResponse res = eventSessionService.getEventStats(id);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(res);
+    }
+
+    @GetMapping("/{eventSessionId}/stats/chart")
+    @PreAuthorize("hasRole('ORGANIZER')")
+    public ResponseEntity<EventChartStatsResponse> getEventChartStats(
+            @PathVariable(name = "eventSessionId") Long id,
+            @RequestParam(name = "timeFilter") TimeFilter timeFilter
+    ) {
+        EventChartStatsResponse res = eventSessionService.getEventChartStats(id, timeFilter);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(res);
     }
 
 }

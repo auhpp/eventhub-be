@@ -131,14 +131,14 @@ public class AttendeeServiceImpl implements AttendeeService {
 
     @Override
     @Transactional
-    public AttendeeResponse createAttendee(AttendeeCreateRequest attendeeCreateRequest) {
-        Attendee attendee = attendeeMapper.toAttendee(attendeeCreateRequest);
+    public AttendeeResponse createAttendee(AttendeeCreateRequest request) {
+        Attendee attendee = attendeeMapper.toAttendee(request);
 
-        Booking booking = bookingRepository.findById(attendeeCreateRequest.getBookingId()).orElseThrow(
+        Booking booking = bookingRepository.findById(request.getBookingId()).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
 
-        Ticket ticket = ticketRepository.findById(attendeeCreateRequest.getTicketId()).orElseThrow(
+        Ticket ticket = ticketRepository.findById(request.getTicketId()).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
         attendee.setPrice(ticket.getPrice());
@@ -146,7 +146,11 @@ public class AttendeeServiceImpl implements AttendeeService {
         attendee.setTicket(ticket);
         attendee.setDiscountAmount(0D);
         attendee.setFinalPrice(ticket.getPrice());
-
+        if (request.getAttendeeParentId() != null) {
+            Attendee attendeeParent = attendeeRepository.findById(request.getAttendeeParentId())
+                    .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
+            attendee.setParentAttendee(attendeeParent);
+        }
         Event event = attendee.getTicket().getEventSession().getEvent();
         if (event.getType() == EventType.OFFLINE) {
             attendee.setTicketCode(generateTicketCode());
@@ -312,5 +316,17 @@ public class AttendeeServiceImpl implements AttendeeService {
                 .pageSize(appUserPage.getSize())
                 .data(responses)
                 .build();
+    }
+
+    @Override
+    public String getTicketCode(Long id) {
+        Attendee attendee = attendeeRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        String email = SecurityUtils.getCurrentUserLogin();
+        if (!Objects.equals(attendee.getOwner().getEmail(), email)) {
+            throw new AppException(ErrorCode.ATTENDEE_OWNER_INVALID);
+        }
+        return attendee.getTicketCode();
     }
 }

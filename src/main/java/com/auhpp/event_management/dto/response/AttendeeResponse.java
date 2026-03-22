@@ -39,7 +39,7 @@ public class AttendeeResponse {
 
     private EventSessionResponse eventSession;
 
-    private TicketResponse ticket;
+    private TicketBasicResponse ticket;
 
     private EventBasicResponse event;
 

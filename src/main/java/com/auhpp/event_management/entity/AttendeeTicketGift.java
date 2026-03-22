@@ -1,5 +1,6 @@
 package com.auhpp.event_management.entity;
 
+import com.auhpp.event_management.constant.TicketGiftStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,6 +14,9 @@ public class AttendeeTicketGift {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
+
+    @Enumerated(EnumType.STRING)
+    private TicketGiftStatus status;
 
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)

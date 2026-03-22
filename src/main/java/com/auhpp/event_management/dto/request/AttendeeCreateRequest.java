@@ -31,4 +31,6 @@ public class AttendeeCreateRequest {
 
     @NotNull(message = "Booking id cannot be null")
     private Long ticketId;
+
+    private Long attendeeParentId;
 }

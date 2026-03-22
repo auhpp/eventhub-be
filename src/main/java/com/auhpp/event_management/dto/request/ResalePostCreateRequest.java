@@ -1,7 +1,5 @@
 package com.auhpp.event_management.dto.request;
 
-import com.auhpp.event_management.constant.BookingType;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,11 +14,18 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PendingBookingCreateRequest {
-    @NotEmpty(message = "Booking ticket cannot be empty")
-    @Size(min = 1)
-    private List<@Valid BookingTicketRequest> bookingTicketRequests;
+public class ResalePostCreateRequest {
+    @NotNull(message = "price per ticket cannot null")
+    private Double pricePerTicket;
 
-    @NotNull(message = "Type cannot be null")
-    private BookingType type;
+    @NotNull(message = "Ticket id cannot null")
+    private Long ticketId;
+
+    @NotNull(message = "Has retail cannot null")
+    private Boolean hasRetail;
+
+    @NotEmpty(message = "Attendees cannot empty")
+    @Size(min = 1)
+    private List<Long> attendeeIds;
+
 }

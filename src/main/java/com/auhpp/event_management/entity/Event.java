@@ -64,6 +64,8 @@ public class Event {
     @Column(columnDefinition = "TEXT")
     private String posterPublicId;
 
+    private Boolean hasResalable;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

@@ -2,10 +2,8 @@ package com.auhpp.event_management.service;
 
 import com.auhpp.event_management.constant.BookingStatus;
 import com.auhpp.event_management.constant.WalletType;
-import com.auhpp.event_management.dto.request.BookingPaymentRequest;
-import com.auhpp.event_management.dto.request.BookingSearchRequest;
-import com.auhpp.event_management.dto.request.InvitationBookingCreateRequest;
-import com.auhpp.event_management.dto.request.PendingBookingCreateRequest;
+import com.auhpp.event_management.dto.request.*;
+import com.auhpp.event_management.dto.response.BookingBasicResponse;
 import com.auhpp.event_management.dto.response.BookingResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.UserBookingSummaryResponse;
@@ -15,6 +13,8 @@ import java.time.LocalDateTime;
 
 public interface BookingService {
     BookingResponse createPendingBooking(PendingBookingCreateRequest pendingBookingCreateRequest);
+
+    BookingResponse createPendingResaleBooking(PendingResaleBookingCreateRequest request);
 
     Booking createInvitationBooking(InvitationBookingCreateRequest bookingCreateRequest);
 
@@ -30,12 +30,14 @@ public interface BookingService {
 
     BookingResponse updatePaymentBooking(Long id, LocalDateTime vnpPayDate);
 
-    PageResponse<BookingResponse> getBookings(BookingSearchRequest bookingSearchRequest,
-                                              int page, int size);
+    PageResponse<BookingBasicResponse> getBookings(BookingSearchRequest bookingSearchRequest,
+                                                   int page, int size);
 
     void cleanupExpiredBookings();
 
     BookingResponse getBookingByEventSessionIdAndCurrentUserAndStatus(Long eventId, BookingStatus status);
+
+    BookingResponse getBookingByResalePostIdAndCurrentUserAndStatus(Long resalePostId, BookingStatus status);
 
     UserBookingSummaryResponse getUserBookingSummary(Long eventSessionId, Long userId);
 }

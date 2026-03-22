@@ -15,8 +15,6 @@ import lombok.NoArgsConstructor;
 public class AttendeeBasicResponse {
     private Long id;
 
-    private String ticketCode;
-
     private AttendeeType type;
 
     private SourceType sourceType;
@@ -26,7 +24,6 @@ public class AttendeeBasicResponse {
     private TicketBasicResponse ticket;
 
     private UserBasicResponse owner;
-
 
 
 }

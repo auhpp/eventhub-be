@@ -65,10 +65,15 @@ public class Attendee {
     @ManyToOne
     private AppUser owner;
 
-    @OneToMany(mappedBy = "attendee")
+    @OneToMany(mappedBy = "attendee", cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<AttendeeTicketGift> attendeeTicketGifts;
 
     @OneToOne(mappedBy = "attendee")
     private Review review;
 
+    @ManyToOne
+    private ResalePost resalePost;
+
+    @OneToOne
+    private Attendee parentAttendee;
 }

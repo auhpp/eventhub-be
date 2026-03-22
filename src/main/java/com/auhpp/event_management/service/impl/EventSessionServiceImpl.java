@@ -1,15 +1,10 @@
 package com.auhpp.event_management.service.impl;
 
-import com.auhpp.event_management.constant.AttendeeStatus;
-import com.auhpp.event_management.constant.AttendeeType;
-import com.auhpp.event_management.constant.BookingStatus;
-import com.auhpp.event_management.constant.EventSessionStatus;
+import com.auhpp.event_management.constant.*;
 import com.auhpp.event_management.dto.request.EventSessionCreateRequest;
 import com.auhpp.event_management.dto.request.EventSessionUpdateRequest;
 import com.auhpp.event_management.dto.request.TicketCreateRequest;
-import com.auhpp.event_management.dto.response.EventSessionReportCheckInResponse;
-import com.auhpp.event_management.dto.response.EventSessionResponse;
-import com.auhpp.event_management.dto.response.TicketCheckInResponse;
+import com.auhpp.event_management.dto.response.*;
 import com.auhpp.event_management.entity.*;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
@@ -27,9 +22,13 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -209,5 +208,83 @@ public class EventSessionServiceImpl implements EventSessionService {
         }
     }
 
+    @Override
+    public EventOverviewStatsResponse getEventStats(Long eventSessionId) {
+        Double totalRevenue = eventSessionRepository.getTotalRevenue(eventSessionId);
+        Double maxPotentialRevenue = eventSessionRepository.getMaxPotentialRevenue(eventSessionId);
+        Double voucherRevenue = eventSessionRepository.getVoucherRevenue(eventSessionId);
+        Double discountAmount = eventSessionRepository.getDiscountAmount(eventSessionId);
+        Double totalFee = eventSessionRepository.getTotalFee(eventSessionId);
+
+        Integer totalTicketsSold = eventSessionRepository.getTotalTicketsSold(eventSessionId);
+        Integer totalCapacity = eventSessionRepository.getTotalTicketCapacity(eventSessionId);
+        Double revenuePercentage = 0.0;
+        if (maxPotentialRevenue != null && maxPotentialRevenue > 0) {
+            double rawPercentage = (voucherRevenue / maxPotentialRevenue) * 100.0;
+            revenuePercentage = Math.round(rawPercentage * 100.0) / 100.0;
+        }
+        Double ticketsSoldPercentage = 0.0;
+        if (totalCapacity != null && totalCapacity > 0) {
+            double rawPercentage = ((double) totalTicketsSold / totalCapacity) * 100.0;
+            ticketsSoldPercentage = Math.round(rawPercentage * 100.0) / 100.0;
+        }
+        return EventOverviewStatsResponse.builder()
+                .totalRevenue(totalRevenue)
+                .maxPotentialRevenue(maxPotentialRevenue)
+                .voucherRevenue(voucherRevenue)
+                .revenuePercentage(revenuePercentage)
+                .discountAmount(discountAmount)
+                .totalFee(totalFee)
+                .totalTicketsSold(totalTicketsSold)
+                .totalCapacity(totalCapacity)
+                .ticketsSoldPercentage(ticketsSoldPercentage)
+                .build();
+    }
+
+    @Override
+    public EventChartStatsResponse getEventChartStats(Long eventSessionId, TimeFilter filter) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDate;
+        List<ChartDataProjection> rawDataFromDb;
+        List<String> allTimeLabels = new ArrayList<>();
+        if (filter == TimeFilter.LAST_24_HOURS) {
+            startDate = now.minusHours(23).withMinute(0).withSecond(0).withNano(0);
+            rawDataFromDb = eventSessionRepository.getChartDataByHour(eventSessionId, startDate);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:00");
+            for (int i = 0; i < 24; i++) {
+                allTimeLabels.add(startDate.plusHours(i).format(formatter));
+            }
+        } else {
+            startDate = now.minusDays(29).withHour(0).withMinute(0).withSecond(0).withNano(0);
+            rawDataFromDb = eventSessionRepository.getChartDataByDay(eventSessionId, startDate);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM");
+            for (int i = 0; i < 30; i++) {
+                allTimeLabels.add(startDate.plusDays(i).format(formatter));
+            }
+        }
+        Map<String, ChartDataProjection> dbDataMap = rawDataFromDb.stream()
+                .collect(Collectors.toMap(ChartDataProjection::getTimeLabel, data -> data));
+        List<EventChartDataPoint> finalDataPoints = new ArrayList<>();
+
+        for (String label : allTimeLabels) {
+            if (dbDataMap.containsKey(label)) {
+                ChartDataProjection projection = dbDataMap.get(label);
+                finalDataPoints.add(new EventChartDataPoint(
+                        label,
+                        projection.getRevenue(),
+                        projection.getTicketsSold()
+                ));
+            } else {
+                // Nếu giờ/ngày đó KHÔNG có người mua vé -> Cho bằng 0
+                finalDataPoints.add(new EventChartDataPoint(label, 0.0, 0));
+            }
+        }
+
+        return EventChartStatsResponse.builder()
+                .timeFilter(filter)
+                .data(finalDataPoints)
+                .build();
+    }
 
 }
