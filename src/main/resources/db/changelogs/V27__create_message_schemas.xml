@@ -1,0 +1,111 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1774338731300-1">
+        <createSequence incrementBy="50" sequenceName="conversation_member_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-2">
+        <createSequence incrementBy="50" sequenceName="conversation_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-3">
+        <createSequence incrementBy="50" sequenceName="message_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-4">
+        <createTable tableName="conversation">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="conversationPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="has_notification" type="BOOLEAN" defaultValue="true"/>
+            <column name="has_pin" type="BOOLEAN" defaultValue="false"/>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="latest_message_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-5">
+        <createTable tableName="conversation_member">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="conversation_memberPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="conversation_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-6">
+        <createTable tableName="message">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="messagePK"/>
+            </column>
+            <column name="content" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="path_url" type="TEXT"/>
+            <column name="public_id" type="TEXT"/>
+            <column name="seen_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="recipient_id" type="BIGINT"/>
+            <column name="reply_message_id" type="BIGINT"/>
+            <column name="sender_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-7">
+        <addUniqueConstraint columnNames="latest_message_id" constraintName="UC_CONVERSATIONLATEST_MESSAGE_ID_COL"
+                             tableName="conversation"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-8">
+        <addUniqueConstraint columnNames="reply_message_id" constraintName="UC_MESSAGEREPLY_MESSAGE_ID_COL"
+                             tableName="message"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-9">
+        <addForeignKeyConstraint baseColumnNames="reply_message_id" baseTableName="message"
+                                 constraintName="FK50riwwo6dy6rvetiujop5rhsu" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="message"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-10">
+        <addForeignKeyConstraint baseColumnNames="recipient_id" baseTableName="message"
+                                 constraintName="FKas8ar13rijxvqox033jcm0cvb" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id"
+                                 referencedTableName="conversation_member" validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-11">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="conversation_member"
+                                 constraintName="FKex121cnh44mcc7u8v1pmjcof9" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-12">
+        <addForeignKeyConstraint baseColumnNames="conversation_id" baseTableName="conversation_member"
+                                 constraintName="FKg4mccr2hoe0jpr192dolgj4ks" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="conversation"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-13">
+        <addForeignKeyConstraint baseColumnNames="latest_message_id" baseTableName="conversation"
+                                 constraintName="FKkbhwmibtl1ujuq119d5rqbhp6" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="message"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774338731300-14">
+        <addForeignKeyConstraint baseColumnNames="sender_id" baseTableName="message"
+                                 constraintName="FKqat22go47sjkjenn02pmueqvw" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id"
+                                 referencedTableName="conversation_member" validate="true"/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -11,13 +11,10 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserBasicResponse {
+public class ConversationMemberResponse {
     private Long id;
-    private String email;
-    private String fullName;
-    private String avatar;
-    private String biography;
-    private Boolean isOnline;
 
-    private LocalDateTime lastSeen;
+    private UserBasicResponse appUser;
+
+    private LocalDateTime createdAt;
 }

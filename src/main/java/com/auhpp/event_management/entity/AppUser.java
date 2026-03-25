@@ -103,4 +103,8 @@ public class AppUser {
 
     @OneToMany(mappedBy = "appUser")
     private List<ResalePost> resalePosts;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<ConversationMember> conversationMembers;
+
 }

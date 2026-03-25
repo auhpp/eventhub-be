@@ -63,21 +63,23 @@ public class WebsocketConfiguration implements WebSocketMessageBrokerConfigurer 
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor =
                         MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-                assert accessor != null;
 
-                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
 
                     String authorizationHeader = accessor.getFirstNativeHeader("Authorization");
-                    assert authorizationHeader != null;
-                    String token = authorizationHeader.substring(7);
-                    try {
-                        Jwt jwt = customJwtDecoder.decode(token);
-                        AbstractAuthenticationToken authentication = jwtAuthenticationConverter.convert(jwt);
+                    if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                        String token = authorizationHeader.substring(7);
+                        try {
+                            Jwt jwt = customJwtDecoder.decode(token);
+                            AbstractAuthenticationToken authentication = jwtAuthenticationConverter.convert(jwt);
 
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                        accessor.setUser(authentication);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Invalid WebSocket Authentication Token: " + e.getMessage());
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+                            accessor.setUser(authentication);
+                        } catch (Exception e) {
+                            throw new RuntimeException("Invalid WebSocket Authentication Token: " + e.getMessage());
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Missing or incorrectly formatted Authorization header");
                     }
                 }
                 return message;
