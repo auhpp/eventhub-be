@@ -1,5 +1,6 @@
 package com.auhpp.event_management.service;
 
+import com.auhpp.event_management.constant.ResalePostStatus;
 import com.auhpp.event_management.dto.request.RejectionRequest;
 import com.auhpp.event_management.dto.request.ResalePostCreateRequest;
 import com.auhpp.event_management.dto.request.ResalePostSearchRequest;
@@ -24,5 +25,6 @@ public interface ResalePostService {
 
     ResalePostResponse getById(Long id);
 
+    Integer count(ResalePostStatus status);
 
 }

@@ -1,10 +1,15 @@
 package com.auhpp.event_management.dto.request;
 
 import com.auhpp.event_management.validation.annotation.ValidUpdateEvent;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -28,4 +33,7 @@ public class EventUpdateRequest {
 
     private Double locationLatitude;
 
+    @NotEmpty(message = "tags cannot be empty")
+    @Size(min = 1)
+    private List<@Valid TagUpdateRequest> tags;
 }

@@ -1,5 +1,6 @@
 package com.auhpp.event_management.controller;
 
+import com.auhpp.event_management.constant.ResalePostStatus;
 import com.auhpp.event_management.dto.request.RejectionRequest;
 import com.auhpp.event_management.dto.request.ResalePostCreateRequest;
 import com.auhpp.event_management.dto.request.ResalePostSearchRequest;
@@ -108,5 +109,14 @@ public class ResalePostController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<Integer> count(
+            ResalePostStatus status
+    ) {
+        Integer result = resalePostService.count(status);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(result);
     }
 }

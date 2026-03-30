@@ -88,7 +88,7 @@ public class CouponServiceImpl implements CouponService {
         // upload image
         if (request.getAvatar() != null) {
             Map<String, Object> uploadResult = cloudinaryService.uploadFile(request.getAvatar(),
-                    FolderName.COUPON_AVATAR.getValue() + coupon.getId());
+                    FolderName.COUPON_AVATAR.getValue() + coupon.getId(), true);
             String publicId = (String) uploadResult.get("public_id");
             String imageUrl = (String) uploadResult.get("secure_url");
             coupon.setAvatarPublicId(publicId);
@@ -143,7 +143,7 @@ public class CouponServiceImpl implements CouponService {
                 cloudinaryService.deleteFile(coupon.getAvatarPublicId());
             }
             Map<String, Object> uploadResult = cloudinaryService.uploadFile(request.getAvatar(),
-                    FolderName.COUPON_AVATAR.getValue() + coupon.getId());
+                    FolderName.COUPON_AVATAR.getValue() + coupon.getId(), true);
             String publicId = (String) uploadResult.get("public_id");
             String imageUrl = (String) uploadResult.get("secure_url");
             coupon.setAvatarPublicId(publicId);

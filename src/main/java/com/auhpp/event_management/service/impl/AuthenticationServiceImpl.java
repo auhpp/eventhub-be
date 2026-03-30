@@ -2,20 +2,22 @@ package com.auhpp.event_management.service.impl;
 
 import com.auhpp.event_management.constant.EmailType;
 import com.auhpp.event_management.constant.RedisPrefix;
+import com.auhpp.event_management.constant.RoleName;
 import com.auhpp.event_management.dto.request.AuthenticationRequest;
 import com.auhpp.event_management.dto.request.RegisterRequest;
 import com.auhpp.event_management.dto.request.VerifyAndRegisterRequest;
 import com.auhpp.event_management.dto.response.AuthenticationResponse;
 import com.auhpp.event_management.dto.response.UserResponse;
 import com.auhpp.event_management.entity.AppUser;
+import com.auhpp.event_management.entity.Role;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.UserMapper;
 import com.auhpp.event_management.repository.AppUserRepository;
+import com.auhpp.event_management.repository.RoleRepository;
 import com.auhpp.event_management.service.AuthenticationService;
 import com.auhpp.event_management.service.EmailService;
 import com.auhpp.event_management.service.OtpService;
-import com.auhpp.event_management.service.UserService;
 import com.auhpp.event_management.util.SecurityUtils;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -30,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -46,7 +49,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     EmailService emailService;
     AppUserRepository appUserRepository;
     OtpService otpService;
-    UserService userService;
+    RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
     RedisTemplate<String, String> stringValueRedisTemplate;
     UserMapper userMapper;
@@ -76,13 +79,32 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    @Transactional
+    public void createUser(RegisterRequest registerRequest) {
+        Optional<AppUser> appUserOptional = appUserRepository.findByEmail(registerRequest.getEmail());
+        if (appUserOptional.isPresent()) {
+            throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+        Role role = roleRepository.findByName(RoleName.USER);
+        AppUser appUser = userMapper.toAppUser(registerRequest);
+        String passwordEncoded = passwordEncoder.encode(registerRequest.getPassword());
+
+        appUser.setPassword(passwordEncoded);
+        appUser.setStatus(true);
+        appUser.setRole(role);
+
+        appUserRepository.save(appUser);
+    }
+
+    @Override
+    @Transactional
     public void verifyAndCreateUser(VerifyAndRegisterRequest verifyAndRegisterRequest) {
         if (otpService.verifyOtp(verifyAndRegisterRequest.getEmail(), verifyAndRegisterRequest.getOtp())) {
             RegisterRequest registerRequest = RegisterRequest.builder()
                     .email(verifyAndRegisterRequest.getEmail())
                     .password(verifyAndRegisterRequest.getPassword())
                     .build();
-            userService.createUser(registerRequest);
+            this.createUser(registerRequest);
         } else {
             throw new AppException(ErrorCode.OTP_NOT_VALID);
         }
@@ -99,7 +121,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
         boolean valid = passwordEncoder.matches(request.getPassword(), user.getPassword());
         if (!valid) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(ErrorCode.WRONG_PASSWORD);
         }
         String accessToken = generateAccessToken(user);
         String refreshToken = generateRefreshToken(user);
@@ -197,6 +219,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private String generateAccessToken(AppUser user) {
         return generateToken(user, VALID_DURATION, true);
+//        return generateToken(user, 1, true);
+
     }
 
     public String generateRefreshToken(AppUser user) {
@@ -213,7 +237,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .subject(user.getEmail())
                 .issuer("event.com")
                 .issueTime(new Date())
-                .expirationTime(new Date(Instant.now().plus(VALID_DURATION, ChronoUnit.MINUTES).toEpochMilli()))
+                .expirationTime(new Date(Instant.now().plus(duration, ChronoUnit.MINUTES).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString());
         if (withScope) {
             claimsSetBuilder.claim("scope", user.getRole().getName());

@@ -2,6 +2,7 @@ package com.auhpp.event_management.controller;
 
 
 import com.auhpp.event_management.dto.request.CategoryCreateRequest;
+import com.auhpp.event_management.dto.request.CategorySearchRequest;
 import com.auhpp.event_management.dto.request.CategoryUpdateRequest;
 import com.auhpp.event_management.dto.response.CategoryResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
@@ -46,12 +47,13 @@ public class CategoryController {
                 .body(result);
     }
 
-    @GetMapping
+    @PostMapping("/filter")
     public ResponseEntity<PageResponse<CategoryResponse>> getCategoriesPagination(
+            @RequestBody CategorySearchRequest request,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int size
     ) {
-        PageResponse<CategoryResponse> result = categoryService.getCategoriesPagination(page, size);
+        PageResponse<CategoryResponse> result = categoryService.getCategoriesPagination(request, page, size);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(result);

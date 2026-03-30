@@ -5,17 +5,16 @@ import com.auhpp.event_management.dto.request.*;
 import com.auhpp.event_management.dto.response.EventBasicResponse;
 import com.auhpp.event_management.dto.response.EventResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
+import com.auhpp.event_management.dto.response.TagResponse;
 import com.auhpp.event_management.entity.*;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.EventBasicMapper;
 import com.auhpp.event_management.mapper.EventMapper;
 import com.auhpp.event_management.repository.*;
-import com.auhpp.event_management.service.CloudinaryService;
-import com.auhpp.event_management.service.EventService;
-import com.auhpp.event_management.service.EventSessionService;
-import com.auhpp.event_management.service.EventStaffService;
+import com.auhpp.event_management.service.*;
 import com.auhpp.event_management.util.SecurityUtils;
+import com.auhpp.event_management.util.SlugUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -34,10 +33,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 
 @Service
@@ -57,12 +53,44 @@ public class EventServiceImpl implements EventService {
     BookingRepository bookingRepository;
     AttendeeRepository attendeeRepository;
     EventSeriesRepository eventSeriesRepository;
+    TagRepository tagRepository;
+    TagService tagService;
+
+    private void handleEventTags(List<EventTag> eventTags, List<TagUpdateRequest> requests, Event event) {
+        for (TagUpdateRequest tagRequest : requests) {
+            Tag tag;
+            if (tagRequest.getId() != null) {
+                tag = tagRepository.findById(tagRequest.getId()).orElseThrow(
+                        () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+                );
+            } else {
+                String slug = SlugUtils.toSlug(tagRequest.getName());
+                // check exists
+                Optional<Tag> existsTag = tagRepository.findBySlug(slug);
+                if (existsTag.isPresent()) {
+                    tag = existsTag.get();
+                } else {
+                    TagResponse response = tagService.create(TagCreateRequest.builder()
+                            .name(tagRequest.getName())
+                            .type(TagType.CUSTOM)
+                            .build());
+                    tag = tagRepository.findById(response.getId()).orElseThrow(
+                            () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+                    );
+                }
+            }
+            eventTags.add(EventTag.builder()
+                    .event(event)
+                    .tag(tag)
+                    .build());
+        }
+    }
 
     @Override
     @Transactional
-    public EventResponse createEvent(EventCreateRequest eventCreateRequest, MultipartFile thumbnail,
+    public EventResponse createEvent(EventCreateRequest request, MultipartFile thumbnail,
                                      MultipartFile poster) {
-        Event event = eventMapper.toEvent(eventCreateRequest);
+        Event event = eventMapper.toEvent(request);
         String email = SecurityUtils.getCurrentUserLogin();
 
         AppUser appUser = appUserRepository.findByEmail(email).orElseThrow(
@@ -70,29 +98,34 @@ public class EventServiceImpl implements EventService {
         );
         event.setAppUser(appUser);
 
-        Category category = categoryRepository.findById(eventCreateRequest.getCategoryId()).orElseThrow(
+        Category category = categoryRepository.findById(request.getCategoryId()).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
         event.setCategory(category);
 
-        if (eventCreateRequest.getEventSeriesId() != null) {
-            EventSeries eventSeries = eventSeriesRepository.findById(eventCreateRequest.getEventSeriesId()).orElseThrow(
+        if (request.getEventSeriesId() != null) {
+            EventSeries eventSeries = eventSeriesRepository.findById(request.getEventSeriesId()).orElseThrow(
                     () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
             );
             event.setEventSeries(eventSeries);
         }
 
         // handle geometry location data
-        if (eventCreateRequest.getType() == EventType.OFFLINE) {
+        if (request.getType() == EventType.OFFLINE) {
             GeometryFactory geometryFactory = new GeometryFactory();
-            Coordinate locationCoordinate = new Coordinate(eventCreateRequest.getLocationLongitude(),
-                    eventCreateRequest.getLocationLatitude());
+            Coordinate locationCoordinate = new Coordinate(request.getLocationLongitude(),
+                    request.getLocationLatitude());
             Point locationPoint = geometryFactory.createPoint(locationCoordinate);
             event.setLocationCoordinates(locationPoint);
         }
 
         event.setStatus(EventStatus.PENDING);
         eventRepository.save(event);
+
+        // handle tags
+        List<EventTag> eventTags = new ArrayList<>();
+        handleEventTags(eventTags, request.getTags(), event);
+        event.setEventTags(eventTags);
 
         // handle event staff
         eventStaffService.createEventStaff(EventStaffCreateRequest.builder()
@@ -103,7 +136,7 @@ public class EventServiceImpl implements EventService {
 
         // upload thumbnail
         Map<String, Object> uploadResult = cloudinaryService.uploadFile(thumbnail,
-                FolderName.EVENT.getValue() + email + "/" + event.getId() + "/thumbnail");
+                FolderName.EVENT.getValue() + email + "/" + event.getId() + "/thumbnail", true);
         String publicId = (String) uploadResult.get("public_id");
         String imageUrl = (String) uploadResult.get("secure_url");
         event.setThumbnail(imageUrl);
@@ -111,7 +144,7 @@ public class EventServiceImpl implements EventService {
 
         // upload poster
         Map<String, Object> uploadPosterResult = cloudinaryService.uploadFile(poster,
-                FolderName.EVENT.getValue() + email + "/" + event.getId() + "/poster");
+                FolderName.EVENT.getValue() + email + "/" + event.getId() + "/poster", true);
         String posterPublicId = (String) uploadPosterResult.get("public_id");
         String posterUrl = (String) uploadPosterResult.get("secure_url");
         event.setPoster(posterUrl);
@@ -120,7 +153,7 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
 
         for (EventSessionCreateRequest eventSessionCreateRequest :
-                eventCreateRequest.getEventSessionCreateRequests()) {
+                request.getEventSessionCreateRequests()) {
             eventSessionCreateRequest.setStatus(EventSessionStatus.PENDING);
             eventSessionService.createEventSession(eventSessionCreateRequest, event.getId());
         }
@@ -171,7 +204,7 @@ public class EventServiceImpl implements EventService {
             cloudinaryService.deleteFile(event.getThumbnailPublicId());
             // upload thumbnail
             uploadResult = cloudinaryService.uploadFile(thumbnail,
-                    FolderName.EVENT.getValue() + owner.getEmail() + "/" + event.getId() + "/thumbnail");
+                    FolderName.EVENT.getValue() + owner.getEmail() + "/" + event.getId() + "/thumbnail", true);
             publicId = (String) uploadResult.get("public_id");
             imageUrl = (String) uploadResult.get("secure_url");
             event.setThumbnail(imageUrl);
@@ -182,12 +215,23 @@ public class EventServiceImpl implements EventService {
             cloudinaryService.deleteFile(event.getPosterPublicId());
             // upload poster
             uploadResult = cloudinaryService.uploadFile(poster,
-                    FolderName.EVENT.getValue() + owner.getEmail() + "/" + event.getId() + "/poster");
+                    FolderName.EVENT.getValue() + owner.getEmail() + "/" + event.getId() + "/poster", true);
             publicId = (String) uploadResult.get("public_id");
             imageUrl = (String) uploadResult.get("secure_url");
             event.setPoster(imageUrl);
             event.setPosterPublicId(publicId);
         }
+
+        // handle tag
+        if (event.getEventTags() != null) {
+            event.getEventTags().clear();
+        } else {
+            event.setEventTags(new ArrayList<>());
+        }
+        List<EventTag> eventTags = event.getEventTags();
+        handleEventTags(eventTags, request.getTags(), event);
+        event.setEventTags(eventTags);
+
         eventRepository.save(event);
         return eventBasicMapper.toEventBasicResponse(event);
     }
@@ -284,6 +328,9 @@ public class EventServiceImpl implements EventService {
                     request.getType(), filterStartDate, filterEndDate, request.getCategoryIds(),
                     request.getPriceFrom(), request.getPriceTo(), request.getName(), request.getEventSeriesId(),
                     request.getHasResale(),
+                    request.getCurrentUserId(),
+                    request.getHasFavorite(),
+                    request.getEmail(),
                     pageable);
         }
         List<EventResponse> eventResponses = pageData.getContent().stream().map(
@@ -345,7 +392,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Integer countEvent(EventCountRequest request) {
-        return eventRepository.countEvent(request.getCategoryId(), request.getStatuses());
+        return eventRepository.countEvent(request.getCategoryId(), request.getStatuses(), null, null);
     }
 
 

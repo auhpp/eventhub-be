@@ -1,0 +1,111 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1774427673122-1">
+        <createSequence incrementBy="50" sequenceName="event_tag_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-2">
+        <createSequence incrementBy="50" sequenceName="favorite_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-3">
+        <createSequence incrementBy="50" sequenceName="tag_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-4">
+        <createSequence incrementBy="50" sequenceName="user_tag_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-5">
+        <createTable tableName="event_tag">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="event_tagPK"/>
+            </column>
+            <column name="event_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-6">
+        <createTable tableName="favorite">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="favoritePK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-7">
+        <createTable tableName="tag">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="tagPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="name" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slug" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-8">
+        <createTable tableName="user_tag">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="user_tagPK"/>
+            </column>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-9">
+        <addForeignKeyConstraint baseColumnNames="tag_id" baseTableName="user_tag"
+                                 constraintName="FK9qknt3y115f17660k0qnm9x3g" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="tag"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-10">
+        <addForeignKeyConstraint baseColumnNames="event_id" baseTableName="favorite"
+                                 constraintName="FKc4tvltkr2frx3ngw5rhx6yrl1" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="event"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-11">
+        <addForeignKeyConstraint baseColumnNames="event_id" baseTableName="event_tag"
+                                 constraintName="FKfsc56xss2wsnywkg555jq7onb" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="event"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-12">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="favorite"
+                                 constraintName="FKi3cfnty0g3dkmarhh2udjfdtg" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-13">
+        <addForeignKeyConstraint baseColumnNames="tag_id" baseTableName="event_tag"
+                                 constraintName="FKlhs43hrd40lqogbcf2xsevwo1" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="tag"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774427673122-14">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="user_tag"
+                                 constraintName="FKt8yk3q4kbfqh58rl4lk4rq538" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+</databaseChangeLog>

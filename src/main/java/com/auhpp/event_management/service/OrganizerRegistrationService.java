@@ -1,6 +1,8 @@
 package com.auhpp.event_management.service;
 
+import com.auhpp.event_management.constant.RegistrationStatus;
 import com.auhpp.event_management.dto.request.OrganizerCreateRequest;
+import com.auhpp.event_management.dto.request.OrganizerRegistrationSearchRequest;
 import com.auhpp.event_management.dto.request.OrganizerUpdateRequest;
 import com.auhpp.event_management.dto.request.RejectionRequest;
 import com.auhpp.event_management.dto.response.OrganizerRegistrationResponse;
@@ -20,10 +22,10 @@ public interface OrganizerRegistrationService {
 
     void approveOrganizerRegistration(long id);
 
-    PageResponse<OrganizerRegistrationResponse> getOrganizerRegistrations(int page, int size);
-
-    PageResponse<OrganizerRegistrationResponse> getOrganizerRegistrationsByUser(int page, int size);
+    PageResponse<OrganizerRegistrationResponse> getOrganizerRegistrations(OrganizerRegistrationSearchRequest
+                                                                                  request, int page, int size);
 
     OrganizerRegistrationResponse getOrganizerRegistrationById(Long id);
 
+    Integer count(RegistrationStatus status);
 }

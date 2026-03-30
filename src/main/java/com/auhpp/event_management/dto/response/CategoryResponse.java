@@ -24,4 +24,8 @@ public class CategoryResponse {
 
     private LocalDateTime updatedAt;
 
+    private Long followerCount;
+
+    private Long eventCount;
+
 }

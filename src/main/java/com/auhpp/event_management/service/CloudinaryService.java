@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 public interface CloudinaryService {
-    Map<String, Object> uploadFile(MultipartFile file, String folderName);
+    Map<String, Object> uploadFile(MultipartFile file, String folderName, boolean isImage);
 
-    List<Map<String, Object>> uploadMultipleFiles(List<MultipartFile> files, String folderName);
+    List<Map<String, Object>> uploadMultipleFiles(List<MultipartFile> files, String folderName, boolean isImage);
 
     Map<String, Object> deleteFile(String publicId);
 

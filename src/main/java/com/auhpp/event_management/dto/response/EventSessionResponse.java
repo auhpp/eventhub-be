@@ -2,6 +2,7 @@ package com.auhpp.event_management.dto.response;
 
 import com.auhpp.event_management.constant.EventSessionStatus;
 import com.auhpp.event_management.constant.MeetingPlatform;
+import com.auhpp.event_management.constant.QAStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +29,12 @@ public class EventSessionResponse {
     private String meetingUrl;
 
     private EventSessionStatus status;
+
+    private QAStatus qaStatus;
+
+    private Boolean allowAnonymous;
+
+    private Boolean requireModerationQuestion;
 
     private String meetingPassword;
 

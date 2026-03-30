@@ -2,6 +2,7 @@ package com.auhpp.event_management.dto.request;
 
 import com.auhpp.event_management.constant.EventSessionStatus;
 import com.auhpp.event_management.constant.MeetingPlatform;
+import com.auhpp.event_management.constant.QAStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -25,7 +26,9 @@ public class EventSessionCreateRequest {
     @NotNull(message = "Event session start date time cannot be null")
     private LocalDateTime startDateTime;
 
-    @NotNull(message = "Event session end date time cannot be null")
+    @NotNull(message = "QA status cannot be null")
+    private QAStatus qaStatus;
+
     private LocalDateTime endDateTime;
 
     private String meetingUrl;
@@ -35,6 +38,10 @@ public class EventSessionCreateRequest {
     private String meetingPassword;
 
     private EventSessionStatus status;
+
+    private Boolean allowAnonymous;
+
+    private Boolean requireModerationQuestion;
 
     @NotEmpty(message = "Event session ticket cannot be empty")
     @Size(min = 1)

@@ -1,6 +1,7 @@
 package com.auhpp.event_management.service;
 
 import com.auhpp.event_management.dto.request.CategoryCreateRequest;
+import com.auhpp.event_management.dto.request.CategorySearchRequest;
 import com.auhpp.event_management.dto.request.CategoryUpdateRequest;
 import com.auhpp.event_management.dto.response.CategoryResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
@@ -12,7 +13,8 @@ public interface CategoryService {
 
     List<CategoryResponse> getCategories();
 
-    PageResponse<CategoryResponse> getCategoriesPagination(int page, int size);
+    PageResponse<CategoryResponse> getCategoriesPagination(CategorySearchRequest request,
+                                                           int page, int size);
 
     CategoryResponse updateCategory(Long id, CategoryUpdateRequest request);
 

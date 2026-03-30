@@ -46,7 +46,7 @@ public class EventSeriesServiceImpl implements EventSeriesService {
     public EventSeriesResponse createEventSeries(EventSeriesCreateRequest request) {
         EventSeries eventSeries = eventSeriesMapper.toEventSeries(request);
         Map<String, Object> uploadResult = cloudinaryService.uploadFile(request.getAvatar(),
-                FolderName.EVENT_SERIES.getValue());
+                FolderName.EVENT_SERIES.getValue(), true);
         String publicId = (String) uploadResult.get("public_id");
         String imageUrl = (String) uploadResult.get("secure_url");
         eventSeries.setAvatar(imageUrl);
@@ -58,7 +58,7 @@ public class EventSeriesServiceImpl implements EventSeriesService {
         eventSeries.setAppUser(appUser);
         if (request.getCoverImage() != null) {
             uploadResult = cloudinaryService.uploadFile(request.getCoverImage(),
-                    FolderName.EVENT_SERIES.getValue());
+                    FolderName.EVENT_SERIES.getValue(), true);
             publicId = (String) uploadResult.get("public_id");
             imageUrl = (String) uploadResult.get("secure_url");
             eventSeries.setCoverImage(imageUrl);
@@ -98,7 +98,7 @@ public class EventSeriesServiceImpl implements EventSeriesService {
         String imageUrl;
         if (request.getAvatar() != null) {
             uploadResult = cloudinaryService.uploadFile(request.getAvatar(),
-                    FolderName.EVENT_SERIES.getValue());
+                    FolderName.EVENT_SERIES.getValue(), true);
             publicId = (String) uploadResult.get("public_id");
             imageUrl = (String) uploadResult.get("secure_url");
             eventSeries.setAvatar(imageUrl);
@@ -107,7 +107,7 @@ public class EventSeriesServiceImpl implements EventSeriesService {
 
         if (request.getCoverImage() != null) {
             uploadResult = cloudinaryService.uploadFile(request.getCoverImage(),
-                    FolderName.EVENT_SERIES.getValue());
+                    FolderName.EVENT_SERIES.getValue(), true);
             publicId = (String) uploadResult.get("public_id");
             imageUrl = (String) uploadResult.get("secure_url");
             eventSeries.setCoverImage(imageUrl);

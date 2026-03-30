@@ -1,10 +1,10 @@
 package com.auhpp.event_management.service;
 
-import com.auhpp.event_management.dto.request.PasswordChangeRequest;
-import com.auhpp.event_management.dto.request.SocialLinkCreateRequest;
-import com.auhpp.event_management.dto.request.UserUpdateRequest;
+import com.auhpp.event_management.dto.request.*;
+import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.SocialLinkResponse;
 import com.auhpp.event_management.dto.response.UserBasicResponse;
+import com.auhpp.event_management.dto.response.UserResponse;
 
 import java.util.List;
 
@@ -16,5 +16,17 @@ public interface AppUserService {
     List<SocialLinkResponse> createSocialLink(List<SocialLinkCreateRequest> requests);
 
     UserBasicResponse getByEmail(String email);
+
+    UserResponse getById(Long id);
+
+    void changeRole(Long id, UserChangeRoleRequest request);
+
+    void sendEmailCreateAdminUser(AdminUserCreateRequest request);
+
+    void confirmAdminUserAccount(RegisterRequest request);
+
+    PageResponse<UserBasicResponse> filter(UserSearchRequest request, int page, int size);
+
+    void changeStatus(Long id, UserChangeStatusRequest request);
 
 }

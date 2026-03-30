@@ -81,7 +81,7 @@ public class ReviewServiceImpl implements ReviewService {
             for (MultipartFile file : request.getFiles()) {
 
                 Map<String, Object> uploadResult = cloudinaryService.uploadFile(file,
-                        FolderName.REVIEW.getValue() + review.getId());
+                        FolderName.REVIEW.getValue() + review.getId(), true);
                 String publicId = (String) uploadResult.get("public_id");
                 String imageUrl = (String) uploadResult.get("secure_url");
                 reviewImages.add(
@@ -116,7 +116,7 @@ public class ReviewServiceImpl implements ReviewService {
             List<ReviewImage> reviewImages = new ArrayList<>();
             for (MultipartFile file : request.getFiles()) {
                 Map<String, Object> uploadResult = cloudinaryService.uploadFile(file,
-                        FolderName.REVIEW.getValue() + review.getId());
+                        FolderName.REVIEW.getValue() + review.getId(), true);
                 String publicId = (String) uploadResult.get("public_id");
                 String imageUrl = (String) uploadResult.get("secure_url");
                 reviewImages.add(

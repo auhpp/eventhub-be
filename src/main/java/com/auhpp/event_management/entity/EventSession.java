@@ -2,6 +2,7 @@ package com.auhpp.event_management.entity;
 
 import com.auhpp.event_management.constant.EventSessionStatus;
 import com.auhpp.event_management.constant.MeetingPlatform;
+import com.auhpp.event_management.constant.QAStatus;
 import com.auhpp.event_management.entity.converter.AttributeEncryptor;
 import jakarta.persistence.*;
 import lombok.*;
@@ -44,6 +45,13 @@ public class EventSession {
     @Enumerated(EnumType.STRING)
     private EventSessionStatus status;
 
+    @Enumerated(EnumType.STRING)
+    private QAStatus qaStatus;
+
+    private Boolean allowAnonymous;
+
+    private Boolean requireModerationQuestion;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -63,6 +71,9 @@ public class EventSession {
 
     @OneToMany(mappedBy = "eventSession")
     private List<Review> reviews;
+
+    @OneToMany(mappedBy = "eventSession")
+    private List<Question> questions;
 
     public boolean isExpired() {
         return this.getEndDateTime().isBefore(LocalDateTime.now());

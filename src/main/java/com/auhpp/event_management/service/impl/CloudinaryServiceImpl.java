@@ -28,8 +28,12 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     @Override
-    public Map<String, Object> uploadFile(MultipartFile file, String folderName) {
-        FileUtils.validateFile(file);
+    public Map<String, Object> uploadFile(MultipartFile file, String folderName, boolean isImage) {
+        if (isImage) {
+            FileUtils.validateImageFile(file);
+        } else {
+            FileUtils.validateAudioFile(file);
+        }
         try {
             return cloudinary.uploader().upload(file.getBytes(),
                     ObjectUtils.asMap(
@@ -44,10 +48,10 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     }
 
     @Override
-    public List<Map<String, Object>> uploadMultipleFiles(List<MultipartFile> files, String folderName) {
+    public List<Map<String, Object>> uploadMultipleFiles(List<MultipartFile> files, String folderName, boolean isImage) {
         List<CompletableFuture<Map<String, Object>>> futures = files.stream()
                 .map(file -> CompletableFuture.supplyAsync(
-                        () -> uploadFile(file, folderName), executorService
+                        () -> uploadFile(file, folderName, isImage), executorService
                 )).toList();
         return futures.stream().map(
                 CompletableFuture::join

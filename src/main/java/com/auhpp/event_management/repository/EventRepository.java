@@ -3,6 +3,7 @@ package com.auhpp.event_management.repository;
 import com.auhpp.event_management.constant.EventStatus;
 import com.auhpp.event_management.constant.EventType;
 import com.auhpp.event_management.entity.Event;
+import com.auhpp.event_management.repository.custom.EventCustomRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,7 +17,7 @@ import java.util.List;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long>,
-        JpaSpecificationExecutor<Event> {
+        JpaSpecificationExecutor<Event>, EventCustomRepository {
 
     @Query("SELECT DISTINCT e FROM Event e " +
             "LEFT JOIN e.eventStaffs es " +
@@ -33,7 +34,12 @@ public interface EventRepository extends JpaRepository<Event, Long>,
             "AND (:priceTo IS NULL OR t.price <= :priceTo) " +
             "AND (:eventSeriesId IS NULL OR e.eventSeries.id = :eventSeriesId) " +
             "AND (CAST(:name AS string ) IS NULL OR LOWER(e.name) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) " +
-            "AND (:hasResale IS NULL OR a.resalePost IS NOT NULL) ")
+            "AND (:hasResale IS NULL OR a.resalePost IS NOT NULL) " +
+            "AND (:hasFavorite IS NULL OR e.id IN (" +
+            "   SELECT f.event.id FROM Favorite f " +
+            "   WHERE f.appUser.id = :currentUserId " +
+            ")) " +
+            "AND (:email IS NULL OR e.appUser.email = :email)")
     Page<Event> filterEvents(@Param("userId") Long userId,
                              @Param("status") EventStatus status,
                              @Param("eventType") EventType type,
@@ -45,6 +51,9 @@ public interface EventRepository extends JpaRepository<Event, Long>,
                              @Param("name") String name,
                              @Param("eventSeriesId") Long eventSeriesId,
                              @Param("hasResale") Boolean hasResale,
+                             @Param("currentUserId") Long currentUserId,
+                             @Param("hasFavorite") Boolean hasFavorite,
+                             @Param("email") String email,
                              Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
@@ -98,8 +107,12 @@ public interface EventRepository extends JpaRepository<Event, Long>,
                                                       Pageable pageable);
 
     @Query("SELECT COUNT(e) FROM Event e " +
-            "WHERE (:categoryId) IS NULL OR e.category.id = :categoryId " +
-            "AND (:statuses IS NULL OR e.status IN :statuses) ")
+            "WHERE (:categoryId IS NULL OR e.category.id = :categoryId) " +
+            "AND (:statuses IS NULL OR e.status IN :statuses) " +
+            "AND (CAST(:startDate AS timestamp) IS NULL OR e.createdAt >= :startDate) " +
+            "AND (CAST(:endDate AS timestamp) IS NULL OR e.createdAt <= :endDate)")
     Integer countEvent(@Param("categoryId") Long categoryId,
-                       @Param("statuses") List<EventStatus> statuses);
+                       @Param("statuses") List<EventStatus> statuses,
+                       @Param("startDate") LocalDateTime startDate,
+                       @Param("endDate") LocalDateTime endDate);
 }

@@ -56,6 +56,11 @@ public enum ErrorCode {
     RESALE_PRICE_INVALID(1046, "Resale price invalid", HttpStatus.BAD_REQUEST),
     ATTENDEE_SOURCE_TYPE_INVALID(1047, "Attendee source type invalid", HttpStatus.BAD_REQUEST),
     OWNER_CANNOT_BUY(1048, "Owner cannot buy", HttpStatus.BAD_REQUEST),
+    RESOURCE_EXISTS(1049, "Resource exists", HttpStatus.BAD_REQUEST),
+    QA_EVENT_SESSION_DISABLED(1050, "QA event session disabled", HttpStatus.BAD_REQUEST),
+    QA_EVENT_SESSION_CLOSED(1051, "QA event session closed", HttpStatus.BAD_REQUEST),
+    NOT_AN_AUDIO(1052, "Not an audio", HttpStatus.BAD_REQUEST),
+    ACCOUNT_ACTIVE(1053, "Account active", HttpStatus.BAD_REQUEST),
 
     ;
 

@@ -1,7 +1,9 @@
 package com.auhpp.event_management.service.impl;
 
 import com.auhpp.event_management.constant.FolderName;
+import com.auhpp.event_management.constant.SortBy;
 import com.auhpp.event_management.dto.request.CategoryCreateRequest;
+import com.auhpp.event_management.dto.request.CategorySearchRequest;
 import com.auhpp.event_management.dto.request.CategoryUpdateRequest;
 import com.auhpp.event_management.dto.response.CategoryResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.swing.*;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +41,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private void uploadCategoryAvatar(Category category, MultipartFile file) {
         Map<String, Object> uploadResult = cloudinaryService.uploadFile(file,
-                FolderName.CATEGORY.getValue());
+                FolderName.CATEGORY.getValue(), true);
         String publicId = (String) uploadResult.get("public_id");
         String imageUrl = (String) uploadResult.get("secure_url");
         category.setAvatarUrl(imageUrl);
@@ -63,12 +66,25 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public PageResponse<CategoryResponse> getCategoriesPagination(int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
-                "createdAt"));
-        Page<Category> pageData = categoryRepository.findAll(pageable);
+    public PageResponse<CategoryResponse> getCategoriesPagination(CategorySearchRequest request, int page, int size) {
+        Sort.Direction direction = Sort.Direction.DESC;
+        if (request.getSortOrder() != null && request.getSortOrder() == SortOrder.ASCENDING) {
+            direction = Sort.Direction.ASC;
+        }
+        String paramSort = "followerCount";
+        if (request.getSortBy() != null && request.getSortBy() == SortBy.EVENT) {
+            paramSort = "eventCount";
+        }
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction,
+                paramSort));
+        Page<Object[]> pageData = categoryRepository.filter(request.getName(), pageable);
         List<CategoryResponse> responses = pageData.getContent().stream().map(
-                categoryMapper::toCategoryResponse
+                objects -> {
+                    CategoryResponse res = categoryMapper.toCategoryResponse((Category) objects[0]);
+                    res.setFollowerCount((Long) objects[1]);
+                    res.setEventCount((Long) objects[2]);
+                    return res;
+                }
         ).toList();
         return PageResponse.<CategoryResponse>builder()
                 .currentPage(page)

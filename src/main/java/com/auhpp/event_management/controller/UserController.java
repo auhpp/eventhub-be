@@ -1,10 +1,11 @@
 package com.auhpp.event_management.controller;
 
-import com.auhpp.event_management.dto.request.PasswordChangeRequest;
-import com.auhpp.event_management.dto.request.SocialLinkCreateRequest;
-import com.auhpp.event_management.dto.request.UserUpdateRequest;
+import com.auhpp.event_management.constant.RoleName;
+import com.auhpp.event_management.dto.request.*;
+import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.SocialLinkResponse;
 import com.auhpp.event_management.dto.response.UserBasicResponse;
+import com.auhpp.event_management.dto.response.UserResponse;
 import com.auhpp.event_management.service.AppUserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -67,4 +68,72 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .body(result);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getById(
+            @PathVariable("id") Long id
+    ) {
+        UserResponse result = userService.getById(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(result);
+    }
+
+    @PostMapping("/change-role/{id}")
+    public ResponseEntity<Void> changeRole(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody UserChangeRoleRequest request
+    ) {
+        userService.changeRole(id, request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @PostMapping("/change-status/{id}")
+    public ResponseEntity<Void> changeStatus(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody UserChangeStatusRequest request
+    ) {
+        userService.changeStatus(id, request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @PostMapping("/send/create-admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> sendEmailCreateAdminUser(
+            @Valid @RequestBody AdminUserCreateRequest request
+    ) {
+        userService.sendEmailCreateAdminUser(request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @PostMapping("/confirm/create-admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> confirmAdminUserAccount(
+            @Valid @RequestBody RegisterRequest request
+    ) {
+        userService.confirmAdminUserAccount(request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @PostMapping("/filter")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PageResponse<UserBasicResponse>> filter(
+            @RequestBody UserSearchRequest request,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ) {
+        PageResponse<UserBasicResponse> result = userService.filter(request, page, size);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(result);
+    }
+
 }

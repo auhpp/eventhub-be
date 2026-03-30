@@ -329,4 +329,9 @@ public class AttendeeServiceImpl implements AttendeeService {
         }
         return attendee.getTicketCode();
     }
+
+    @Override
+    public boolean getAttendeeByEventSessionIdAndCurrentUser(Long eventSessionId, Long userId) {
+        return attendeeRepository.existsByAppUserIdAndEventSessionId(userId, eventSessionId);
+    }
 }

@@ -19,6 +19,7 @@ import com.auhpp.event_management.util.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +42,7 @@ public class EventSessionServiceImpl implements EventSessionService {
     EventRepository eventRepository;
     BookingRepository bookingRepository;
     AttendeeRepository attendeeRepository;
+    SimpMessageSendingOperations simpMessageSendingOperations;
 
     @Override
     @Transactional
@@ -77,6 +79,13 @@ public class EventSessionServiceImpl implements EventSessionService {
             throw new AppException(ErrorCode.RESOURCE_CAN_NOT_UPDATE);
         }
         eventSessionMapper.updateEventSessionFromRequest(request, eventSession);
+        // broadcast if update qa status
+        if (request.getQaStatus() != null) {
+            simpMessageSendingOperations.convertAndSend(
+                    "/topic/question/event-session/" + eventSession.getId(),
+                    eventSessionMapper.toEventSessionResponse(eventSession)
+            );
+        }
         eventSessionRepository.save(eventSession);
         return eventSessionMapper.toEventSessionResponse(eventSession);
     }
@@ -210,11 +219,13 @@ public class EventSessionServiceImpl implements EventSessionService {
 
     @Override
     public EventOverviewStatsResponse getEventStats(Long eventSessionId) {
-        Double totalRevenue = eventSessionRepository.getTotalRevenue(eventSessionId);
+        Double totalRevenue = bookingRepository.getTotalRevenue(eventSessionId, BookingType.BUY, null, null);
         Double maxPotentialRevenue = eventSessionRepository.getMaxPotentialRevenue(eventSessionId);
-        Double voucherRevenue = eventSessionRepository.getVoucherRevenue(eventSessionId);
+        Double voucherRevenue = bookingRepository.getVoucherRevenue(eventSessionId, BookingType.BUY, null, null);
         Double discountAmount = eventSessionRepository.getDiscountAmount(eventSessionId);
-        Double totalFee = eventSessionRepository.getTotalFee(eventSessionId);
+        Double totalFee = attendeeRepository.getCommissionFromEvents(eventSessionId,
+                List.of(SourceType.PURCHASE)
+                , null, null);
 
         Integer totalTicketsSold = eventSessionRepository.getTotalTicketsSold(eventSessionId);
         Integer totalCapacity = eventSessionRepository.getTotalTicketCapacity(eventSessionId);

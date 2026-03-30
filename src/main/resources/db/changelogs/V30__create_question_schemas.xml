@@ -1,0 +1,115 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="auhpp (generated)" id="1774496930086-1">
+        <createSequence incrementBy="50" sequenceName="question_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774496930086-2">
+        <createSequence incrementBy="50" sequenceName="upvote_question_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774496930086-3">
+        <createSequence incrementBy="50" sequenceName="user_note_seq" startValue="1"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774496930086-4">
+        <createTable tableName="question">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="questionPK"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="has_anonymous" type="boolean" defaultValue="false"/>
+            <column name="has_pin" type="boolean" defaultValue="false"/>
+
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_session_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774496930086-5">
+        <createTable tableName="upvote_question">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="upvote_questionPK"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="question_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774496930086-6">
+        <createTable tableName="user_note">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="user_notePK"/>
+            </column>
+            <column name="audio_url" type="TEXT"/>
+            <column name="public_id" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="note_content" type="TEXT"/>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="question_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774496930086-7">
+        <addColumn tableName="event_session">
+            <column name="qa_status" type="VARCHAR(255)"/>
+            <column name="allow_anonymous" type="boolean" defaultValue="false"/>
+            <column name="require_moderation_question" type="boolean" defaultValue="false"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774496930086-8">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="upvote_question"
+                                 constraintName="FK2k28jrk7w3dvl7pwsm8e9ycpt" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774496930086-9">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="user_note"
+                                 constraintName="FK3nof3p6gow6osgibhe63ymdt6" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774496930086-10">
+        <addForeignKeyConstraint baseColumnNames="question_id" baseTableName="upvote_question"
+                                 constraintName="FK74c3hksha1mhhe5e2dghoapuo" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="question"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774496930086-11">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="question"
+                                 constraintName="FK9fw19g3l7ys9646tvb910e5bn" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774496930086-12">
+        <addForeignKeyConstraint baseColumnNames="question_id" baseTableName="user_note"
+                                 constraintName="FKg51uyedjm89gsaygjn4t6a3y9" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="question"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774496930086-13">
+        <addForeignKeyConstraint baseColumnNames="event_session_id" baseTableName="question"
+                                 constraintName="FKtmomhcx5wrhjki0aokkuhi1a9" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id"
+                                 referencedTableName="event_session" validate="true"/>
+    </changeSet>
+
+</databaseChangeLog>

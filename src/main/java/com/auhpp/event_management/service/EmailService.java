@@ -16,4 +16,5 @@ public interface EmailService {
 
     void sendTicketGiftEmail(TicketGiftEmailRequest request);
 
+    void sendEmailCreateAdminUser(String email, String accessToken);
 }

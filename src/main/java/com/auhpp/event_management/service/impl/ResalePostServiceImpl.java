@@ -206,8 +206,9 @@ public class ResalePostServiceImpl implements ResalePostService {
         }
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction, sortBy));
         Page<ResalePost> pageData = resalePostRepository.filter(
-                request.getEventSessionId(), request.getTicketId(),
-                request.getHasRetail(), request.getQuantity(), request.getUserId(), request.getStatuses(),
+                request.getEventSessionId(), request.getEventId(), request.getTicketId(),
+                request.getHasRetail(), request.getQuantity(), request.getUserId(), request.getName(),
+                request.getEmail(), request.getStatuses(),
                 pageable
         );
         List<ResalePostResponse> responses = pageData.getContent().stream().map(
@@ -228,6 +229,11 @@ public class ResalePostServiceImpl implements ResalePostService {
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
         return resalePostMapper.toResalePostResponse(resalePost);
+    }
+
+    @Override
+    public Integer count(ResalePostStatus status) {
+        return resalePostRepository.countResalePost(List.of(status), null, null);
     }
 
     @Override

@@ -90,6 +90,13 @@ public class Event {
     @OneToMany(mappedBy = "event")
     private List<EventImage> eventImages;
 
+    @OneToMany(mappedBy = "event")
+    private List<Favorite> favorites;
+
+    @OneToMany(mappedBy = "event", cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST},
+            orphanRemoval = true)
+    private List<EventTag> eventTags;
+
     @ManyToOne
     private EventSeries eventSeries;
 

@@ -43,6 +43,10 @@ public class EmailServiceImpl implements EmailService {
     @Value("${app.fe.user-url}")
     String feUserUrl;
 
+    @NonFinal
+    @Value("${app.fe.admin-url}")
+    String feAdminUrl;
+
     JavaMailSender sender;
     OtpService otpService;
     SpringTemplateEngine templateEngine;
@@ -188,6 +192,17 @@ public class EmailServiceImpl implements EmailService {
         htmlBody = templateEngine.process("ticket-gift-email", context);
         String title = "Bạn có lời mời nhận vé - " + request.getEventName();
         send(request.getEmailReceiver(), htmlBody, title);
+    }
+
+    @Override
+    public void sendEmailCreateAdminUser(String email, String accessToken) {
+        String viewLink = feAdminUrl + "/confirm-user?accessToken=" + accessToken;
+        String htmlBody = "";
+        Context context = new Context();
+        context.setVariable("viewLink", viewLink);
+        htmlBody = templateEngine.process("confirm-user-email", context);
+        String title = "Bạn có lời mời xác nhận tài khoản quản trị";
+        send(email, htmlBody, title);
     }
 
 

@@ -13,12 +13,7 @@ import java.util.List;
 @Repository
 public interface EventSessionRepository extends JpaRepository<EventSession, Long> {
 
-    @Query("SELECT COALESCE(SUM(b.totalAmount), 0) FROM Booking b " +
-            "WHERE b.id IN ( " +
-            " SELECT b2.id FROM Booking b2 " +
-            " JOIN b2.attendees a " +
-            " WHERE a.ticket.eventSession.id = :eventSessionId )")
-    Double getTotalRevenue(@Param("eventSessionId") Long eventSessionId);
+
 
     @Query("SELECT COALESCE(SUM(t.price * t.quantity), 0) FROM Ticket t " +
             "WHERE t.eventSession.id = :eventSessionId ")
@@ -32,12 +27,7 @@ public interface EventSessionRepository extends JpaRepository<EventSession, Long
             "WHERE t.eventSession.id = :eventSessionId ")
     Integer getTotalTicketCapacity(@Param("eventSessionId") Long eventSessionId);
 
-    @Query("SELECT COALESCE(SUM(b.finalAmount), 0) FROM Booking b " +
-            "WHERE b.id IN ( " +
-            " SELECT b2.id FROM Booking b2 " +
-            " JOIN b2.attendees a " +
-            " WHERE a.ticket.eventSession.id = :eventSessionId )")
-    Double getVoucherRevenue(@Param("eventSessionId") Long eventSessionId);
+
 
     @Query("SELECT COALESCE(SUM(b.discountAmount), 0) FROM Booking b " +
             "WHERE b.id IN ( " +
@@ -46,10 +36,7 @@ public interface EventSessionRepository extends JpaRepository<EventSession, Long
             " WHERE a.ticket.eventSession.id = :eventSessionId )")
     Double getDiscountAmount(@Param("eventSessionId") Long eventSessionId);
 
-    @Query("SELECT COALESCE(SUM(a.price * a.ticket.eventSession.event.commissionRate + " +
-            "a.ticket.eventSession.event.commissionFixedPerTicket), 0) FROM Attendee a " +
-            "WHERE a.ticket.eventSession.id = :eventSessionId ")
-    Double getTotalFee(@Param("eventSessionId") Long eventSessionId);
+
 
     @Query(value = """
             SELECT 

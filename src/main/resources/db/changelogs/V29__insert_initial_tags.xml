@@ -1,0 +1,25 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet id="1774451956015-1" author="auhpp">
+        <loadData
+                file="data/tags.csv"
+                relativeToChangelogFile="true"
+                tableName="tag"
+                separator=","
+                encoding="UTF-8">
+        </loadData>
+        <update tableName="tag">
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <where>created_at IS NULL</where>
+        </update>
+        <rollback>
+            <sql>
+                DELETE FROM tag;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

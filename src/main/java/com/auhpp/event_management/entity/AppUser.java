@@ -107,4 +107,20 @@ public class AppUser {
     @OneToMany(mappedBy = "appUser")
     private List<ConversationMember> conversationMembers;
 
+    @OneToMany(mappedBy = "appUser")
+    private List<Favorite> favorites;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<Question> questions;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<UpvoteQuestion> upvoteQuestions;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<UserNote> userNotes;
+
+    @OneToMany(mappedBy = "appUser",
+            cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST},
+            orphanRemoval = true)
+    private List<UserTag> userTags;
 }

@@ -4,6 +4,7 @@ import com.auhpp.event_management.constant.AttendeeStatus;
 import com.auhpp.event_management.constant.SourceType;
 import com.auhpp.event_management.entity.AppUser;
 import com.auhpp.event_management.entity.Attendee;
+import com.auhpp.event_management.repository.custom.AttendeeCustomRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,7 +18,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AttendeeRepository extends JpaRepository<Attendee, Long>, JpaSpecificationExecutor<Attendee> {
+public interface AttendeeRepository extends JpaRepository<Attendee, Long>, JpaSpecificationExecutor<Attendee>,
+        AttendeeCustomRepository {
     Optional<Attendee> findByTicketCode(String ticketCode);
 
     @Query("SELECT a FROM Attendee a WHERE a.status IN :statuses " +
@@ -82,5 +84,32 @@ public interface AttendeeRepository extends JpaRepository<Attendee, Long>, JpaSp
             @Param("users") List<AppUser> users,
             @Param("eventSessionId") Long eventSessionId);
 
+    @Query("SELECT COUNT(a) > 0 FROM Attendee  a " +
+            "WHERE a.owner.id = :appUserId " +
+            "AND a.ticket.eventSession.id = :eventSessionId")
+    boolean existsByAppUserIdAndEventSessionId(@Param("appUserId") Long appUserId,
+                                               @Param("eventSessionId") Long eventSessionId);
 
+    @Query("SELECT COALESCE(SUM(a.price * a.ticket.eventSession.event.commissionRate + " +
+            "a.ticket.eventSession.event.commissionFixedPerTicket), 0) FROM Attendee a " +
+            "WHERE a.sourceType IN :sourceTypes " +
+            "AND a.booking.resalePost IS NULL " +
+            "AND (:eventSessionId IS NULL OR a.ticket.eventSession.id = :eventSessionId) " +
+            "AND (CAST(:startDate AS timestamp) IS NULL OR a.createdAt >= :startDate) " +
+            "AND (CAST(:endDate AS timestamp) IS NULL OR a.createdAt <= :endDate)")
+    Double getCommissionFromEvents(@Param("eventSessionId") Long eventSessionId,
+                                   @Param("sourceTypes") List<SourceType> sourceTypes,
+                                   @Param("startDate") LocalDateTime startDate,
+                                   @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT COALESCE(SUM(a.price * (a.booking.resalePost.commissionRate / 100)), 0) FROM Attendee a " +
+            "WHERE a.sourceType IN :sourceTypes " +
+            "AND a.booking.resalePost IS NOT NULL " +
+            "AND (:eventSessionId IS NULL OR a.ticket.eventSession.id = :eventSessionId) " +
+            "AND (CAST(:startDate AS timestamp) IS NULL OR a.createdAt >= :startDate) " +
+            "AND (CAST(:endDate AS timestamp) IS NULL OR a.createdAt <= :endDate)")
+    Double getCommissionFromResales(@Param("eventSessionId") Long eventSessionId,
+                                    @Param("sourceTypes") List<SourceType> sourceTypes,
+                                    @Param("startDate") LocalDateTime startDate,
+                                    @Param("endDate") LocalDateTime endDate);
 }

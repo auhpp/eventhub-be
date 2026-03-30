@@ -45,5 +45,7 @@ public class EventCreateRequest {
     @Size(min = 1)
     private List<@Valid EventSessionCreateRequest> eventSessionCreateRequests;
 
-
+    @NotEmpty(message = "Event session cannot be empty")
+    @Size(min = 1)
+    private List<@Valid TagUpdateRequest> tags;
 }

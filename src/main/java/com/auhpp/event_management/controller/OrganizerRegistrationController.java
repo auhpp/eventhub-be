@@ -1,6 +1,9 @@
 package com.auhpp.event_management.controller;
 
+import com.auhpp.event_management.constant.RegistrationStatus;
+import com.auhpp.event_management.constant.ResalePostStatus;
 import com.auhpp.event_management.dto.request.OrganizerCreateRequest;
+import com.auhpp.event_management.dto.request.OrganizerRegistrationSearchRequest;
 import com.auhpp.event_management.dto.request.OrganizerUpdateRequest;
 import com.auhpp.event_management.dto.request.RejectionRequest;
 import com.auhpp.event_management.dto.response.OrganizerRegistrationResponse;
@@ -102,29 +105,15 @@ public class OrganizerRegistrationController {
                 .status(HttpStatus.OK).build();
     }
 
-    @GetMapping("/current-user")
-    @PreAuthorize("hasAnyRole('USER', 'ORGANIZER')")
-    public ResponseEntity<PageResponse<OrganizerRegistrationResponse>> getOrganizerRegistrationsByUser(
-            @RequestParam(name = "page", defaultValue = "1") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size
-    ) {
-        PageResponse<OrganizerRegistrationResponse> response =
-                organizerRegistrationService.getOrganizerRegistrationsByUser(
-                        page, size
-                );
-        return ResponseEntity
-                .status(HttpStatus.OK).body(response);
-    }
-
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/filter")
     public ResponseEntity<PageResponse<OrganizerRegistrationResponse>> getOrganizerRegistrations(
+            @RequestBody OrganizerRegistrationSearchRequest request,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int size
     ) {
         PageResponse<OrganizerRegistrationResponse> response =
                 organizerRegistrationService.getOrganizerRegistrations(
-                        page, size
+                        request, page, size
                 );
         return ResponseEntity
                 .status(HttpStatus.OK).body(response);
@@ -142,4 +131,12 @@ public class OrganizerRegistrationController {
                 .status(HttpStatus.OK).body(response);
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Integer> count(
+            RegistrationStatus status
+    ) {
+        Integer result = organizerRegistrationService.count(status);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(result);
+    }
 }

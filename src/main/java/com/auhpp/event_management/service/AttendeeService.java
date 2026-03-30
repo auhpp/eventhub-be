@@ -37,5 +37,6 @@ public interface AttendeeService {
 
     String getTicketCode(Long id);
 
+    boolean getAttendeeByEventSessionIdAndCurrentUser(Long eventSessionId, Long userId);
 
 }

@@ -4,6 +4,7 @@ import com.auhpp.event_management.constant.FolderName;
 import com.auhpp.event_management.constant.RegistrationStatus;
 import com.auhpp.event_management.constant.RoleName;
 import com.auhpp.event_management.dto.request.OrganizerCreateRequest;
+import com.auhpp.event_management.dto.request.OrganizerRegistrationSearchRequest;
 import com.auhpp.event_management.dto.request.OrganizerUpdateRequest;
 import com.auhpp.event_management.dto.request.RejectionRequest;
 import com.auhpp.event_management.dto.response.OrganizerRegistrationResponse;
@@ -61,7 +62,7 @@ public class OrganizerRegistrationServiceImpl implements OrganizerRegistrationSe
         organizerRegistration.setAppUser(user);
 
         Map<String, Object> uploadResult = cloudinaryService.uploadFile(organizerCreateRequest.getBusinessAvatar(),
-                FolderName.ORGANIZER_REGISTRATION.getValue() + user.getEmail());
+                FolderName.ORGANIZER_REGISTRATION.getValue() + user.getEmail(), true);
         String publicId = (String) uploadResult.get("public_id");
         String imageUrl = (String) uploadResult.get("secure_url");
         organizerRegistration.setBusinessAvatarUrl(imageUrl);
@@ -89,7 +90,8 @@ public class OrganizerRegistrationServiceImpl implements OrganizerRegistrationSe
             cloudinaryService.deleteFile(organizerRegistration.getAvatarPublicId());
 
             Map<String, Object> uploadResult = cloudinaryService.uploadFile(organizerUpdateRequest.getBusinessAvatar(),
-                    FolderName.ORGANIZER_REGISTRATION.getValue() + organizerRegistration.getAppUser().getEmail());
+                    FolderName.ORGANIZER_REGISTRATION.getValue() + organizerRegistration.getAppUser().getEmail(),
+                    true);
             String publicId = (String) uploadResult.get("public_id");
             String imageUrl = (String) uploadResult.get("secure_url");
             organizerRegistration.setBusinessAvatarUrl(imageUrl);
@@ -172,32 +174,12 @@ public class OrganizerRegistrationServiceImpl implements OrganizerRegistrationSe
     }
 
     @Override
-    public PageResponse<OrganizerRegistrationResponse> getOrganizerRegistrations(int page, int size) {
+    public PageResponse<OrganizerRegistrationResponse> getOrganizerRegistrations(
+            OrganizerRegistrationSearchRequest request, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
-        Page<OrganizerRegistration> pageData = organizerRegistrationRepository.findAllByUserId(null, pageable);
-        List<OrganizerRegistrationResponse> responseData = pageData.getContent().stream().map(
-                organizerRegistrationMapper::toOrganizerRegistrationResponse
-        ).toList();
-        return PageResponse.<OrganizerRegistrationResponse>builder()
-                .currentPage(page)
-                .totalElements(pageData.getTotalElements())
-                .totalPage(pageData.getTotalPages())
-                .pageSize(pageData.getSize())
-                .data(responseData)
-                .build();
-    }
-
-    @Override
-    public PageResponse<OrganizerRegistrationResponse> getOrganizerRegistrationsByUser(int page, int size) {
-        String email = SecurityUtils.getCurrentUserLogin();
-        AppUser user = appUserRepository.findByEmail(email).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_FOUND)
-        );
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
-                "createdAt"));
-        Page<OrganizerRegistration> pageData = organizerRegistrationRepository.findAllByUserId(user.getId(),
-                pageable);
+        Page<OrganizerRegistration> pageData = organizerRegistrationRepository.filter(request.getUserId(),
+                request.getEmail(), request.getOrganizerName(), request.getStatus(), pageable);
         List<OrganizerRegistrationResponse> responseData = pageData.getContent().stream().map(
                 organizerRegistrationMapper::toOrganizerRegistrationResponse
         ).toList();
@@ -216,5 +198,10 @@ public class OrganizerRegistrationServiceImpl implements OrganizerRegistrationSe
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
         return organizerRegistrationMapper.toOrganizerRegistrationResponse(organizerRegistration);
+    }
+
+    @Override
+    public Integer count(RegistrationStatus status) {
+        return organizerRegistrationRepository.countByStatus(status);
     }
 }

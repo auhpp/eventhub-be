@@ -106,7 +106,7 @@ public class MessageServiceImpl implements MessageService {
         // handle file and content
         if (request.getFile() != null) {
             Map<String, Object> uploadResult = cloudinaryService.uploadFile(request.getFile(),
-                    FolderName.MESSAGE.getValue() + conversationId);
+                    FolderName.MESSAGE.getValue() + conversationId, true);
             String publicId = (String) uploadResult.get("public_id");
             String imageUrl = (String) uploadResult.get("secure_url");
             message.setPathUrl(imageUrl);

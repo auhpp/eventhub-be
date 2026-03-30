@@ -49,6 +49,8 @@ public class EventResponse {
 
     private List<EventSessionResponse> eventSessions;
 
+    private List<TagResponse> eventTags;
+
     private UserResponse appUser;
 
     private EventSeriesResponse eventSeries;

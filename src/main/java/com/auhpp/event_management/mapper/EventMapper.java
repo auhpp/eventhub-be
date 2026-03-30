@@ -7,7 +7,7 @@ import com.auhpp.event_management.entity.Event;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", uses = {EventSessionMapper.class, PointMapper.class, CategoryMapper.class,
-        UserMapper.class, EventSeriesMapper.class
+        UserMapper.class, EventSeriesMapper.class, TagMapper.class
 })
 public interface EventMapper {
 

@@ -2,9 +2,11 @@ package com.auhpp.event_management.repository;
 
 import com.auhpp.event_management.constant.AttendeeType;
 import com.auhpp.event_management.constant.BookingStatus;
+import com.auhpp.event_management.constant.BookingType;
 import com.auhpp.event_management.constant.WalletType;
 import com.auhpp.event_management.entity.AppUser;
 import com.auhpp.event_management.entity.Booking;
+import com.auhpp.event_management.repository.custom.BookingCustomRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,7 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface BookingRepository extends JpaRepository<Booking, Long> {
+public interface BookingRepository extends JpaRepository<Booking, Long>, BookingCustomRepository {
     Optional<Booking> findByTransactionIdAndWalletType(String transactionId, WalletType walletType);
 
     @Query("SELECT DISTINCT b FROM Booking b " +
@@ -82,4 +84,32 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Optional<Booking> findByResalePostIdAndCurrentUserAndStatus(@Param("resalePostId") Long resalePostId,
                                                                 @Param("email") String email,
                                                                 @Param("status") BookingStatus status);
+
+    @Query("SELECT COALESCE(SUM(b.totalAmount), 0) FROM Booking b " +
+            "WHERE (:eventSessionId IS NULL OR b.id IN ( " +
+            " SELECT b2.id FROM Booking b2 " +
+            " JOIN b2.attendees a " +
+            " WHERE a.ticket.eventSession.id = :eventSessionId ))" +
+            "AND (:bookingType IS NULL OR b.type = :bookingType ) " +
+            "AND (:startDate IS NULL OR b.createdAt >= :startDate) " +
+            "AND (:endDate IS NULL OR b.createdAt <= :endDate)")
+    Double getTotalRevenue(@Param("eventSessionId") Long eventSessionId,
+                           @Param("bookingType") BookingType bookingType,
+                           @Param("startDate") LocalDateTime startDate,
+                           @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT COALESCE(SUM(b.finalAmount), 0) FROM Booking b " +
+            "WHERE (:eventSessionId IS NULL OR b.id IN ( " +
+            " SELECT b2.id FROM Booking b2 " +
+            " JOIN b2.attendees a " +
+            " WHERE a.ticket.eventSession.id = :eventSessionId)) " +
+            "AND (:bookingType IS NULL OR b.type = :bookingType ) " +
+            "AND (CAST(:startDate AS timestamp) IS NULL OR b.createdAt >= :startDate) " +
+            "AND (CAST(:endDate AS timestamp) IS NULL OR b.createdAt <= :endDate)")
+    Double getVoucherRevenue(@Param("eventSessionId") Long eventSessionId,
+                             @Param("bookingType") BookingType bookingType,
+                             @Param("startDate") LocalDateTime startDate,
+                             @Param("endDate") LocalDateTime endDate);
+
+
 }

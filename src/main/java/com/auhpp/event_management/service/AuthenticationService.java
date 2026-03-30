@@ -27,4 +27,6 @@ public interface AuthenticationService {
     void logout(String accessToken);
 
     UserResponse getCurrentUserInfo();
+
+    void createUser(RegisterRequest request);
 }

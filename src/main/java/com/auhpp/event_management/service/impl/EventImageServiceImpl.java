@@ -69,7 +69,7 @@ public class EventImageServiceImpl implements EventImageService {
                         + "/event-session/" + eventSessionOptional.get().getId() + "/images";
             }
             Map<String, Object> uploadResult = cloudinaryService.uploadFile(file,
-                    folderName);
+                    folderName, true);
             String publicId = (String) uploadResult.get("public_id");
             String imageUrl = (String) uploadResult.get("secure_url");
 

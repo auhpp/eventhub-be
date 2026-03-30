@@ -1,6 +1,7 @@
 package com.auhpp.event_management.dto.request;
 
 import com.auhpp.event_management.constant.MeetingPlatform;
+import com.auhpp.event_management.constant.QAStatus;
 import com.auhpp.event_management.validation.annotation.ValidUpdateEventSession;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,5 +27,11 @@ public class EventSessionUpdateRequest {
     private MeetingPlatform meetingPlatform;
 
     private String meetingPassword;
+
+    private Boolean allowAnonymous;
+
+    private Boolean requireModerationQuestion;
+
+    private QAStatus qaStatus;
 
 }

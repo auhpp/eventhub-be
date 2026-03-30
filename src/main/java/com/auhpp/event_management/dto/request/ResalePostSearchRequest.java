@@ -21,4 +21,7 @@ public class ResalePostSearchRequest {
     private Boolean hasRetail;
     private Long userId;
     private List<ResalePostStatus> statuses;
+    private Long eventId;
+    private String name;
+    private String email;
 }

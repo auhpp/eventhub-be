@@ -1,0 +1,37 @@
+name,slug,type
+Công nghệ,cong-nghe,TOPIC
+Âm nhạc,am-nhac,TOPIC
+Giáo dục,giao-duc,TOPIC
+Kinh doanh,kinh-doanh,TOPIC
+Thể thao,the-thao,TOPIC
+Nghệ thuật,nghe-thuat,TOPIC
+Khởi nghiệp,khoi-nghiep,TOPIC
+Marketing,marketing,TOPIC
+Tài chính,tai-chinh,TOPIC
+Y tế và Sức khỏe,y-te-suc-khoe,TOPIC
+Văn hóa,van-hoa,TOPIC
+Du lịch,du-lich,TOPIC
+Thiết kế,thiet-ke,TOPIC
+Kỹ năng mềm,ky-nang-mem,TOPIC
+Tuyển dụng,tuyen-dung,TOPIC
+Giải trí,giai-tri,TOPIC
+Nhiếp ảnh,nhiep-anh,TOPIC
+Ẩm thực,am-thuc,TOPIC
+Tâm lý học,tam-ly-hoc,TOPIC
+Khoa học,khoa-hoc,TOPIC
+Ngoại ngữ,ngoai-ngu,TOPIC
+Lập trình,lap-trinh,TOPIC
+Workshop,workshop,CUSTOM
+Networking,networking,CUSTOM
+Miễn phí,mien-phi,CUSTOM
+Trực tuyến,truc-tuyen,CUSTOM
+Cuối tuần,cuoi-tuan,CUSTOM
+Từ thiện,tu-thien,CUSTOM
+Sinh viên,sinh-vien,CUSTOM
+Gia đình,gia-dinh,CUSTOM
+Talkshow,talkshow,CUSTOM
+Triển lãm,trien-lam,CUSTOM
+Teambuilding,teambuilding,CUSTOM
+Dành cho người mới,danh-cho-nguoi-moi,CUSTOM
+Có cấp chứng chỉ,co-cap-chung-chi,CUSTOM
+Gây quỹ,gay-quy,CUSTOM

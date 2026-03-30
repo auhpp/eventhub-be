@@ -32,5 +32,7 @@ public class EventSearchRequest {
     private SortType sortType;
     private Long eventSeriesId;
     private Boolean hasResale;
-
+    private Boolean hasFavorite;
+    private Long currentUserId;
+    private String email;
 }
