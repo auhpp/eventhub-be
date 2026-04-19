@@ -14,28 +14,59 @@ import java.util.List;
 public interface EventSessionRepository extends JpaRepository<EventSession, Long> {
 
 
-
     @Query("SELECT COALESCE(SUM(t.price * t.quantity), 0) FROM Ticket t " +
-            "WHERE t.eventSession.id = :eventSessionId ")
-    Double getMaxPotentialRevenue(@Param("eventSessionId") Long eventSessionId);
+            "WHERE (:eventSessionId IS NULL OR t.eventSession.id = :eventSessionId) " +
+            "AND (:eventSeriesId IS NULL OR t.eventSession.event.eventSeries.id = :eventSeriesId)" +
+            "")
+    Double getMaxPotentialRevenue(
+            @Param("eventSeriesId") Long eventSeriesId,
+            @Param("eventSessionId") Long eventSessionId);
 
     @Query("SELECT COALESCE(SUM(t.soldQuantity), 0) FROM Ticket t " +
-            "WHERE t.eventSession.id = :eventSessionId ")
-    Integer getTotalTicketsSold(@Param("eventSessionId") Long eventSessionId);
+            "WHERE (:eventSessionId IS NULL OR t.eventSession.id = :eventSessionId) " +
+            "AND (:eventSeriesId IS NULL OR t.eventSession.event.eventSeries.id = :eventSeriesId)" +
+            "AND (CAST(:startDate AS timestamp) IS NULL OR exists (" +
+            "SELECT 1 FROM Attendee a " +
+            "WHERE a.ticket.id = t.id AND a.createdAt >= :startDate))" +
+            "AND (CAST(:endDate AS timestamp) IS NULL OR exists (" +
+            "SELECT 1 FROM Attendee a " +
+            "WHERE a.ticket.id = t.id AND a.createdAt <= :endDate))")
+    Integer getTotalTicketsSold(
+            @Param("eventSeriesId") Long eventSeriesId,
+            @Param("eventSessionId") Long eventSessionId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 
     @Query("SELECT COALESCE(SUM(t.quantity), 0) FROM Ticket t " +
-            "WHERE t.eventSession.id = :eventSessionId ")
-    Integer getTotalTicketCapacity(@Param("eventSessionId") Long eventSessionId);
-
+            "WHERE (:eventSessionId IS NULL OR t.eventSession.id = :eventSessionId) " +
+            "AND (:eventSeriesId IS NULL OR t.eventSession.event.eventSeries.id = :eventSeriesId)" +
+            "AND (CAST(:startDate AS timestamp) IS NULL OR exists (" +
+            "SELECT 1 FROM Attendee a " +
+            "WHERE a.ticket.id = t.id AND a.createdAt >= :startDate))" +
+            "AND (CAST(:endDate AS timestamp) IS NULL OR exists (" +
+            "SELECT 1 FROM Attendee a " +
+            "WHERE a.ticket.id = t.id AND a.createdAt <= :endDate))")
+    Integer getTotalTicketCapacity(
+            @Param("eventSeriesId") Long eventSeriesId,
+            @Param("eventSessionId") Long eventSessionId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 
 
     @Query("SELECT COALESCE(SUM(b.discountAmount), 0) FROM Booking b " +
-            "WHERE b.id IN ( " +
-            " SELECT b2.id FROM Booking b2 " +
-            " JOIN b2.attendees a " +
-            " WHERE a.ticket.eventSession.id = :eventSessionId )")
-    Double getDiscountAmount(@Param("eventSessionId") Long eventSessionId);
-
+            "WHERE (:eventSeriesId IS NULL OR exists ( " +
+            " SELECT 1 FROM Attendee a " +
+            " WHERE a.booking.id = b.id AND a.ticket.eventSession.event.eventSeries.id = :eventSeriesId))" +
+            "AND (:eventSessionId IS NULL OR exists ( " +
+            " SELECT 1 FROM Attendee a " +
+            " WHERE a.booking.id = b.id AND a.ticket.eventSession.id = :eventSessionId))" +
+            "AND (CAST(:startDate AS timestamp) IS NULL OR b.createdAt >= :startDate) " +
+            "AND (CAST(:endDate AS timestamp) IS NULL OR b.createdAt <= :endDate)")
+    Double getDiscountAmount(
+            @Param("eventSeriesId") Long eventSeriesId,
+            @Param("eventSessionId") Long eventSessionId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 
 
     @Query(value = """
@@ -46,11 +77,14 @@ public interface EventSessionRepository extends JpaRepository<EventSession, Long
                                         (SELECT COUNT(a.id) 
                                         FROM attendee a
                                         INNER JOIN ticket t ON a.ticket_id = t.id
-                                        WHERE a.booking_id = b.id AND t.event_session_id = :eventSessionId
+                                        WHERE a.booking_id = b.id 
+                                        AND t.event_session_id = :eventSessionId
+                                        AND b.type != 'INVITE' 
                                         )
                             ), 0) AS ticketsSold
             FROM booking b
             WHERE b.status = 'PAID'
+            AND b.type = 'BUY'
             AND b.created_at >= :startDate
             AND EXISTS(
                     SELECT 1
@@ -73,12 +107,15 @@ public interface EventSessionRepository extends JpaRepository<EventSession, Long
                                         (SELECT COUNT(a.id) 
                                         FROM attendee a
                                         INNER JOIN ticket t ON a.ticket_id = t.id
-                                        WHERE a.booking_id = b.id AND t.event_session_id = :eventSessionId
+                                        WHERE a.booking_id = b.id 
+                                        AND t.event_session_id = :eventSessionId
+                                        AND b.type != 'INVITE' 
                                         )
                             ), 0) AS ticketsSold
             FROM booking b
             WHERE b.status = 'PAID'
             AND b.created_at >= :startDate
+            AND b.type = 'BUY'
             AND EXISTS(
                     SELECT 1
                     FROM attendee a

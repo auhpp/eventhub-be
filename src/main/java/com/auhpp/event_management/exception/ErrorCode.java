@@ -61,6 +61,12 @@ public enum ErrorCode {
     QA_EVENT_SESSION_CLOSED(1051, "QA event session closed", HttpStatus.BAD_REQUEST),
     NOT_AN_AUDIO(1052, "Not an audio", HttpStatus.BAD_REQUEST),
     ACCOUNT_ACTIVE(1053, "Account active", HttpStatus.BAD_REQUEST),
+    RESALE_AN_ATTENDEE_JUST_ONCE(1054, "Resale an attendee just once", HttpStatus.BAD_REQUEST),
+    CHECK_IN_START_TIME(1055, "Check in start time of event session", HttpStatus.BAD_REQUEST),
+    NOT_CHECK_IN(1056, "Not check in", HttpStatus.BAD_REQUEST),
+    ATTENDEE_OUTSIDE(1057, "Attendee outside", HttpStatus.BAD_REQUEST),
+    EVENT_NOT_ALLOW_RESALE(1058, "Event not allow resale", HttpStatus.BAD_REQUEST),
+    MAXIMUM_TICKET_PER_USER(1059, "Maximum ticket per user", HttpStatus.BAD_REQUEST),
 
     ;
 

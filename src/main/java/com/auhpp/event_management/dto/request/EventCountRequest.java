@@ -15,5 +15,7 @@ import java.util.List;
 public class EventCountRequest {
     private Long categoryId;
 
+    private Long organizerId;
+
     private List<EventStatus> statuses;
 }

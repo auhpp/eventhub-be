@@ -14,7 +14,9 @@ import com.auhpp.event_management.repository.BookingRepository;
 import com.auhpp.event_management.repository.EventRepository;
 import com.auhpp.event_management.repository.EventSessionRepository;
 import com.auhpp.event_management.service.EventSessionService;
+import com.auhpp.event_management.service.GoogleCalendarService;
 import com.auhpp.event_management.service.TicketService;
+import com.auhpp.event_management.service.WalletService;
 import com.auhpp.event_management.util.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +45,8 @@ public class EventSessionServiceImpl implements EventSessionService {
     BookingRepository bookingRepository;
     AttendeeRepository attendeeRepository;
     SimpMessageSendingOperations simpMessageSendingOperations;
+    WalletService walletService;
+    GoogleCalendarService googleCalendarService;
 
     @Override
     @Transactional
@@ -79,6 +83,8 @@ public class EventSessionServiceImpl implements EventSessionService {
             throw new AppException(ErrorCode.RESOURCE_CAN_NOT_UPDATE);
         }
         eventSessionMapper.updateEventSessionFromRequest(request, eventSession);
+        eventSessionRepository.save(eventSession);
+
         // broadcast if update qa status
         if (request.getQaStatus() != null) {
             simpMessageSendingOperations.convertAndSend(
@@ -86,7 +92,8 @@ public class EventSessionServiceImpl implements EventSessionService {
                     eventSessionMapper.toEventSessionResponse(eventSession)
             );
         }
-        eventSessionRepository.save(eventSession);
+        googleCalendarService.syncUpdatedEventToAllUsersInBackground(eventSession.getId());
+
         return eventSessionMapper.toEventSessionResponse(eventSession);
     }
 
@@ -135,7 +142,7 @@ public class EventSessionServiceImpl implements EventSessionService {
 
             int checkedInQuantityTmp = ticket.getAttendees().stream().filter(
                     attendee -> attendee.getStatus() == AttendeeStatus.CHECKED_IN &&
-                            attendee.getType() == AttendeeType.BUY
+                            (attendee.getType() == AttendeeType.BUY || attendee.getType() == AttendeeType.RESALE)
             ).toList().size();
             int guestCheckedInQuantityTmp = ticket.getAttendees().stream().filter(
                     attendee -> attendee.getStatus() == AttendeeStatus.CHECKED_IN &&
@@ -161,6 +168,7 @@ public class EventSessionServiceImpl implements EventSessionService {
             guestOutsideQuantity += guestOutsideQuantityTmp;
 
             ticketCheckIns.add(TicketCheckInResponse.builder()
+                    .id(ticket.getId())
                     .name(ticket.getName())
                     .totalQuantity(totalQuantityTmp)
                     .soldQuantity(soldQuantityTmp)
@@ -218,41 +226,6 @@ public class EventSessionServiceImpl implements EventSessionService {
     }
 
     @Override
-    public EventOverviewStatsResponse getEventStats(Long eventSessionId) {
-        Double totalRevenue = bookingRepository.getTotalRevenue(eventSessionId, BookingType.BUY, null, null);
-        Double maxPotentialRevenue = eventSessionRepository.getMaxPotentialRevenue(eventSessionId);
-        Double voucherRevenue = bookingRepository.getVoucherRevenue(eventSessionId, BookingType.BUY, null, null);
-        Double discountAmount = eventSessionRepository.getDiscountAmount(eventSessionId);
-        Double totalFee = attendeeRepository.getCommissionFromEvents(eventSessionId,
-                List.of(SourceType.PURCHASE)
-                , null, null);
-
-        Integer totalTicketsSold = eventSessionRepository.getTotalTicketsSold(eventSessionId);
-        Integer totalCapacity = eventSessionRepository.getTotalTicketCapacity(eventSessionId);
-        Double revenuePercentage = 0.0;
-        if (maxPotentialRevenue != null && maxPotentialRevenue > 0) {
-            double rawPercentage = (voucherRevenue / maxPotentialRevenue) * 100.0;
-            revenuePercentage = Math.round(rawPercentage * 100.0) / 100.0;
-        }
-        Double ticketsSoldPercentage = 0.0;
-        if (totalCapacity != null && totalCapacity > 0) {
-            double rawPercentage = ((double) totalTicketsSold / totalCapacity) * 100.0;
-            ticketsSoldPercentage = Math.round(rawPercentage * 100.0) / 100.0;
-        }
-        return EventOverviewStatsResponse.builder()
-                .totalRevenue(totalRevenue)
-                .maxPotentialRevenue(maxPotentialRevenue)
-                .voucherRevenue(voucherRevenue)
-                .revenuePercentage(revenuePercentage)
-                .discountAmount(discountAmount)
-                .totalFee(totalFee)
-                .totalTicketsSold(totalTicketsSold)
-                .totalCapacity(totalCapacity)
-                .ticketsSoldPercentage(ticketsSoldPercentage)
-                .build();
-    }
-
-    @Override
     public EventChartStatsResponse getEventChartStats(Long eventSessionId, TimeFilter filter) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startDate;
@@ -296,6 +269,17 @@ public class EventSessionServiceImpl implements EventSessionService {
                 .timeFilter(filter)
                 .data(finalDataPoints)
                 .build();
+    }
+
+    @Override
+    public void releaseFundForEventSession(Long eventSessionId) {
+        List<Booking> pendingBookings = bookingRepository.findBookingsReadyForFundReleaseBySession(eventSessionId);
+        if (pendingBookings.isEmpty()) {
+            throw new AppException(ErrorCode.RESOURCE_CAN_NOT_UPDATE);
+        }
+        for (Booking booking : pendingBookings) {
+            walletService.processSingleBooking(booking);
+        }
     }
 
 }

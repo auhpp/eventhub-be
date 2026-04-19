@@ -1,6 +1,7 @@
 package com.auhpp.event_management.repository;
 
 import com.auhpp.event_management.constant.BookingStatus;
+import com.auhpp.event_management.constant.EventSearchStatus;
 import com.auhpp.event_management.entity.Booking;
 import com.auhpp.event_management.entity.Coupon;
 import org.springframework.data.domain.Page;
@@ -26,9 +27,23 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
     @Query("SELECT c FROM Coupon c " +
             "JOIN TicketCoupon tc ON tc.coupon.id = c.id " +
             "WHERE (:eventId IS NULL OR tc.ticket.eventSession.event.id = :eventId) " +
-            "AND (:hasPublic IS NULL OR c.hasPublic = :hasPublic) ")
-    Page<Coupon> filterCoupon(@Param("eventId") Long eventId,
-                              @Param("hasPublic") Boolean hasPublic, Pageable pageable);
+            "AND (:hasPublic IS NULL OR c.hasPublic = :hasPublic) " +
+            "AND (CAST(:keyword AS string ) IS NULL OR LOWER(c.name)" +
+            " LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')) OR " +
+            " LOWER(c.code) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%'))" +
+            ") " +
+            "AND (" +
+            "   :status IS NULL " +
+            "   OR (:status = 'COMING' AND c.startDateTime > CURRENT_TIMESTAMP) " +
+            "   OR (:status = 'ONGOING' AND c.startDateTime <= CURRENT_TIMESTAMP AND c.endDateTime >= CURRENT_TIMESTAMP) " +
+            "   OR (:status = 'PAST' AND c.endDateTime < CURRENT_TIMESTAMP)" +
+            ")")
+    Page<Coupon> filterCoupon(
+            @Param("keyword") String keyword,
+            @Param("eventId") Long eventId,
+            @Param("hasPublic") Boolean hasPublic,
+            @Param("status") String status,
+            Pageable pageable);
 
     @Query("SELECT b FROM Coupon c " +
             "JOIN Booking b ON b.coupon.id = c.id " +

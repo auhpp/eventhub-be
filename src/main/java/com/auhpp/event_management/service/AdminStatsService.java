@@ -5,6 +5,7 @@ import com.auhpp.event_management.constant.RevenueSource;
 import com.auhpp.event_management.constant.RoleName;
 import com.auhpp.event_management.dto.request.DateRangeFilterRequest;
 import com.auhpp.event_management.dto.request.PaginationFilterRequest;
+import com.auhpp.event_management.dto.request.StatsFilterRequest;
 import com.auhpp.event_management.dto.response.*;
 
 import java.util.List;
@@ -12,10 +13,8 @@ import java.util.List;
 public interface AdminStatsService {
     KpiOverviewResponse getKpiOverview(DateRangeFilterRequest request);
 
-    List<RevenueChartResponse> getRevenueCharts(DateRangeFilterRequest request, RevenueSource revenueSource);
+    List<RevenueChartResponse> getRevenueCharts(StatsFilterRequest request, RevenueSource revenueSource);
 
-    List<TopEventRevenueResponse> getTopEventRevenue(DateRangeFilterRequest request,
-                                                     PaginationFilterRequest paginationFilterRequest);
 
     List<TopOrganizerResponse> getTopOrganizer(DateRangeFilterRequest request,
                                                PaginationFilterRequest paginationFilterRequest);

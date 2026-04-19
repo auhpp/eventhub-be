@@ -27,6 +27,8 @@ public class TicketBasicResponse {
 
     private Integer maximumPerPurchase;
 
+    private Integer maximumPerUser;
+
     private Integer soldQuantity;
 
     private TicketStatus status;

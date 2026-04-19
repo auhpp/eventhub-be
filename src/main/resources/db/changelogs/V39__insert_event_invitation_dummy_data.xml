@@ -1,0 +1,31 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="1775578537326-1" author="auhpp">
+        <sqlFile path="data/event_invitation.sql" relativeToChangelogFile="true" splitStatements="true"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sql>DELETE FROM event_invitation;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1775578537326-2" author="auhpp">
+        <sqlFile path="data/booking.sql" relativeToChangelogFile="true" splitStatements="true"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sql>UPDATE event_invitation SET booking_id = NULL;</sql>
+            <sql>DELETE FROM booking where type = 'INVITE';</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1775578537326-3" author="auhpp">
+        <sqlFile path="data/attendee.sql" relativeToChangelogFile="true" splitStatements="true"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sql>DELETE FROM attendee where type = 'INVITE';</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

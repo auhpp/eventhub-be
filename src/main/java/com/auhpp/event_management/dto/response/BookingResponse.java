@@ -28,6 +28,8 @@ public class BookingResponse {
 
     private String transactionId;
 
+    private String invoiceUrl;
+
     private String customerName;
 
     private String customerEmail;

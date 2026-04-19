@@ -64,4 +64,8 @@ app:
     emulator-app: ${EMULATOR_APP_CORS_ALLOWED}
   spotter:
     base-url: ${SPOTTER_BASE_URL}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID}
+    client-secret: ${GOOGLE_CLIENT_SECRET}
+
 

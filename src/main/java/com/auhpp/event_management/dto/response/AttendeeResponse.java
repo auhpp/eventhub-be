@@ -17,8 +17,6 @@ import java.time.LocalDateTime;
 public class AttendeeResponse {
     private Long id;
 
-    private String ticketCode;
-
     private LocalDateTime checkInAt;
 
     private AttendeeStatus status;

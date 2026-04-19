@@ -33,6 +33,8 @@ public class EventUpdateRequest {
 
     private Double locationLatitude;
 
+    private Boolean hasResalable;
+
     @NotEmpty(message = "tags cannot be empty")
     @Size(min = 1)
     private List<@Valid TagUpdateRequest> tags;

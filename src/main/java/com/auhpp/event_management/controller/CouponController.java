@@ -17,8 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/v1/coupon")
 @RequiredArgsConstructor
@@ -27,7 +25,7 @@ public class CouponController {
     CouponService couponService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<CouponResponse> createCoupon(
             @Valid @ModelAttribute CouponCreateRequest request
     ) {
@@ -38,7 +36,7 @@ public class CouponController {
     }
 
     @PutMapping(path = "/{couponId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<CouponResponse> updateCoupon(
             @PathVariable("couponId") Long couponId,
             @Valid @ModelAttribute CouponUpdateRequest request
@@ -50,7 +48,7 @@ public class CouponController {
     }
 
     @DeleteMapping(path = "/{couponId}")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<Void> deleteCoupon(
             @PathVariable("couponId") Long couponId
     ) {
@@ -73,11 +71,11 @@ public class CouponController {
     }
 
     @GetMapping("/report/{couponId}")
-    public ResponseEntity<List<CouponReportDetailResponse>> getInfoReportDetail(
+    public ResponseEntity<CouponReportDetailResponse> getInfoReportDetail(
             @PathVariable("couponId") Long couponId
 
     ) {
-        List<CouponReportDetailResponse> result = couponService.getInfoReportDetail(couponId);
+        CouponReportDetailResponse result = couponService.getInfoReportDetail(couponId);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(result);
@@ -95,7 +93,7 @@ public class CouponController {
     }
 
     @DeleteMapping(path = "/{couponId}/ticket-coupon/{ticketCouponId}")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<Void> deleteTicketCoupon(
             @PathVariable("ticketCouponId") Long ticketCouponId
     ) {
@@ -125,5 +123,15 @@ public class CouponController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(cnt);
+    }
+
+    @PostMapping("/disable/{id}")
+    public ResponseEntity<Void> disableCoupon(
+            @PathVariable("id") Long id
+    ) {
+        couponService.disableCoupon(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
     }
 }

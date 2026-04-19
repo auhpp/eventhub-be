@@ -42,7 +42,7 @@ public class UserFollowerController {
 
     @PostMapping("/filter")
     public ResponseEntity<PageResponse<UserFollowerResponse>> getUserFollowers(
-            UserFollowerSearchRequest request,
+            @RequestBody  UserFollowerSearchRequest request,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int size
     ) {

@@ -11,5 +11,6 @@ public interface EventStaffMapper {
     @Mapping(source = "appUser.fullName", target = "fullName")
     @Mapping(source = "event.id", target = "eventId")
     @Mapping(source = "appUser.avatar", target = "avatar")
+    @Mapping(source = "appUser.id", target = "userId")
     EventStaffResponse toEventStaffResponse(EventStaff eventStaff);
 }

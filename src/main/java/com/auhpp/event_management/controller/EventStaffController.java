@@ -1,6 +1,7 @@
 package com.auhpp.event_management.controller;
 
 import com.auhpp.event_management.dto.request.EventInvitationRejectRequest;
+import com.auhpp.event_management.dto.request.EventStaffChangeRoleRequest;
 import com.auhpp.event_management.dto.request.EventStaffCreateRequest;
 import com.auhpp.event_management.dto.request.EventStaffSearchRequest;
 import com.auhpp.event_management.dto.response.EventStaffInvitationResponse;
@@ -27,7 +28,7 @@ public class EventStaffController {
 
 
     @PostMapping
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<List<EventStaffInvitationResponse>> createEventStaff(
             @RequestBody @Valid EventStaffCreateRequest request
     ) {
@@ -59,7 +60,7 @@ public class EventStaffController {
     }
 
     @PostMapping("/filter")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<PageResponse<EventStaffResponse>> getEventStaffs(
             @RequestBody EventStaffSearchRequest request,
             @RequestParam(name = "page", defaultValue = "1") int page,
@@ -94,7 +95,7 @@ public class EventStaffController {
     }
 
     @PostMapping("/revoke/{id}")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<Void> revokeEventStaffs(
             @PathVariable("id") Long id
     ) {
@@ -104,4 +105,43 @@ public class EventStaffController {
                 .build();
     }
 
+    @GetMapping("/check")
+    public ResponseEntity<Boolean> isEventStaff(
+    ) {
+        boolean response = eventStaffService.isEventStaff();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
+
+    @PostMapping("/disable/{id}")
+    public ResponseEntity<Void> disableEventStaff(
+            @PathVariable("id") Long id
+    ) {
+        eventStaffService.disableEventStaff(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @GetMapping("/role/{eventId}")
+    public ResponseEntity<EventStaffResponse> getByEventId(
+            @PathVariable("eventId") Long eventId
+    ) {
+        EventStaffResponse response = eventStaffService.getByEventId(eventId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
+
+    @PostMapping("/change-role/{eventStaffId}")
+    public ResponseEntity<Void> changeRole(
+            @PathVariable("eventStaffId") Long eventStaffId,
+            @RequestBody EventStaffChangeRoleRequest request
+    ) {
+        eventStaffService.changeRole(eventStaffId, request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
 }

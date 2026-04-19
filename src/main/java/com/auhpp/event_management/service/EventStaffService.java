@@ -1,6 +1,7 @@
 package com.auhpp.event_management.service;
 
 import com.auhpp.event_management.dto.request.EventInvitationRejectRequest;
+import com.auhpp.event_management.dto.request.EventStaffChangeRoleRequest;
 import com.auhpp.event_management.dto.request.EventStaffCreateRequest;
 import com.auhpp.event_management.dto.request.EventStaffSearchRequest;
 import com.auhpp.event_management.dto.response.EventStaffInvitationResponse;
@@ -25,4 +26,15 @@ public interface EventStaffService {
 
     EventStaffResponse getById(Long id);
 
+    boolean isEventStaff();
+
+    void disableEventStaff(Long id);
+
+    EventStaffResponse getByEventId(Long eventId);
+
+    void checkAllPermission(Long eventId);
+
+    boolean isCheckInStaff(Long eventId);
+
+    void changeRole(Long eventStaffId, EventStaffChangeRoleRequest request);
 }

@@ -13,7 +13,6 @@ import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.EventInvitationMapper;
 import com.auhpp.event_management.repository.AppUserRepository;
 import com.auhpp.event_management.repository.EventInvitationRepository;
-import com.auhpp.event_management.repository.RoleRepository;
 import com.auhpp.event_management.repository.TicketRepository;
 import com.auhpp.event_management.service.BookingService;
 import com.auhpp.event_management.service.EmailService;
@@ -27,7 +26,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -192,6 +190,7 @@ public class EventInvitationServiceImpl implements EventInvitationService {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
         Page<EventInvitation> eventInvitationPage = eventInvitationRepository.findByEventSessionId(
+                request.getEmail(),
                 statuses,
                 request.getEventSessionId(),
                 pageable);

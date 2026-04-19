@@ -38,8 +38,5 @@ public class Tag {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "tag")
-    private List<UserTag> userTags;
-
-    @OneToMany(mappedBy = "tag")
     private List<EventTag> eventTags;
 }

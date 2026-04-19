@@ -76,4 +76,8 @@ public class Attendee {
 
     @OneToOne
     private Attendee parentAttendee;
+
+    @OneToMany(mappedBy = "attendee", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE},
+            orphanRemoval = true)
+    private List<CheckInLog> checkInLogs;
 }

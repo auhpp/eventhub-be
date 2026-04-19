@@ -1,0 +1,33 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1775459861513-1">
+        <dropTable tableName="platform_revenue"/>
+    </changeSet>
+
+    <changeSet author="auhpp (generated)" id="1775459861513-2">
+        <dropColumn columnName="auth_provider" tableName="app_user"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775459861513-3">
+        <dropColumn columnName="has_notification" tableName="conversation"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775459861513-4">
+        <dropColumn columnName="has_pin" tableName="conversation"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775459861513-5">
+        <dropColumn columnName="provider_id" tableName="app_user"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775459861513-6">
+        <addColumn tableName="organizer_registration">
+            <column name="type" type="varchar">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="organizer_registration">
+            <column name="tax_code" type="varchar">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

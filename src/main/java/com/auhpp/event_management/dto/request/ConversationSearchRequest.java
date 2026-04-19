@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ConversationSearchRequest {
-    private Boolean hasPin;
     private MessageStatus status;
     private String nameMember;
 }

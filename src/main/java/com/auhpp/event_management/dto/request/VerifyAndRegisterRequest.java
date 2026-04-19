@@ -21,4 +21,10 @@ public class VerifyAndRegisterRequest {
 
     @NotEmpty(message = "Password cannot be empty")
     private String password;
+
+    @NotEmpty(message = "Full name cannot be empty")
+    private String fullName;
+
+    @NotEmpty(message = "Phone number cannot be empty")
+    private String phoneNumber;
 }

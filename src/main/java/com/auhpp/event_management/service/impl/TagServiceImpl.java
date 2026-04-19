@@ -78,8 +78,7 @@ public class TagServiceImpl implements TagService {
         Tag tag = tagRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
-        if (tag.getEventTags() != null && !tag.getEventTags().isEmpty()
-                || tag.getUserTags() != null && !tag.getUserTags().isEmpty()) {
+        if (tag.getEventTags() != null && !tag.getEventTags().isEmpty()) {
             throw new AppException(ErrorCode.RESOURCE_CAN_NOT_DELETE);
         }
         tagRepository.deleteById(id);
@@ -104,7 +103,7 @@ public class TagServiceImpl implements TagService {
 
     @Override
     public List<TagResponse> getAll(TagSearchRequest request) {
-        List<Tag> tags = tagRepository.findAllByType(request.getType(), request.getName(), request.getUserId());
+        List<Tag> tags = tagRepository.findAllByType(request.getType(), request.getName(), request.getEventId());
         return tags.stream().map(tagMapper::toTagResponse).toList();
     }
 }

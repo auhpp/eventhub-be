@@ -3,9 +3,11 @@ package com.auhpp.event_management.service.impl;
 import com.auhpp.event_management.constant.EmailType;
 import com.auhpp.event_management.constant.RedisPrefix;
 import com.auhpp.event_management.constant.RoleName;
+import com.auhpp.event_management.constant.WalletType;
 import com.auhpp.event_management.dto.request.AuthenticationRequest;
 import com.auhpp.event_management.dto.request.RegisterRequest;
 import com.auhpp.event_management.dto.request.VerifyAndRegisterRequest;
+import com.auhpp.event_management.dto.request.WalletCreateRequest;
 import com.auhpp.event_management.dto.response.AuthenticationResponse;
 import com.auhpp.event_management.dto.response.UserResponse;
 import com.auhpp.event_management.entity.AppUser;
@@ -18,6 +20,7 @@ import com.auhpp.event_management.repository.RoleRepository;
 import com.auhpp.event_management.service.AuthenticationService;
 import com.auhpp.event_management.service.EmailService;
 import com.auhpp.event_management.service.OtpService;
+import com.auhpp.event_management.service.WalletService;
 import com.auhpp.event_management.util.SecurityUtils;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -53,6 +56,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     PasswordEncoder passwordEncoder;
     RedisTemplate<String, String> stringValueRedisTemplate;
     UserMapper userMapper;
+    WalletService walletService;
 
     @NonFinal
     @Value("${spring.jwt.signer-key}")
@@ -80,7 +84,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     @Transactional
-    public void createUser(RegisterRequest registerRequest) {
+    public AppUser createUser(RegisterRequest registerRequest) {
         Optional<AppUser> appUserOptional = appUserRepository.findByEmail(registerRequest.getEmail());
         if (appUserOptional.isPresent()) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
@@ -92,19 +96,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         appUser.setPassword(passwordEncoded);
         appUser.setStatus(true);
         appUser.setRole(role);
+        appUser.setFullName(registerRequest.getFullName());
+        appUser.setPhoneNumber(registerRequest.getPhoneNumber());
 
-        appUserRepository.save(appUser);
+
+        return appUserRepository.save(appUser);
     }
 
     @Override
     @Transactional
-    public void verifyAndCreateUser(VerifyAndRegisterRequest verifyAndRegisterRequest) {
-        if (otpService.verifyOtp(verifyAndRegisterRequest.getEmail(), verifyAndRegisterRequest.getOtp())) {
+    public void verifyAndCreateUser(VerifyAndRegisterRequest request) {
+        if (otpService.verifyOtp(request.getEmail(), request.getOtp())) {
             RegisterRequest registerRequest = RegisterRequest.builder()
-                    .email(verifyAndRegisterRequest.getEmail())
-                    .password(verifyAndRegisterRequest.getPassword())
+                    .email(request.getEmail())
+                    .password(request.getPassword())
+                    .fullName(request.getFullName())
+                    .phoneNumber(request.getPhoneNumber())
                     .build();
-            this.createUser(registerRequest);
+            AppUser user = this.createUser(registerRequest);
+            // create wallet
+            walletService.create(WalletCreateRequest.builder()
+                    .appUserId(user.getId())
+                    .type(WalletType.USER_WALLET)
+                    .build());
         } else {
             throw new AppException(ErrorCode.OTP_NOT_VALID);
         }

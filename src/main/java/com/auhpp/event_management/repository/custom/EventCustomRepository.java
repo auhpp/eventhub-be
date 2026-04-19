@@ -13,4 +13,6 @@ public interface EventCustomRepository {
 
     EventApprovalStatResponse getEventApprovalStatResponse(DateRangeFilterRequest request);
 
+
+
 }

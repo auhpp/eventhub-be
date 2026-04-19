@@ -42,7 +42,7 @@ public class EventSeriesFollowerController {
 
     @PostMapping("/filter")
     public ResponseEntity<PageResponse<EventSeriesFollowerResponse>> getEventSeries(
-            EventSeriesFollowerSearchRequest request,
+            @RequestBody EventSeriesFollowerSearchRequest request,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int size
     ) {

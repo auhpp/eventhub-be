@@ -35,4 +35,5 @@ public class EventSearchRequest {
     private Boolean hasFavorite;
     private Long currentUserId;
     private String email;
+    private String slug;
 }

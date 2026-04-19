@@ -18,9 +18,10 @@ public interface TicketGiftRepository extends JpaRepository<TicketGift, Long>, J
     List<TicketGift> findAllByStatusAndExpiredAtBefore(TicketGiftStatus status, LocalDateTime currentDate);
 
     @Query("SELECT tg FROM TicketGift tg " +
-            "JOIN tg.attendeeTicketGifts atg " +
-            "WHERE atg.attendee.ticket.eventSession.id = :eventSessionId " +
-            "AND atg.attendee.owner IN :users " +
+            "WHERE exists ( " +
+            "SELECT 1 FROM AttendeeTicketGift atg " +
+            "WHERE atg.ticketGift.id = tg.id AND atg.attendee.ticket.eventSession.id = :eventSessionId " +
+            "AND atg.attendee.owner IN :users )" +
             "AND (:status IS NULL OR tg.status = :status) ")
     List<TicketGift> findAllByUserInAndEventSession(
             @Param("status") TicketGiftStatus status,

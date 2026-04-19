@@ -1,0 +1,117 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1774970591277-1">
+        <createTable tableName="payment_method">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="payment_methodPK"/>
+            </column>
+            <column name="bank_account_name" type="VARCHAR(255)"/>
+            <column name="bank_account_no" type="VARCHAR(255)"/>
+            <column name="bank_code" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774970591277-2">
+        <createTable tableName="platform_revenue">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="platform_revenuePK"/>
+            </column>
+            <column name="amount" type="FLOAT(53)"/>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="reference_id" type="BIGINT"/>
+            <column name="reference_type" type="VARCHAR(255)"/>
+            <column name="revenue_type" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774970591277-3">
+        <createTable tableName="wallet">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="walletPK"/>
+            </column>
+            <column name="available_balance" type="FLOAT(53)"/>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="locked_balance" type="FLOAT(53)"/>
+            <column name="pending_balance" type="FLOAT(53)"/>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="type" type="VARCHAR(255)"/>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774970591277-4">
+        <createTable tableName="wallet_transaction">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="wallet_transactionPK"/>
+            </column>
+            <column name="amount" type="FLOAT(53)"/>
+            <column name="balance_after" type="FLOAT(53)"/>
+            <column name="balance_before" type="FLOAT(53)"/>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="reference_id" type="BIGINT"/>
+            <column name="reference_type" type="VARCHAR(255)"/>
+            <column name="transaction_type" type="VARCHAR(255)"/>
+            <column name="wallet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774970591277-5">
+        <createTable tableName="withdrawal_request">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="withdrawal_requestPK"/>
+            </column>
+            <column name="admin_note" type="VARCHAR(255)"/>
+            <column name="amount" type="FLOAT(53)"/>
+            <column name="bank_account_name" type="VARCHAR(255)"/>
+            <column name="bank_account_no" type="VARCHAR(255)"/>
+            <column name="bank_code" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="proof_image_public_id" type="VARCHAR(255)"/>
+            <column name="proof_image_url" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="updated_at" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="wallet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774970591277-6">
+        <addForeignKeyConstraint baseColumnNames="wallet_id" baseTableName="withdrawal_request"
+                                 constraintName="FK2gvdwiffurnrbye0yt6wpdxfq" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="wallet"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774970591277-7">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="payment_method"
+                                 constraintName="FK3rudnirgtkchdsacfjbt2kxhd" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774970591277-8">
+        <addForeignKeyConstraint baseColumnNames="wallet_id" baseTableName="wallet_transaction"
+                                 constraintName="FK6cnvafp3a0xhbs0eh9w26sett" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="wallet"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774970591277-9">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="wallet"
+                                 constraintName="FKcjyje4tcijhfjyv8lbocw5l6" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1774970591277-10">
+        <addColumn tableName="booking">
+            <column defaultValueBoolean="false" name="is_fund_released" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

@@ -6,7 +6,7 @@ import com.auhpp.event_management.dto.response.UserResponse;
 import com.auhpp.event_management.entity.AppUser;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", uses = {RoleMapper.class, TagMapper.class})
+@Mapper(componentModel = "spring", uses = {RoleMapper.class, TagMapper.class, SocialLinkMapper.class})
 public interface UserMapper {
     AppUser toAppUser(RegisterRequest registerRequest);
 

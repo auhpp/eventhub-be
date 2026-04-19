@@ -75,6 +75,9 @@ public class EventSession {
     @OneToMany(mappedBy = "eventSession")
     private List<Question> questions;
 
+    @OneToMany(mappedBy = "eventSession")
+    private List<CalendarSyncMapping> calendarSyncMappings;
+
     public boolean isExpired() {
         return this.getEndDateTime().isBefore(LocalDateTime.now());
     }

@@ -1,5 +1,6 @@
 package com.auhpp.event_management.dto.request;
 
+import com.auhpp.event_management.constant.OrganizerType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -35,5 +36,12 @@ public class OrganizerCreateRequest {
 
     @NotEmpty(message = "Contact address cannot be empty")
     private String contactAddress;
+
+    @NotNull(message = "Type cannot be null")
+    private OrganizerType type;
+
+    @NotEmpty(message = "Tax code cannot be empty")
+    private String taxCode;
+
 
 }

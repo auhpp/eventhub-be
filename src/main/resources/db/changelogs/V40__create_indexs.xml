@@ -1,0 +1,256 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1775822749940-1">
+        <createIndex tableName="face_data" indexName="idx_face_data_event_image_id">
+            <column name="event_image_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-2">
+        <createIndex tableName="event_image" indexName="idx_event_image_event_id">
+            <column name="event_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-3">
+        <createIndex tableName="ticket" indexName="idx_ticket_event_session_id">
+            <column name="event_session_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-4">
+        <createIndex tableName="event_session" indexName="idx_event_session_event_id">
+            <column name="event_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-5">
+        <createIndex tableName="attendee" indexName="idx_attendee_ticket_id">
+            <column name="ticket_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-6">
+        <createIndex tableName="attendee" indexName="idx_attendee_booking_id">
+            <column name="booking_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-7">
+        <createIndex tableName="attendee" indexName="idx_attendee_owner_id">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-8">
+        <createIndex tableName="booking" indexName="idx_booking_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-9">
+        <createIndex tableName="category_follower" indexName="idx_category_follower_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-10">
+        <createIndex tableName="category_follower" indexName="idx_category_follower_category_id">
+            <column name="category_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-11">
+        <createIndex tableName="check_in_log" indexName="idx_check_in_log_attendee_id">
+            <column name="attendee_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-12">
+        <createIndex tableName="conversation_member" indexName="idx_conversation_member_conversation_id">
+            <column name="conversation_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-13">
+        <createIndex tableName="conversation_member" indexName="idx_conversation_member_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-14">
+        <createIndex tableName="event" indexName="idx_event_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-15">
+        <createIndex tableName="event" indexName="idx_event_event_series_id">
+            <column name="event_series_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-16">
+        <createIndex tableName="event_series_follower" indexName="idx_event_series_follower_event_series_id">
+            <column name="event_series_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-17">
+        <createIndex tableName="event_series_follower" indexName="idx_event_series_follower_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-18">
+        <createIndex tableName="event_series" indexName="idx_event_series_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-19">
+        <createIndex tableName="event_staff" indexName="idx_event_staff_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-20">
+        <createIndex tableName="event_staff" indexName="idx_event_staff_event_id">
+            <column name="event_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-21">
+        <createIndex tableName="favorite" indexName="idx_favorite_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-22">
+        <createIndex tableName="message" indexName="idx_message_recipient_id">
+            <column name="recipient_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-23">
+        <createIndex tableName="message" indexName="idx_message_sender_id">
+            <column name="sender_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-24">
+        <createIndex tableName="notification_recipient" indexName="idx_notification_recipient_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-25">
+        <createIndex tableName="organizer_registration" indexName="idx_organizer_registration_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-26">
+        <createIndex tableName="payment_method" indexName="idx_payment_method_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-27">
+        <createIndex tableName="question" indexName="idx_question_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-28">
+        <createIndex tableName="question" indexName="idx_question_event_session_id">
+            <column name="event_session_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-29">
+        <createIndex tableName="resale_post" indexName="idx_resale_post_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-30">
+        <createIndex tableName="review_image" indexName="idx_review_image_review_id">
+            <column name="review_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-31">
+        <createIndex tableName="review" indexName="idx_review_attendee_id">
+            <column name="attendee_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-32">
+        <createIndex tableName="review" indexName="idx_review_event_session_id">
+            <column name="event_session_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-33">
+        <createIndex tableName="social_link" indexName="idx_social_link_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-34">
+        <createIndex tableName="event_tag" indexName="idx_event_tag_event_id">
+            <column name="event_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-35">
+        <createIndex tableName="ticket_coupon" indexName="idx_ticket_coupon_coupon_id">
+            <column name="coupon_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-36">
+        <createIndex tableName="ticket_coupon" indexName="idx_ticket_coupon_ticket_id">
+            <column name="ticket_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="auhpp (generated)" id="1775822749940-37">
+        <createIndex tableName="user_follower" indexName="idx_user_follower_follower_id">
+            <column name="follower_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-38">
+        <createIndex tableName="user_follower" indexName="idx_user_follower_followed_id">
+            <column name="followed_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-39">
+        <createIndex tableName="user_note" indexName="idx_user_note_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-40">
+        <createIndex tableName="user_note" indexName="idx_user_note_question_id">
+            <column name="question_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-41">
+        <createIndex tableName="wallet" indexName="idx_wallet_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-42">
+        <createIndex tableName="wallet_transaction" indexName="idx_wallet_transaction_wallet_id">
+            <column name="wallet_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-43">
+        <createIndex tableName="withdrawal_request" indexName="idx_withdrawal_request_wallet_id">
+            <column name="wallet_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-44">
+        <createIndex tableName="ticket_gift" indexName="idx_ticket_gift_receiver_id">
+            <column name="receiver_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-45">
+        <createIndex tableName="ticket_gift" indexName="idx_ticket_gift_sender_id">
+            <column name="sender_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-46">
+        <createIndex tableName="attendee" indexName="idx_attendee_resale_post_id">
+            <column name="resale_post_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-47">
+        <createIndex tableName="event_invitation" indexName="idx_event_invitation_ticket_id">
+            <column name="ticket_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-48">
+        <createIndex tableName="event_invitation" indexName="idx_event_invitation_app_user_id">
+            <column name="app_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-49">
+        <createIndex tableName="attendee_ticket_gift" indexName="idx_attendee_ticket_gift_ticket_gift_id">
+            <column name="ticket_gift_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775822749940-50">
+        <createIndex tableName="attendee_ticket_gift" indexName="idx_attendee_ticket_gift_attendee_id">
+            <column name="attendee_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

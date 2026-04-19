@@ -51,8 +51,6 @@ public class ConversationServiceImpl implements ConversationService {
         }
 
         Conversation conversation = new Conversation();
-        conversation.setHasNotification(true);
-        conversation.setHasPin(false);
 
         // latest message
         if (request.getLatestMessageId() != null) {
@@ -85,7 +83,7 @@ public class ConversationServiceImpl implements ConversationService {
     public PageResponse<ConversationResponse> getConversations(ConversationSearchRequest request, int page, int size) {
         String currentUserEmail = SecurityUtils.getCurrentUserLogin();
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Conversation> pageData = conversationRepository.filter(request.getHasPin(), request.getStatus(),
+        Page<Conversation> pageData = conversationRepository.filter(request.getStatus(),
                 request.getNameMember(), currentUserEmail, pageable);
         List<ConversationResponse> responses = pageData.getContent().stream().map(
                 conversationMapper::toConversationResponse

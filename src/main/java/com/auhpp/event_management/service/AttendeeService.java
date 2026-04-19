@@ -1,13 +1,8 @@
 package com.auhpp.event_management.service;
 
-import com.auhpp.event_management.dto.request.AttendeeCreateRequest;
-import com.auhpp.event_management.dto.request.AttendeeSearchRequest;
-import com.auhpp.event_management.dto.request.CheckInRequest;
-import com.auhpp.event_management.dto.request.CheckinSearchRequest;
-import com.auhpp.event_management.dto.response.AttendeeBasicResponse;
-import com.auhpp.event_management.dto.response.AttendeeResponse;
-import com.auhpp.event_management.dto.response.PageResponse;
-import com.auhpp.event_management.dto.response.UserAttendeeSummaryResponse;
+import com.alibaba.excel.ExcelWriter;
+import com.auhpp.event_management.dto.request.*;
+import com.auhpp.event_management.dto.response.*;
 
 public interface AttendeeService {
     AttendeeResponse createAttendee(AttendeeCreateRequest attendeeCreateRequest);
@@ -39,4 +34,14 @@ public interface AttendeeService {
 
     boolean getAttendeeByEventSessionIdAndCurrentUser(Long eventSessionId, Long userId);
 
+    AttendanceImportCheckInResponse processAttendanceFromEmails(Long eventSessionId,
+                                                                AttendanceImportRequest request);
+
+    PageResponse<AttendeeCheckinResponse> getAttendeeCheckins(Long ticketId, String email, int page, int size);
+
+    PageResponse<CheckInLogResponse> getCheckInLogs(CheckInLogSearchRequest request, int page, int size);
+
+    void exportReportAttendees(ExcelWriter excelWriter, AttendeeSearchRequest request, String eventName);
+
+    int countBoughtTicket(Long ticketId, Long userId);
 }

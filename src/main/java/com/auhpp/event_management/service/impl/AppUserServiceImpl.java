@@ -1,26 +1,26 @@
 package com.auhpp.event_management.service.impl;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.write.metadata.WriteSheet;
+import com.auhpp.event_management.constant.EmailType;
 import com.auhpp.event_management.constant.FolderName;
 import com.auhpp.event_management.constant.RoleName;
 import com.auhpp.event_management.dto.request.*;
-import com.auhpp.event_management.dto.response.PageResponse;
-import com.auhpp.event_management.dto.response.SocialLinkResponse;
-import com.auhpp.event_management.dto.response.UserBasicResponse;
-import com.auhpp.event_management.dto.response.UserResponse;
-import com.auhpp.event_management.entity.*;
+import com.auhpp.event_management.dto.response.*;
+import com.auhpp.event_management.entity.AppUser;
+import com.auhpp.event_management.entity.Role;
+import com.auhpp.event_management.entity.SocialLink;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.SocialLinkMapper;
 import com.auhpp.event_management.mapper.UserBasicMapper;
+import com.auhpp.event_management.mapper.UserExportMapper;
 import com.auhpp.event_management.mapper.UserMapper;
 import com.auhpp.event_management.repository.AppUserRepository;
 import com.auhpp.event_management.repository.RoleRepository;
 import com.auhpp.event_management.repository.SocialLinkRepository;
-import com.auhpp.event_management.repository.TagRepository;
-import com.auhpp.event_management.service.AppUserService;
-import com.auhpp.event_management.service.AuthenticationService;
-import com.auhpp.event_management.service.CloudinaryService;
-import com.auhpp.event_management.service.EmailService;
+import com.auhpp.event_management.service.*;
 import com.auhpp.event_management.util.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -32,11 +32,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -50,10 +51,11 @@ public class AppUserServiceImpl implements AppUserService {
     PasswordEncoder passwordEncoder;
     SocialLinkMapper socialLinkMapper;
     SocialLinkRepository socialLinkRepository;
-    TagRepository tagRepository;
     RoleRepository roleRepository;
     AuthenticationService authenticationService;
     EmailService emailService;
+    UserExportMapper userExportMapper;
+    OtpService otpService;
 
     @Override
     @Transactional
@@ -63,7 +65,7 @@ public class AppUserServiceImpl implements AppUserService {
         );
         userMapper.updateUserFromRequest(request, user);
         if (request.getAvatar() != null) {
-            if (!StringUtils.hasText(user.getAvatar())) {
+            if (user.getAvatar() != null) {
                 cloudinaryService.deleteFile(user.getAvatarPublicId());
             }
             Map<String, Object> uploadResult = cloudinaryService.uploadFile(request.getAvatar(),
@@ -72,26 +74,6 @@ public class AppUserServiceImpl implements AppUserService {
             String imageUrl = (String) uploadResult.get("secure_url");
             user.setAvatar(imageUrl);
             user.setAvatarPublicId(publicId);
-        }
-
-        // handle tag
-        if (request.getTagIds() != null) {
-            if (user.getUserTags() != null) {
-                user.getUserTags().clear();
-            } else {
-                user.setUserTags(new ArrayList<>());
-            }
-            List<UserTag> userTags = user.getUserTags();
-            for (Long tagId : request.getTagIds()) {
-                Tag tag = tagRepository.findById(tagId).orElseThrow(
-                        () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
-                );
-                userTags.add(UserTag.builder()
-                        .appUser(user)
-                        .tag(tag)
-                        .build());
-            }
-            user.setUserTags(userTags);
         }
 
         appUserRepository.save(user);
@@ -121,6 +103,9 @@ public class AppUserServiceImpl implements AppUserService {
         );
         List<SocialLinkResponse> responses = new ArrayList<>();
         for (SocialLinkCreateRequest request : requests) {
+            if (request.getUrlLink() == "" || request.getUrlLink() == null) {
+                throw new AppException(ErrorCode.INVALID_PARAMS);
+            }
             Optional<SocialLink> optionalSocialLink = socialLinkRepository.findByTypeAndAppUserId(
                     request.getType(), user.getId());
             SocialLink socialLink;
@@ -130,6 +115,7 @@ public class AppUserServiceImpl implements AppUserService {
             } else {
                 socialLink = socialLinkMapper.toSocialLink(request);
             }
+            socialLink.setAppUser(user);
             socialLinkRepository.save(socialLink);
             responses.add(socialLinkMapper.toSocialLinkResponse(socialLink));
         }
@@ -243,6 +229,92 @@ public class AppUserServiceImpl implements AppUserService {
         );
         user.setStatus(request.getStatus());
         appUserRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void updateSocialLink(List<SocialLinkCreateRequest> requests) {
+        for (SocialLinkCreateRequest request : requests) {
+            SocialLink link = socialLinkRepository.findById(request.getId()).orElseThrow(
+                    () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+            );
+            link.setUrlLink(request.getUrlLink());
+            socialLinkRepository.save(link);
+        }
+    }
+
+    @Override
+    public void exportReportAppUser(ExcelWriter excelWriter, UserSearchRequest request) {
+        WriteSheet writeSheet = EasyExcel.writerSheet("danh_sach_tai_khoan")
+                .relativeHeadRowIndex(1)
+                .registerWriteHandler(new EventTitleWriteHandler("Danh sách tài khoản"))
+                .build();
+        int currentPage = 1;
+        int pageSize = 1000;
+        boolean hasNextPage = true;
+        boolean hasData = false;
+
+        while (hasNextPage) {
+            Pageable pageable = PageRequest.of(currentPage - 1, pageSize, Sort.by(Sort.Direction.ASC,
+                    "createdAt"));
+            Page<AppUser> pageData = appUserRepository.filter(request.getEmail(), request.getStatus(),
+                    request.getRoleName(), pageable);
+            if (pageData == null || pageData.isEmpty()) {
+                break;
+            }
+            hasData = true;
+            List<UserExcelReportResponse> userExports = pageData.stream().map(
+                    appUser -> {
+                        UserExcelReportResponse response = userExportMapper.toUserExcelReportResponse(appUser);
+                        response.setRoleName(appUser.getRole().getName().name());
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+                        response.setCreatedAt(appUser.getCreatedAt().format(formatter));
+                        if (appUser.getLastSeen() != null) {
+                            response.setLastSeen(appUser.getLastSeen().format(formatter));
+                        }
+
+                        return response;
+                    }
+            ).collect(Collectors.toList());
+
+            excelWriter.write(userExports, writeSheet);
+
+            if (currentPage >= pageData.getTotalPages()) {
+                hasNextPage = false;
+            } else {
+                currentPage++;
+            }
+        }
+        if (!hasData) {
+            excelWriter.write(new ArrayList<UserExcelReportResponse>(), writeSheet);
+        }
+        excelWriter.finish();
+    }
+
+    @Override
+    public void sendOtpResetPassword(EmailSendRequest request) {
+        Optional<AppUser> appUserOptional = appUserRepository.findByEmail(request.getEmail());
+        if (appUserOptional.isEmpty()) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        String otpCode = otpService.generateOTP();
+        otpService.saveOtp(request.getEmail(), otpCode);
+        // send otp
+        emailService.sendOtpEmail(request.getEmail(), EmailType.FORGET_PASSWORD, "Khôi phục mật khẩu");
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        if (otpService.verifyOtp(request.getEmail(), request.getOtpCode())) {
+            AppUser user = appUserRepository.findByEmail(request.getEmail()).orElseThrow(
+                    () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+            );
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            appUserRepository.save(user);
+        } else {
+            throw new AppException(ErrorCode.OTP_NOT_VALID);
+        }
     }
 
 

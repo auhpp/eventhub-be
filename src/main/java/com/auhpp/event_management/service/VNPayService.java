@@ -6,16 +6,16 @@ import com.auhpp.event_management.dto.response.BookingConfirmPaymentResponse;
 import com.auhpp.event_management.dto.response.RefundBookingResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 public interface VNPayService {
     //Build redirect payment URL
     String createPaymentUrl(Long bookingId, BookingPaymentRequest request,
-                            HttpServletRequest httpServletRequest) throws UnsupportedEncodingException;
+                            HttpServletRequest httpServletRequest) throws IOException;
 
     BookingConfirmPaymentResponse confirmPaymentBooking(CheckPaymentRequest checkPaymentRequest,
-                                                        HttpServletRequest httpServletRequest);
+                                                        HttpServletRequest httpServletRequest) throws IOException;
 
-    List<RefundBookingResponse> refund(Long eventId, HttpServletRequest httpServletRequest);
 }

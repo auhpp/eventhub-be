@@ -12,5 +12,4 @@ public enum AttendeeStatus {
     ON_RESALE,
     RESOLD,
     PENDING_GIFT,
-    GIFTED_AWAY,
 }

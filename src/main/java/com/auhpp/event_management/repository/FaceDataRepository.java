@@ -13,11 +13,11 @@ import java.util.List;
 public interface FaceDataRepository extends JpaRepository<FaceData, Long> {
     @Query(value = "SELECT ei.image_url as imageUrl, " +
             "ei.id as eventImageId, " +
-            "(fd.face_encoding <=> cast(:vectorStr as vector)) as distance " +
+            "(fd.face_encoding <=> cast(:vectorStr as vector(512))) as distance " +
             "FROM face_data fd " +
             "JOIN event_image ei ON fd.event_image_id = ei.id " +
             "WHERE ei.event_id = :eventId " +
-            "AND (fd.face_encoding <=> cast(:vectorStr as vector)) < :threshold " +
+            "AND (fd.face_encoding <=> cast(:vectorStr as vector(512))) < :threshold " +
             "ORDER BY distance ASC " +
             "LIMIT :limit ",
             nativeQuery = true)

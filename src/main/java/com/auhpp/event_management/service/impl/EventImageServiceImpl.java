@@ -15,10 +15,7 @@ import com.auhpp.event_management.repository.EventImageRepository;
 import com.auhpp.event_management.repository.EventRepository;
 import com.auhpp.event_management.repository.EventSessionRepository;
 import com.auhpp.event_management.repository.FaceDataRepository;
-import com.auhpp.event_management.service.CloudinaryService;
-import com.auhpp.event_management.service.EventImageService;
-import com.auhpp.event_management.service.FaceDataService;
-import com.auhpp.event_management.service.SpotterService;
+import com.auhpp.event_management.service.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -47,12 +44,18 @@ public class EventImageServiceImpl implements EventImageService {
     FaceDataService faceDataService;
     FaceDataRepository faceDataRepository;
     SpotterService spotterService;
+    EventStaffService eventStaffService;
 
     @Override
     @Transactional
     public List<EventImageResponse> uploadEventImages(
             Long eventId, Long eventSessionId,
             List<MultipartFile> files) {
+
+        if (eventStaffService.isCheckInStaff(eventId)) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
         Optional<Event> eventOptional = eventRepository.findById(eventId);
         Optional<EventSession> eventSessionOptional = Optional.empty();
         if (eventSessionId != null) {
@@ -90,7 +93,7 @@ public class EventImageServiceImpl implements EventImageService {
             responses.add(eventImageMapper.toEventImageResponse(eventImage));
 
             // call AI service handle image
-            faceDataService.processEventImage(eventImage.getId(), file, "");
+            faceDataService.processEventImage(eventImage.getId(), imageUrl);
         }
         return responses;
     }
@@ -137,11 +140,15 @@ public class EventImageServiceImpl implements EventImageService {
 
     @Override
     public void refreshProcessImages(Long eventId) {
+        if (eventStaffService.isCheckInStaff(eventId)) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
         List<EventImage> eventImages = eventImageRepository.findAllByProcessStatusAndEventId(
                 ProcessStatus.FAILED, eventId);
         // call AI service handle image
         for (EventImage eventImage : eventImages) {
-            faceDataService.processEventImage(eventImage.getId(), null, eventImage.getImageUrl());
+            faceDataService.processEventImage(eventImage.getId(), eventImage.getImageUrl());
         }
     }
 

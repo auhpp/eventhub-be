@@ -21,7 +21,7 @@ public interface EventSessionService {
 
     void cancelEventSession(Long id);
 
-    EventOverviewStatsResponse getEventStats(Long eventSessionId);
-
     EventChartStatsResponse getEventChartStats(Long eventSessionId, TimeFilter filter);
+
+    void releaseFundForEventSession(Long eventSessionId);
 }

@@ -15,5 +15,5 @@ public class TagSearchRequest {
 
     private String name;
 
-    private Long userId;
+    private Long eventId;
 }

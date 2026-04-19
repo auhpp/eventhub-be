@@ -25,7 +25,7 @@ public class EventInvitationController {
     EventInvitationService eventInvitationService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<List<EventInvitationResponse>> createEventInvitation(
             @Valid @RequestBody EventInvitationCreateRequest request
     ) {
@@ -57,7 +57,7 @@ public class EventInvitationController {
     }
 
     @PostMapping("/filter")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<PageResponse<EventInvitationResponse>> getEventInvitations(
             @RequestBody EventInvitationSearchRequest request,
             @RequestParam(name = "page", defaultValue = "1") int page,
@@ -82,7 +82,7 @@ public class EventInvitationController {
     }
 
     @PostMapping("/revoke/{id}")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<Void> revokeEventInvitations(
             @PathVariable("id") Long id
     ) {

@@ -28,5 +28,5 @@ public interface AuthenticationService {
 
     UserResponse getCurrentUserInfo();
 
-    void createUser(RegisterRequest request);
+    AppUser createUser(RegisterRequest request);
 }

@@ -26,6 +26,8 @@ public class BookingBasicResponse {
 
     private String customerName;
 
+    private String invoiceUrl;
+
     private String customerEmail;
 
     private String customerPhone;

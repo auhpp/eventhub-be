@@ -23,6 +23,11 @@ import java.util.Map;
 public class SpotterServiceImpl implements SpotterService {
     final RestClient restClient;
 
+
+    public SpotterServiceImpl(@Qualifier("spotterRestClient") RestClient restClient) {
+        this.restClient = restClient;
+    }
+
     @Override
     public List<FaceResult> detectFacesByUrl(String url) {
         try {
@@ -45,32 +50,6 @@ public class SpotterServiceImpl implements SpotterService {
         return Collections.emptyList();
     }
 
-    public SpotterServiceImpl(@Qualifier("spotterRestClient") RestClient restClient) {
-        this.restClient = restClient;
-    }
-
-    @Override
-    public List<FaceResult> detectFaces(MultipartFile file) {
-        try {
-            // prepare body
-            LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            body.add("file", file.getResource());
-
-            FaceResponse response = restClient.post()
-                    .uri("/extract-faces")
-                    .contentType(MediaType.MULTIPART_FORM_DATA)
-                    .body(body)
-                    .retrieve()
-                    .body(FaceResponse.class);
-            if (response != null && response.getCode() == 200) {
-                return response.getFaces();
-            }
-        } catch (Exception e) {
-            System.err.println("Lỗi gọi AI spotter Service: " + e.getMessage());
-            throw e;
-        }
-        return Collections.emptyList();
-    }
 
     @Override
     public List<Double> extractUserVector(MultipartFile file) {

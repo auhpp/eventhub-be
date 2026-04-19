@@ -74,13 +74,17 @@ public class EmailServiceImpl implements EmailService {
         if (otpCode == null) {
             throw new AppException(ErrorCode.OTP_NOT_FOUND);
         }
-        String htmlBody = "";
+        String htmlBody;
         if (type.equals(EmailType.REGISTER)) {
             Context context = new Context();
             context.setVariable("actionMessage", "Xác nhận tạo tài khoản");
             context.setVariable("otpDigits", otpCode.split(""));
 
             htmlBody = templateEngine.process("otp-email", context);
+        } else {
+            Context context = new Context();
+            context.setVariable("otpDigits", otpCode.split(""));
+            htmlBody = templateEngine.process("otp-reset-password-email", context);
         }
         send(email, htmlBody, title);
     }

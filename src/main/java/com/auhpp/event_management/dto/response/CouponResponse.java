@@ -1,5 +1,6 @@
 package com.auhpp.event_management.dto.response;
 
+import com.auhpp.event_management.constant.CouponStatus;
 import com.auhpp.event_management.constant.DiscountType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +18,8 @@ public class CouponResponse {
     private Long id;
 
     private String name;
+
+    private CouponStatus status;
 
     private String code;
 

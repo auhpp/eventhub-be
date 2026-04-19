@@ -9,16 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TicketStandardResponse {
-    private Long id;
-
-    private Double price;
-
-    private Integer quantity;
-
+public class GroupedTicketResponse {
     private String name;
 
-    private Integer soldQuantity;
+    private int quantity;
 
-    private EventSessionBasicResponse eventSession;
+    private double price;
 }

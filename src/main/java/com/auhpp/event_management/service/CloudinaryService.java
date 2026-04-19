@@ -2,6 +2,7 @@ package com.auhpp.event_management.service;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,8 @@ public interface CloudinaryService {
     List<Map<String, Object>> uploadMultipleFiles(List<MultipartFile> files, String folderName, boolean isImage);
 
     Map<String, Object> deleteFile(String publicId);
+
+    String uploadPdf(byte[] pdfBytes, String folderName, String fileName) throws IOException;
 
 
 }

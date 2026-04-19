@@ -33,7 +33,7 @@ public class EventSessionController {
     }
 
     @PutMapping("/{eventSessionId}")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<EventSessionResponse> updateEventSession(
             @PathVariable(name = "eventSessionId") Long id,
             @Valid @RequestBody EventSessionUpdateRequest request
@@ -44,7 +44,7 @@ public class EventSessionController {
     }
 
     @PostMapping("/{eventSessionId}/ticket")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<TicketResponse> createTicket(
             @PathVariable(name = "eventSessionId") Long id,
             @Valid @RequestBody TicketCreateRequest request
@@ -55,7 +55,7 @@ public class EventSessionController {
     }
 
     @DeleteMapping("/{eventSessionId}")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<Void> deleteEventSession(
             @PathVariable(name = "eventSessionId") Long id
     ) {
@@ -75,7 +75,7 @@ public class EventSessionController {
     }
 
     @PostMapping("/cancel/{eventSessionId}")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<Void> cancelEventSession(
             @PathVariable(name = "eventSessionId") Long id
     ) {
@@ -84,18 +84,10 @@ public class EventSessionController {
                 .status(HttpStatus.OK).build();
     }
 
-    @GetMapping("/{eventSessionId}/stats/overview")
-    @PreAuthorize("hasRole('ORGANIZER')")
-    public ResponseEntity<EventOverviewStatsResponse> getEventStats(
-            @PathVariable(name = "eventSessionId") Long id
-    ) {
-        EventOverviewStatsResponse res = eventSessionService.getEventStats(id);
-        return ResponseEntity
-                .status(HttpStatus.OK).body(res);
-    }
+
 
     @GetMapping("/{eventSessionId}/stats/chart")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<EventChartStatsResponse> getEventChartStats(
             @PathVariable(name = "eventSessionId") Long id,
             @RequestParam(name = "timeFilter") TimeFilter timeFilter
@@ -103,6 +95,16 @@ public class EventSessionController {
         EventChartStatsResponse res = eventSessionService.getEventChartStats(id, timeFilter);
         return ResponseEntity
                 .status(HttpStatus.OK).body(res);
+    }
+
+    @PostMapping("/{eventSessionId}/release-fund")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> releaseFundManually(
+            @PathVariable(name = "eventSessionId") Long id
+    ) {
+        eventSessionService.releaseFundForEventSession(id);
+        return ResponseEntity
+                .status(HttpStatus.OK).build();
     }
 
 }

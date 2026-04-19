@@ -31,13 +31,10 @@ public class UserResponse {
 
     private Boolean status;
 
-    private String authProvider;
-
-    private String providerId;
-
     private LocalDateTime createdAt;
 
     private RoleResponse role;
 
-    List<TagResponse> userTags;
+    private List<SocialLinkResponse> socialLinks;
+
 }

@@ -3,6 +3,7 @@ package com.auhpp.event_management.service.impl;
 import com.auhpp.event_management.constant.*;
 import com.auhpp.event_management.dto.request.DateRangeFilterRequest;
 import com.auhpp.event_management.dto.request.PaginationFilterRequest;
+import com.auhpp.event_management.dto.request.StatsFilterRequest;
 import com.auhpp.event_management.dto.response.*;
 import com.auhpp.event_management.repository.*;
 import com.auhpp.event_management.service.AdminStatsService;
@@ -28,27 +29,30 @@ public class AdminStatsServiceImpl implements AdminStatsService {
 
     @Override
     public KpiOverviewResponse getKpiOverview(DateRangeFilterRequest request) {
-        Double totalFmv = bookingRepository.getVoucherRevenue(null, BookingType.BUY, request.getStartDate(),
+        Double totalFmv = bookingRepository.getVoucherRevenue(null, null, null,
+                BookingType.BUY, request.getStartDate(),
                 request.getEndDate());
 
-        Double commissionFromEvents = attendeeRepository.getCommissionFromEvents(null, List.of(
-                SourceType.PURCHASE
-        ), request.getStartDate(), request.getEndDate());
+        Double commissionFromEvents = attendeeRepository.getCommissionFromEvents(
+                null, null, null, List.of(
+                        SourceType.PURCHASE
+                ), request.getStartDate(), request.getEndDate());
 
-        Double commissionFomResales = attendeeRepository.getCommissionFromResales(null, List.of(
-                SourceType.RESALE
-        ), request.getStartDate(), request.getEndDate());
+        Double commissionFomResales = attendeeRepository.getCommissionFromResales(null,
+                null, List.of(
+                        SourceType.RESALE
+                ), request.getStartDate(), request.getEndDate());
 
-        Integer activeEventsCount = eventRepository.countEvent(null, List.of(EventStatus.APPROVED),
+        Integer activeEventsCount = eventRepository.countEvent(null, null, List.of(EventStatus.APPROVED),
                 request.getStartDate(), request.getEndDate());
 
-        Integer pendingEventsCount = eventRepository.countEvent(null, List.of(EventStatus.PENDING),
+        Integer pendingEventsCount = eventRepository.countEvent(null, null, List.of(EventStatus.PENDING),
                 request.getStartDate(), request.getEndDate());
 
-        Integer rejectEventsCount = eventRepository.countEvent(null, List.of(EventStatus.REJECTED),
+        Integer rejectEventsCount = eventRepository.countEvent(null, null, List.of(EventStatus.REJECTED),
                 request.getStartDate(), request.getEndDate());
 
-        Integer cancelEventsCount = eventRepository.countEvent(null, List.of(EventStatus.CANCELLED),
+        Integer cancelEventsCount = eventRepository.countEvent(null, null, List.of(EventStatus.CANCELLED),
                 request.getStartDate(), request.getEndDate());
 
         Integer pendingResalesCount = resalePostRepository.countResalePost(
@@ -72,7 +76,7 @@ public class AdminStatsServiceImpl implements AdminStatsService {
     }
 
     @Override
-    public List<RevenueChartResponse> getRevenueCharts(DateRangeFilterRequest request, RevenueSource revenueSource) {
+    public List<RevenueChartResponse> getRevenueCharts(StatsFilterRequest request, RevenueSource revenueSource) {
         BookingType bookingType;
         SourceType sourceType;
         if (revenueSource.equals(RevenueSource.RESALE)) {
@@ -82,10 +86,9 @@ public class AdminStatsServiceImpl implements AdminStatsService {
             bookingType = BookingType.BUY;
             sourceType = SourceType.PURCHASE;
         }
-        List<RevenueChartResponse> gmvRes = bookingRepository.getVoucherRevenueWithTimeLabel(null,
-                bookingType, request);
+        List<RevenueChartResponse> gmvRes = bookingRepository.getVoucherRevenueWithTimeLabel(request, bookingType);
         List<RevenueChartResponse> commissionRes = attendeeRepository.getCommissionWithTimeLabel(null,
-                sourceType, request);
+                sourceType, request.getDateRangeFilter());
         Map<String, Double> mapCommission = new HashMap<>();
         for (RevenueChartResponse commission : commissionRes) {
             mapCommission.put(commission.getTimeLabel(), commission.getCommission());
@@ -96,12 +99,6 @@ public class AdminStatsServiceImpl implements AdminStatsService {
             }
         }
         return gmvRes;
-    }
-
-    @Override
-    public List<TopEventRevenueResponse> getTopEventRevenue(
-            DateRangeFilterRequest request, PaginationFilterRequest paginationFilterRequest) {
-        return attendeeRepository.getTopEventRevenue(request, paginationFilterRequest);
     }
 
     @Override

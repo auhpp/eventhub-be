@@ -1,12 +1,11 @@
 package com.auhpp.event_management.controller;
 
-import com.auhpp.event_management.constant.RoleName;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
 import com.auhpp.event_management.dto.request.*;
-import com.auhpp.event_management.dto.response.PageResponse;
-import com.auhpp.event_management.dto.response.SocialLinkResponse;
-import com.auhpp.event_management.dto.response.UserBasicResponse;
-import com.auhpp.event_management.dto.response.UserResponse;
+import com.auhpp.event_management.dto.response.*;
 import com.auhpp.event_management.service.AppUserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -17,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.List;
 
 @RestController
@@ -51,12 +52,23 @@ public class UserController {
     @PostMapping(value = "/social-link")
     @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<List<SocialLinkResponse>> createSocialLink(
-            List<@Valid SocialLinkCreateRequest> requests
+            @RequestBody List<@Valid SocialLinkCreateRequest> requests
     ) {
         List<SocialLinkResponse> responses = userService.createSocialLink(requests);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(responses);
+    }
+
+    @PutMapping(value = "/social-link")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
+    public ResponseEntity<Void> updateSocialLink(
+            @RequestBody List<@Valid SocialLinkCreateRequest> requests
+    ) {
+        userService.updateSocialLink(requests);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
     }
 
     @GetMapping
@@ -136,4 +148,45 @@ public class UserController {
                 .body(result);
     }
 
+    @PostMapping("/send-email/reset-password")
+    public ResponseEntity<Void> sendEmailResetPassword(
+            @RequestBody EmailSendRequest request
+    ) {
+        userService.sendOtpResetPassword(request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(
+            @RequestBody ResetPasswordRequest request
+    ) {
+        userService.resetPassword(request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+
+    @PostMapping("/reports/export")
+    public void exportUser(
+            @RequestBody UserSearchRequest request,
+            HttpServletResponse response) throws IOException {
+        try {
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("utf-8");
+            String fileName = URLEncoder.encode("danh_sach_tai_khoan", "UTF-8").replaceAll("\\+", "%20");
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+
+            ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream(), UserExcelReportResponse.class).build();
+            userService.exportReportAppUser(excelWriter, request);
+
+        } catch (Exception e) {
+            response.reset();
+            response.setContentType("application/json");
+            response.setCharacterEncoding("utf-8");
+            response.getWriter().println("{ \"message\": \"Lỗi trong quá trình xuất Excel: " + e.getMessage() + "\" }");
+        }
+    }
 }

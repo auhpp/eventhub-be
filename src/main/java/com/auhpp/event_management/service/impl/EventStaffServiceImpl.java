@@ -2,10 +2,7 @@ package com.auhpp.event_management.service.impl;
 
 import com.auhpp.event_management.constant.EventStaffStatus;
 import com.auhpp.event_management.constant.RoleName;
-import com.auhpp.event_management.dto.request.EventInvitationRejectRequest;
-import com.auhpp.event_management.dto.request.EventStaffCreateRequest;
-import com.auhpp.event_management.dto.request.EventStaffSearchRequest;
-import com.auhpp.event_management.dto.request.StaffInvitationEmailRequest;
+import com.auhpp.event_management.dto.request.*;
 import com.auhpp.event_management.dto.response.EventStaffInvitationResponse;
 import com.auhpp.event_management.dto.response.EventStaffResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
@@ -53,6 +50,15 @@ public class EventStaffServiceImpl implements EventStaffService {
     @Override
     @Transactional
     public List<EventStaffInvitationResponse> createEventStaff(EventStaffCreateRequest request) {
+        // role must all
+        if (request.getRoleName() == RoleName.EVENT_ADMIN || request.getRoleName() == RoleName.EVENT_MANAGER) {
+            this.checkAllPermission(request.getEventId());
+        } else {
+            if (this.isCheckInStaff(request.getEventId())) {
+                throw new AppException(ErrorCode.FORBIDDEN);
+            }
+        }
+
         Role role = roleRepository.findByName(request.getRoleName());
         Event event = eventRepository.findById(request.getEventId()).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
@@ -243,5 +249,73 @@ public class EventStaffServiceImpl implements EventStaffService {
         return eventStaffMapper.toEventStaffResponse(eventStaff);
     }
 
+    @Override
+    public boolean isEventStaff() {
+        AppUser currentUser = appUserRepository.findByEmail(SecurityUtils.getCurrentUserLogin()).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        return currentUser.getEventStaffs() != null && !currentUser.getEventStaffs().isEmpty();
+    }
+
+    @Override
+    @Transactional
+    public void disableEventStaff(Long id) {
+        EventStaff eventStaff = eventStaffRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        if (eventStaff.getStatus() == EventStaffStatus.ACTIVE) {
+            eventStaff.setStatus(EventStaffStatus.INACTIVE);
+        } else if (eventStaff.getStatus() == EventStaffStatus.INACTIVE) {
+            eventStaff.setStatus(EventStaffStatus.ACTIVE);
+        }
+        eventStaffRepository.save(eventStaff);
+    }
+
+    @Override
+    public EventStaffResponse getByEventId(Long eventId) {
+        EventStaff eventStaff = eventStaffRepository.findByUserEmailAndEventId(SecurityUtils.getCurrentUserLogin(),
+                eventId).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        return eventStaffMapper.toEventStaffResponse(eventStaff);
+    }
+
+    @Override
+    public void checkAllPermission(Long eventId) {
+        EventStaff eventStaff = eventStaffRepository.findByUserEmailAndEventId(
+                        SecurityUtils.getCurrentUserLogin(),
+                        eventId)
+                .orElseThrow(
+                        () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+                );
+        if (eventStaff.getRole().getName() != RoleName.EVENT_OWNER &&
+                eventStaff.getRole().getName() != RoleName.EVENT_ADMIN) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+    }
+
+    @Override
+    public boolean isCheckInStaff(Long eventId) {
+        EventStaff eventStaff = eventStaffRepository.findByUserEmailAndEventId(
+                        SecurityUtils.getCurrentUserLogin(),
+                        eventId)
+                .orElseThrow(
+                        () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+                );
+        return eventStaff.getRole().getName() == RoleName.EVENT_STAFF;
+    }
+
+    @Override
+    @Transactional
+    public void changeRole(Long eventStaffId, EventStaffChangeRoleRequest request) {
+        EventStaff eventStaff = eventStaffRepository.findById(eventStaffId).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        checkAllPermission(eventStaff.getEvent().getId());
+        Role role = roleRepository.findByName(request.getRoleName());
+        eventStaff.setRole(role);
+
+        eventStaffRepository.save(eventStaff);
+    }
 
 }

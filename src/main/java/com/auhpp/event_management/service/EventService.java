@@ -1,5 +1,6 @@
 package com.auhpp.event_management.service;
 
+import com.alibaba.excel.ExcelWriter;
 import com.auhpp.event_management.dto.request.*;
 import com.auhpp.event_management.dto.response.EventBasicResponse;
 import com.auhpp.event_management.dto.response.EventResponse;
@@ -24,5 +25,9 @@ public interface EventService {
     void cancelEvent(Long id);
 
     Integer countEvent(EventCountRequest request);
+
+    void exportReportEvent(ExcelWriter excelWriter, EventSearchRequest request);
+
+    Boolean hasResalable(Long id);
 
 }

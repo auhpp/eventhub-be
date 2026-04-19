@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TicketCheckInResponse {
+    private Long id;
     private String name;
     private Integer totalQuantity;
     private Integer soldQuantity;

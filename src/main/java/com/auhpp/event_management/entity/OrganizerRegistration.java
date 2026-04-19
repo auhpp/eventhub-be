@@ -1,5 +1,6 @@
 package com.auhpp.event_management.entity;
 
+import com.auhpp.event_management.constant.OrganizerType;
 import com.auhpp.event_management.constant.RegistrationStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -37,6 +38,13 @@ public class OrganizerRegistration {
 
     @Column(nullable = false)
     private String email;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private OrganizerType type;
+
+    @Column(nullable = false)
+    private String taxCode;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

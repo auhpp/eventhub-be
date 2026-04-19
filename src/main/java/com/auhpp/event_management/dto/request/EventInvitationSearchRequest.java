@@ -16,4 +16,6 @@ public class EventInvitationSearchRequest {
 
     @NotNull(message = "Event session id cannot be null")
     private Long eventSessionId;
+
+    private String email;
 }

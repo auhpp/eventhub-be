@@ -28,7 +28,7 @@ public class TicketUpdateRequest {
 
     private Integer maximumPerPurchase;
 
-    private Integer invitationQuota;
+    private Integer maximumPerUser;
 
-    private Integer cancelBeforeMinutes;
+    private Integer invitationQuota;
 }

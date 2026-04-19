@@ -15,9 +15,6 @@ public class AttendeeTicketGift {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private TicketGiftStatus status;
-
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private TicketGift ticketGift;

@@ -1,0 +1,17 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="auhpp (generated)" id="1775961273610-1">
+        <dropColumn columnName="status" tableName="attendee_ticket_gift"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775961273610-2">
+        <dropColumn columnName="status" tableName="payment_method"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775961273610-3">
+        <addColumn tableName="ticket">
+            <column name="maximum_per_user" type="INTEGER"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

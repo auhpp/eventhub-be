@@ -1,15 +1,15 @@
 package com.auhpp.event_management.controller;
 
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
 import com.auhpp.event_management.constant.BookingStatus;
 import com.auhpp.event_management.dto.request.BookingSearchRequest;
 import com.auhpp.event_management.dto.request.PendingBookingCreateRequest;
 import com.auhpp.event_management.dto.request.PendingResaleBookingCreateRequest;
-import com.auhpp.event_management.dto.response.BookingBasicResponse;
-import com.auhpp.event_management.dto.response.BookingResponse;
-import com.auhpp.event_management.dto.response.PageResponse;
-import com.auhpp.event_management.dto.response.UserBookingSummaryResponse;
+import com.auhpp.event_management.dto.response.*;
 import com.auhpp.event_management.service.BookingService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +18,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.net.URLEncoder;
 
 @RestController
 @RequestMapping("/api/v1/booking")
@@ -107,7 +110,7 @@ public class BookingController {
 
 
     @GetMapping("/event-session/{eventSessionId}/user/{userId}")
-    @PreAuthorize("hasAnyRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<UserBookingSummaryResponse> getUserSummaryBooking(
             @PathVariable(name = "eventSessionId") Long eventSessionId,
             @PathVariable(name = "userId") Long userId
@@ -117,5 +120,27 @@ public class BookingController {
                 userId);
         return ResponseEntity
                 .status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/reports/export")
+    public void exportBookings(
+            @RequestBody BookingSearchRequest bookingSearchRequest,
+            @RequestParam("eventName") String eventName,
+            HttpServletResponse response) throws IOException {
+        try {
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("utf-8");
+            String fileName = URLEncoder.encode("bao_bao_don_hang", "UTF-8").replaceAll("\\+", "%20");
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+
+            ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream(), BookingReportResponse.class).build();
+            bookingService.exportReportBookings(excelWriter, bookingSearchRequest, eventName);
+
+        } catch (Exception e) {
+            response.reset();
+            response.setContentType("application/json");
+            response.setCharacterEncoding("utf-8");
+            response.getWriter().println("{ \"message\": \"Lỗi trong quá trình xuất Excel: " + e.getMessage() + "\" }");
+        }
     }
 }

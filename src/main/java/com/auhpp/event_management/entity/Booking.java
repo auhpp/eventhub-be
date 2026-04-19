@@ -52,6 +52,12 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     private BookingType type;
 
+    @Column(columnDefinition = "boolean default false")
+    private Boolean isFundReleased = false;
+
+    @Column(columnDefinition = "TEXT")
+    private String invoiceUrl;
+
     private LocalDateTime createdAt;
 
     @UpdateTimestamp

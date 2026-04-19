@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -24,4 +25,8 @@ public class ResalePostSearchRequest {
     private Long eventId;
     private String name;
     private String email;
+    private LocalDateTime fromDate;
+    private LocalDateTime toDate;
+
 }
+

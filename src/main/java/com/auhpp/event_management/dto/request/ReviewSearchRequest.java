@@ -13,4 +13,6 @@ public class ReviewSearchRequest {
     private Long eventSessionId;
     private Long userId;
     private Long attendeeId;
+    private Long rating;
+    private String email;
 }

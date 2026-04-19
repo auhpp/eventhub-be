@@ -20,10 +20,6 @@ public class Conversation {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    private Boolean hasPin;
-
-    private Boolean hasNotification;
-
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private CommonStatus status;

@@ -1,5 +1,6 @@
 package com.auhpp.event_management.dto.response;
 
+import com.auhpp.event_management.constant.OrganizerType;
 import com.auhpp.event_management.constant.RegistrationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,4 +39,8 @@ public class OrganizerRegistrationResponse {
     private LocalDateTime updatedAt;
 
     private UserResponse appUser;
+
+    private OrganizerType type;
+
+    private String taxCode;
 }

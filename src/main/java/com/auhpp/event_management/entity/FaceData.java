@@ -25,7 +25,7 @@ public class FaceData {
     @Column(columnDefinition = "jsonb", nullable = false)
     private FaceCoordinate coordinate;
 
-    @Column(columnDefinition = "vector", nullable = false)
+    @Column(columnDefinition = "vector(512)", nullable = false)
     @Convert(converter = VectorFloatListConverter.class)
     @ColumnTransformer(write = "?::vector")
     private List<Float> faceEncoding;

@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserFollowerResponse {
+    private Long id;
     private UserBasicResponse follower;
     private UserBasicResponse followed;
     private LocalDateTime createdAt;

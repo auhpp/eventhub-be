@@ -18,7 +18,7 @@ public interface CouponService {
 
     PageResponse<CouponResponse> getCoupons(CouponSearchRequest request, int page, int size);
 
-    List<CouponReportDetailResponse> getInfoReportDetail(Long couponId);
+    CouponReportDetailResponse getInfoReportDetail(Long couponId);
 
     CouponResponse getByCode(Long eventId, String code);
 
@@ -28,4 +28,5 @@ public interface CouponService {
 
     CouponResponse getById(Long id);
 
+    void disableCoupon(Long id);
 }

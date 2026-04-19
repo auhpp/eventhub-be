@@ -1,7 +1,11 @@
 package com.auhpp.event_management.entity;
 
+import com.auhpp.event_management.constant.ActionType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -9,16 +13,23 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserTag {
+public class CheckInLog {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(nullable = false)
-    private AppUser appUser;
+    @Enumerated
+    private ActionType actionType;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
-    private Tag tag;
+    private Attendee attendee;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
+    private EventStaff eventStaff;
 }

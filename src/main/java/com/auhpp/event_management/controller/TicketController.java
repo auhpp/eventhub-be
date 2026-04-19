@@ -23,7 +23,7 @@ public class TicketController {
     TicketService ticketService;
 
     @PutMapping("/{ticketId}")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<TicketResponse> updateTicket(
             @PathVariable(name = "ticketId") Long id,
             @Valid @RequestBody TicketUpdateRequest request
@@ -34,7 +34,7 @@ public class TicketController {
     }
 
     @DeleteMapping("/{ticketId}")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<Void> deleteTicket(
             @PathVariable(name = "ticketId") Long id
     ) {
@@ -44,7 +44,7 @@ public class TicketController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<List<TicketBasicResponse>> getTicketByEventSessionId(
             @RequestParam("eventSessionId") Long eventSessionId
     ) {

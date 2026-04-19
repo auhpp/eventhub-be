@@ -4,6 +4,4 @@ public enum TicketStatus {
     PENDING,
     ACTIVE,
     INACTIVE,
-    SOLD_OUT,
-    EXPIRED
 }

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class TopEventRevenueResponse {
     private Double totalCommission;
 
-   private Long eventId;
+    private Long eventId;
 
     private String eventName;
 
@@ -20,4 +20,14 @@ public class TopEventRevenueResponse {
 
     private Long totalTicketsSold;
 
+    private Double totalRevenue;
+
+    private double averageRating;
+
+    private int reviewCount;
+
+    private Long totalTickets;
+
+
+    private int totalCheckIn;
 }

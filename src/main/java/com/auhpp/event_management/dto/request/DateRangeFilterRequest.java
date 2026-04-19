@@ -1,6 +1,6 @@
 package com.auhpp.event_management.dto.request;
 
-import com.auhpp.event_management.constant.TimeUnit;
+import com.auhpp.event_management.constant.SortBy;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,5 +17,5 @@ public class DateRangeFilterRequest {
 
     private LocalDateTime endDate;
 
-    private TimeUnit timeUnit;
+    private SortBy sortBy;
 }

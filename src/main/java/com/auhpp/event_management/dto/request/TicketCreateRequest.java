@@ -38,9 +38,11 @@ public class TicketCreateRequest {
     @Min(value = 1)
     private Integer maximumPerPurchase;
 
+    @NotNull(message = "Ticket maximum per user cannot be null")
+    @Min(value = 0)
+    private Integer maximumPerUser;
+
+
     @NotNull(message = "Ticket end date cannot be null")
     private Integer invitationQuota;
-
-    @NotNull(message = "Cancel before minutes cannot be null")
-    private Integer cancelBeforeMinutes;
 }

@@ -62,7 +62,7 @@ public class EventSeriesController {
 
     @PostMapping("/filter")
     public ResponseEntity<PageResponse<EventSeriesResponse>> getEventSeries(
-            EventSeriesSearchRequest request,
+            @RequestBody EventSeriesSearchRequest request,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int size
     ) {

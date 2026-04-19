@@ -1,0 +1,46 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="auhpp (generated)" id="1775181546670-1">
+        <createTable tableName="calendar_sync_mapping">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="calendar_sync_mappingPK"/>
+            </column>
+            <column name="google_event_id" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="app_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_session_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775181546670-2">
+        <addColumn tableName="app_user">
+            <column name="google_refresh_token" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775181546670-3">
+        <addColumn tableName="app_user">
+            <column name="google_sync_status" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775181546670-4">
+        <addForeignKeyConstraint baseColumnNames="app_user_id" baseTableName="calendar_sync_mapping"
+                                 constraintName="FK33vd1khrxv8dcbhp3i5jas87i" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id" referencedTableName="app_user"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775181546670-5">
+        <addForeignKeyConstraint baseColumnNames="event_session_id" baseTableName="calendar_sync_mapping"
+                                 constraintName="FKf1t8lo4xj7sgwdnejnijmau3d" deferrable="false"
+                                 initiallyDeferred="false" referencedColumnNames="id"
+                                 referencedTableName="event_session" validate="true"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775181546670-6">
+        <dropColumn columnName="cancel_before_minutes" tableName="ticket"/>
+    </changeSet>
+</databaseChangeLog>

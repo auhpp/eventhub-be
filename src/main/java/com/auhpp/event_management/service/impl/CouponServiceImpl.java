@@ -10,6 +10,7 @@ import com.auhpp.event_management.dto.response.CouponReportDetailResponse;
 import com.auhpp.event_management.dto.response.CouponResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.TicketBasicResponse;
+import com.auhpp.event_management.entity.Booking;
 import com.auhpp.event_management.entity.Coupon;
 import com.auhpp.event_management.entity.Ticket;
 import com.auhpp.event_management.entity.TicketCoupon;
@@ -17,12 +18,12 @@ import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.CouponMapper;
 import com.auhpp.event_management.mapper.TicketBasicMapper;
-import com.auhpp.event_management.mapper.TicketStandardMapper;
 import com.auhpp.event_management.repository.CouponRepository;
 import com.auhpp.event_management.repository.TicketCouponRepository;
 import com.auhpp.event_management.repository.TicketRepository;
 import com.auhpp.event_management.service.CloudinaryService;
 import com.auhpp.event_management.service.CouponService;
+import com.auhpp.event_management.service.EventStaffService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -44,14 +45,14 @@ public class CouponServiceImpl implements CouponService {
     CouponMapper couponMapper;
     CloudinaryService cloudinaryService;
     TicketRepository ticketRepository;
-    TicketStandardMapper ticketStandardMapper;
     TicketCouponRepository ticketCouponRepository;
     TicketBasicMapper ticketBasicMapper;
+    EventStaffService eventStaffService;
 
     @Override
     @Transactional
     public CouponResponse createCoupon(CouponCreateRequest request) {
-
+        eventStaffService.checkAllPermission(request.getEventId());
         if (couponRepository.findByCodeAndEventId(request.getCode(), request.getEventId()).isPresent()) {
             throw new AppException(ErrorCode.CODE_EXISTS);
         }
@@ -101,17 +102,21 @@ public class CouponServiceImpl implements CouponService {
     @Override
     @Transactional
     public CouponResponse updateCoupon(Long couponId, CouponUpdateRequest request) {
+
         Coupon coupon = couponRepository.findById(couponId).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
+        eventStaffService.checkAllPermission(coupon.getTicketCoupons()
+                .getFirst().getTicket().getEventSession().getEvent().getId());
         couponMapper.updateCoupon(request, coupon);
         List<TicketCoupon> existingTicketCoupons = coupon.getTicketCoupons();
+
         if (request.getTicketIds() != null && !request.getTicketIds().isEmpty()) {
             existingTicketCoupons.removeIf(tc ->
                     !request.getTicketIds().contains(tc.getTicket().getId()));
 
             Set<Long> existingTicketIds = existingTicketCoupons.stream().map(
-                    TicketCoupon::getId
+                    ticketCoupon -> ticketCoupon.getTicket().getId()
             ).collect(Collectors.toSet());
 
             for (Long ticketId : request.getTicketIds()) {
@@ -156,9 +161,13 @@ public class CouponServiceImpl implements CouponService {
     @Override
     @Transactional
     public void deleteCoupon(Long couponId) {
+
         Coupon coupon = couponRepository.findById(couponId).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
+        eventStaffService.checkAllPermission(coupon.getTicketCoupons()
+                .getFirst().getTicket().getEventSession().getEvent().getId());
+
         if (coupon.getBookings().isEmpty()) {
             if (coupon.getAvatarUrl() != null && !coupon.getAvatarUrl().isEmpty()) {
                 cloudinaryService.deleteFile(coupon.getAvatarPublicId());
@@ -183,7 +192,10 @@ public class CouponServiceImpl implements CouponService {
     public PageResponse<CouponResponse> getCoupons(CouponSearchRequest request, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
-        Page<Coupon> pageData = couponRepository.filterCoupon(request.getEventId(), request.getHasPublic(), pageable);
+        Page<Coupon> pageData = couponRepository.filterCoupon(request.getKeyword(),
+                request.getEventId(), request.getHasPublic(),
+                request.getStatus() != null ? request.getStatus().name() : null,
+                pageable);
 
         List<CouponResponse> responses = pageData.getContent().stream().map(
                 this::addTicketBasicResponse
@@ -198,18 +210,16 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
-    public List<CouponReportDetailResponse> getInfoReportDetail(Long couponId) {
+    public CouponReportDetailResponse getInfoReportDetail(Long couponId) {
         Coupon coupon = couponRepository.findById(couponId).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
-        List<CouponReportDetailResponse> responses = new ArrayList<>();
-        for (TicketCoupon ticketCoupon : coupon.getTicketCoupons()) {
-            responses.add(CouponReportDetailResponse.builder()
-                    .ticket(ticketStandardMapper.toTicketStandardResponse(ticketCoupon.getTicket()))
-//                    .usageQuantity(ticketCoupon.getCouponUsages().size())
-                    .build());
-        }
-        return responses;
+        List<Booking> bookings = coupon.getBookings();
+        return CouponReportDetailResponse.builder()
+                .usageQuantity(bookings.size())
+                .totalQuantity(coupon.getMaximumUsage())
+                .totalUsageMoney(bookings.stream().mapToDouble(Booking::getDiscountAmount).sum())
+                .build();
     }
 
     @Override
@@ -236,6 +246,24 @@ public class CouponServiceImpl implements CouponService {
         );
 
         return addTicketBasicResponse(coupon);
+    }
+
+    @Override
+    @Transactional
+    public void disableCoupon(Long id) {
+        Coupon coupon = couponRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+
+        eventStaffService.checkAllPermission(coupon.getTicketCoupons()
+                .getFirst().getTicket().getEventSession().getEvent().getId());
+
+        if (coupon.getStatus() == CouponStatus.ACTIVE) {
+            coupon.setStatus(CouponStatus.INACTIVE);
+        } else if (coupon.getStatus() == CouponStatus.INACTIVE) {
+            coupon.setStatus(CouponStatus.ACTIVE);
+        }
+        couponRepository.save(coupon);
     }
 
 }

@@ -20,6 +20,4 @@ public class UserUpdateRequest {
     private MultipartFile avatar;
 
     private String biography;
-
-    private List<Long> tagIds;
 }

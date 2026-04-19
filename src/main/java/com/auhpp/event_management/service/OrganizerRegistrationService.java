@@ -1,5 +1,6 @@
 package com.auhpp.event_management.service;
 
+import com.alibaba.excel.ExcelWriter;
 import com.auhpp.event_management.constant.RegistrationStatus;
 import com.auhpp.event_management.dto.request.OrganizerCreateRequest;
 import com.auhpp.event_management.dto.request.OrganizerRegistrationSearchRequest;
@@ -28,4 +29,7 @@ public interface OrganizerRegistrationService {
     OrganizerRegistrationResponse getOrganizerRegistrationById(Long id);
 
     Integer count(RegistrationStatus status);
+
+    void exportReportOrganizer(ExcelWriter excelWriter, OrganizerRegistrationSearchRequest request);
+
 }

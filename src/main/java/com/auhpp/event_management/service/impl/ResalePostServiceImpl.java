@@ -63,8 +63,12 @@ public class ResalePostServiceImpl implements ResalePostService {
         );
         checkValidPrice(ticket.getPrice(), request.getPricePerTicket());
 
+
         // check event session
         EventSession eventSession = ticket.getEventSession();
+        if (!eventSession.getEvent().getHasResalable()) {
+            throw new AppException(ErrorCode.EVENT_NOT_ALLOW_RESALE);
+        }
         if (eventSession.isOnGoing()) {
             throw new AppException(ErrorCode.EVENT_ON_GOING);
         }
@@ -91,6 +95,10 @@ public class ResalePostServiceImpl implements ResalePostService {
             Attendee attendee = attendeeRepository.findById(attendeeId).orElseThrow(
                     () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
             );
+            // resell once on an attendee
+            if (attendee.getParentAttendee() != null) {
+                throw new AppException(ErrorCode.RESALE_AN_ATTENDEE_JUST_ONCE);
+            }
             // check status
             if (attendee.getStatus() != AttendeeStatus.VALID) {
                 throw new AppException(ErrorCode.ATTENDEE_STATUS_INVALID);
@@ -208,7 +216,7 @@ public class ResalePostServiceImpl implements ResalePostService {
         Page<ResalePost> pageData = resalePostRepository.filter(
                 request.getEventSessionId(), request.getEventId(), request.getTicketId(),
                 request.getHasRetail(), request.getQuantity(), request.getUserId(), request.getName(),
-                request.getEmail(), request.getStatuses(),
+                request.getEmail(), request.getStatuses(), request.getFromDate(), request.getToDate(),
                 pageable
         );
         List<ResalePostResponse> responses = pageData.getContent().stream().map(

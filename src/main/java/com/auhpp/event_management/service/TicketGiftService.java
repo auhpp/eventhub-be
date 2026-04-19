@@ -27,7 +27,5 @@ public interface TicketGiftService {
 
     void cleanupExpiredTicketGifts();
 
-    void refundTicket(List<Long> attendeeId);
-
 
 }

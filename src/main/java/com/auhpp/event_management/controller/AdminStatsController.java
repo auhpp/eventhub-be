@@ -5,6 +5,7 @@ import com.auhpp.event_management.constant.RevenueSource;
 import com.auhpp.event_management.constant.RoleName;
 import com.auhpp.event_management.dto.request.DateRangeFilterRequest;
 import com.auhpp.event_management.dto.request.PaginationFilterRequest;
+import com.auhpp.event_management.dto.request.StatsFilterRequest;
 import com.auhpp.event_management.dto.response.*;
 import com.auhpp.event_management.service.AdminStatsService;
 import lombok.AccessLevel;
@@ -13,10 +14,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -37,10 +35,10 @@ public class AdminStatsController {
                 .status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping("/revenue/chart")
+    @PostMapping("/revenue/chart")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<RevenueChartResponse>> getRevenueCharts(
-            DateRangeFilterRequest request,
+            @RequestBody StatsFilterRequest request,
             @RequestParam("revenueSource") RevenueSource revenueSource
     ) {
         List<RevenueChartResponse> response = adminStatsService.getRevenueCharts(request, revenueSource);
@@ -48,16 +46,6 @@ public class AdminStatsController {
                 .status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping("/revenue/top-events")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<TopEventRevenueResponse>> getTopEventRevenue(
-            DateRangeFilterRequest request,
-            PaginationFilterRequest paginationFilterRequest
-    ) {
-        List<TopEventRevenueResponse> response = adminStatsService.getTopEventRevenue(request, paginationFilterRequest);
-        return ResponseEntity
-                .status(HttpStatus.OK).body(response);
-    }
 
     @GetMapping("/revenue/top-organizers")
     @PreAuthorize("hasRole('ADMIN')")

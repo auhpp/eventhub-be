@@ -1,5 +1,6 @@
 package com.auhpp.event_management.service;
 
+import com.alibaba.excel.ExcelWriter;
 import com.auhpp.event_management.dto.request.*;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.SocialLinkResponse;
@@ -28,5 +29,13 @@ public interface AppUserService {
     PageResponse<UserBasicResponse> filter(UserSearchRequest request, int page, int size);
 
     void changeStatus(Long id, UserChangeStatusRequest request);
+
+    void updateSocialLink(List<SocialLinkCreateRequest> requests);
+
+    void exportReportAppUser(ExcelWriter excelWriter, UserSearchRequest request);
+
+    void sendOtpResetPassword(EmailSendRequest request);
+
+    void resetPassword(ResetPasswordRequest request);
 
 }

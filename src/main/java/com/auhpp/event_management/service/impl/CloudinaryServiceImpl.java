@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -65,6 +66,18 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         } catch (Exception e) {
             throw new AppException(ErrorCode.FILE_DELETE_FAILED);
         }
+    }
+
+    @Override
+    public String uploadPdf(byte[] pdfBytes, String folderName, String fileName) throws IOException {
+        Map<String, Object> params = ObjectUtils.asMap(
+                "resource_type", "image",
+                "folder", folderName,
+                "format", "pdf",
+                "public_id", fileName
+        );
+        Map uploadResult = cloudinary.uploader().upload(pdfBytes, params);
+        return uploadResult.get("secure_url").toString();
     }
 
 

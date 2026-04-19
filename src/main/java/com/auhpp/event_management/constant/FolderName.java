@@ -7,7 +7,8 @@ public enum FolderName {
     ORGANIZER_REGISTRATION("eventhub/organizer_registration/"), CATEGORY("eventhub/category/"),
     EVENT("eventhub/event/"), USER_AVATAR("eventhub/avatar/"), COUPON_AVATAR("eventhub/coupon/"),
     REVIEW("eventhub/review/"), EVENT_SERIES("eventhub/event_series/"), MESSAGE("eventhub/message/"),
-    AUDIO_NOTE("eventhub/note/audio/");
+    AUDIO_NOTE("eventhub/note/audio/"), WITHDRAWAL("eventhub/withdrawal/"),
+    INVOICE("eventhub/invoice/");
 
     private final String value;
 

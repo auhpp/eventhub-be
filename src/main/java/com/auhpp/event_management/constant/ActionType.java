@@ -1,5 +1,5 @@
 package com.auhpp.event_management.constant;
 
-public enum TimeUnit {
-    DAY, WEEK, MONTH
+public enum ActionType {
+    IN, OUT
 }

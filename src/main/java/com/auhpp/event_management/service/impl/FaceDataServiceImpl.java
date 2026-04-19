@@ -14,9 +14,8 @@ import com.auhpp.event_management.service.SpotterService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,9 +28,9 @@ public class FaceDataServiceImpl implements FaceDataService {
     SpotterService spotterService;
     EventImageRepository eventImageRepository;
 
+    @Async("taskExecutor")
     @Override
-    @Transactional
-    public void processEventImage(Long eventImageId, MultipartFile file, String url) {
+    public void processEventImage(Long eventImageId, String imageUrl) {
         EventImage eventImage = eventImageRepository.findById(eventImageId).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
@@ -39,14 +38,8 @@ public class FaceDataServiceImpl implements FaceDataService {
         try {
             eventImage.setProcessStatus(ProcessStatus.PROCESSING);
             eventImageRepository.saveAndFlush(eventImage);
-            List<FaceResult> faces = new ArrayList<>();
-            if (file != null) {
-                // call spotter service
-                faces = spotterService.detectFaces(file);
-            } else {
-                faces = spotterService.detectFacesByUrl(url);
 
-            }
+            List<FaceResult> faces = spotterService.detectFacesByUrl(imageUrl);
 
             List<FaceData> faceDataToSave = new ArrayList<>();
             for (FaceResult face : faces) {

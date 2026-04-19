@@ -20,8 +20,10 @@ public class AppUserCustomRepositoryImpl implements AppUserCustomRepository {
     @PersistenceContext
     private EntityManager entityManager;
 
-    private void handleJoin(StringBuilder query) {
-        query.append(" INNER JOIN role r on r.id = u.role_id ");
+    private void handleJoin(RoleName roleName, StringBuilder query) {
+        if (roleName != null) {
+            query.append(" INNER JOIN role r on r.id = u.role_id ");
+        }
     }
 
     private void handleQuery(DateRangeFilterRequest request, RoleName roleName,
@@ -44,15 +46,16 @@ public class AppUserCustomRepositoryImpl implements AppUserCustomRepository {
     @Override
     public List<UserGrowthResponse> getUserGrowthResponse(DateRangeFilterRequest request, RoleName roleName) {
         StringBuilder query = new StringBuilder(
-                "SELECT TO_CHAR(u.created_at, 'MM-YYYY') as timeLabel, COUNT(DISTINCT u.id) as newUsersCount " +
+                "SELECT TO_CHAR(u.created_at, 'MM-YYYY') as time_label, COUNT(DISTINCT u.id) as new_users_count " +
                         " FROM app_user u ");
-        handleJoin(query);
+        handleJoin(roleName, query);
 
         StringBuilder where = new StringBuilder(" WHERE 1 = 1 ");
         Map<String, Object> params = new HashMap<>();
         handleQuery(request, roleName, where, params);
         query.append(where);
         query.append(" GROUP BY TO_CHAR(u.created_at, 'MM-YYYY') ");
+        query.append(" ORDER BY MIN(u.created_at) ASC ");
 
         Query dataQuery = entityManager.createNativeQuery(query.toString(), Tuple.class);
         for (String key : params.keySet()) {
@@ -61,8 +64,8 @@ public class AppUserCustomRepositoryImpl implements AppUserCustomRepository {
         List<Tuple> tuples = dataQuery.getResultList();
         List<UserGrowthResponse> res = tuples.stream().map(
                 tuple -> UserGrowthResponse.builder()
-                        .timeLabel(tuple.get("timeLabel", String.class))
-                        .newUsersCount(tuple.get("newUsersCount") != null ? ((Number) tuple.get("newUsersCount")).longValue() : 0L)
+                        .timeLabel(tuple.get("time_label", String.class))
+                        .newUsersCount(tuple.get("new_users_count") != null ? ((Number) tuple.get("new_users_count")).longValue() : 0L)
                         .build()
         ).toList();
         return res;

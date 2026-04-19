@@ -18,4 +18,6 @@ public class TopResaleEventResponse {
 
     private Long completedTransactionCount;
 
+    private Double totalFee;
+
 }

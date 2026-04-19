@@ -41,6 +41,8 @@ public class EventResponse {
 
     private String poster;
 
+    private Boolean hasResalable;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
@@ -48,8 +50,6 @@ public class EventResponse {
     private CategoryResponse category;
 
     private List<EventSessionResponse> eventSessions;
-
-    private List<TagResponse> eventTags;
 
     private UserResponse appUser;
 

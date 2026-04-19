@@ -1,26 +1,16 @@
 package com.auhpp.event_management.service.impl;
 
-import com.auhpp.event_management.constant.AttendeeSearchStatus;
-import com.auhpp.event_management.constant.AttendeeStatus;
-import com.auhpp.event_management.constant.EventType;
-import com.auhpp.event_management.dto.request.AttendeeCreateRequest;
-import com.auhpp.event_management.dto.request.AttendeeSearchRequest;
-import com.auhpp.event_management.dto.request.CheckInRequest;
-import com.auhpp.event_management.dto.request.CheckinSearchRequest;
-import com.auhpp.event_management.dto.response.AttendeeBasicResponse;
-import com.auhpp.event_management.dto.response.AttendeeResponse;
-import com.auhpp.event_management.dto.response.PageResponse;
-import com.auhpp.event_management.dto.response.UserAttendeeSummaryResponse;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.write.metadata.WriteSheet;
+import com.auhpp.event_management.constant.*;
+import com.auhpp.event_management.dto.request.*;
+import com.auhpp.event_management.dto.response.*;
 import com.auhpp.event_management.entity.*;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
-import com.auhpp.event_management.mapper.AttendeeBasicMapper;
-import com.auhpp.event_management.mapper.AttendeeMapper;
-import com.auhpp.event_management.mapper.UserBasicMapper;
-import com.auhpp.event_management.repository.AppUserRepository;
-import com.auhpp.event_management.repository.AttendeeRepository;
-import com.auhpp.event_management.repository.BookingRepository;
-import com.auhpp.event_management.repository.TicketRepository;
+import com.auhpp.event_management.mapper.*;
+import com.auhpp.event_management.repository.*;
 import com.auhpp.event_management.service.AttendeeService;
 import com.auhpp.event_management.util.SecurityUtils;
 import lombok.AccessLevel;
@@ -35,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,6 +40,10 @@ public class AttendeeServiceImpl implements AttendeeService {
     AppUserRepository appUserRepository;
     AttendeeBasicMapper attendeeBasicMapper;
     UserBasicMapper userBasicMapper;
+    CheckInLogRepository checkInLogRepository;
+    EventStaffRepository eventStaffRepository;
+    CheckInLogMapper checkInLogMapper;
+    AttendeeExportMapper attendeeExportMapper;
 
     static String CHAR_LOWER = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     static SecureRandom random = new SecureRandom();
@@ -79,32 +74,88 @@ public class AttendeeServiceImpl implements AttendeeService {
     @Override
     @Transactional
     public AttendeeBasicResponse checkIn(CheckInRequest request) {
-        Attendee attendee = attendeeRepository.findByTicketCode(request.getTicketCode()).orElseThrow(
-                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
-        );
+        Attendee attendee = null;
+        if (request.getAttendeeId() == null) {
+            attendee = attendeeRepository.findByTicketCode(request.getTicketCode()).orElseThrow(
+                    () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+            );
+        } else {
+            attendee = attendeeRepository.findById(request.getAttendeeId()).orElseThrow(
+                    () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+            );
+        }
+
+        // common validations
+        if (attendee.getStatus() != AttendeeStatus.CHECKED_IN && attendee.getStatus() != AttendeeStatus.OUTSIDE
+                && attendee.getStatus() != AttendeeStatus.VALID) {
+            throw new AppException(ErrorCode.INVALID_TICKET);
+        }
+
         EventSession eventSession = attendee.getTicket().getEventSession();
+        // time checkin
+        if (LocalDateTime.now().
+
+                isBefore(eventSession.getCheckinStartTime())) {
+            throw new AppException(ErrorCode.CHECK_IN_START_TIME);
+        }
+
         if (eventSession.isExpired()) {
             throw new AppException(ErrorCode.EXPIRED_EVENT_SESSION);
         }
+
         String email = SecurityUtils.getCurrentUserLogin();
         Event event = eventSession.getEvent();
-        if (!event.isEventStaff(email) || !Objects.equals(event.getId(), request.getEventId())) {
+
+        // find event staff
+        Optional<EventStaff> eventStaff = eventStaffRepository.findByUserEmailAndEventId(email, event.getId());
+
+        if (eventStaff.isEmpty() || !Objects.equals(event.getId(), request.getEventId())) {
             throw new AppException(ErrorCode.WRONG_EVENT);
         }
 
-        if (attendee.getStatus() == AttendeeStatus.VALID) {
-            attendee.setStatus(AttendeeStatus.CHECKED_IN);
-            attendee.setCheckInAt(LocalDateTime.now());
-            attendeeRepository.save(attendee);
-            return attendeeBasicMapper.toAttendeeBasicResponse(attendee);
-        } else if (attendee.getStatus() == AttendeeStatus.CHECKED_IN) {
-            throw new AppException(ErrorCode.CHECKED_IN_TICKET);
+        // In
+        if (request.getActionType() == ActionType.IN) {
+            if (attendee.getStatus() == AttendeeStatus.CHECKED_IN) {
+                throw new AppException(ErrorCode.CHECKED_IN_TICKET);
+            }
+
+            if (attendee.getStatus() == AttendeeStatus.VALID || attendee.getStatus() == AttendeeStatus.OUTSIDE) {
+                attendee.setStatus(AttendeeStatus.CHECKED_IN);
+
+                if (attendee.getCheckInAt() == null) {
+                    attendee.setCheckInAt(LocalDateTime.now());
+                }
+                // create checkin log
+                attendee.getCheckInLogs().add(CheckInLog.builder()
+                        .attendee(attendee)
+                        .actionType(ActionType.IN)
+                        .eventStaff(eventStaff.get())
+                        .build());
+            }
         } else {
-            throw new AppException(ErrorCode.INVALID_TICKET);
+            // OUT
+            if (attendee.getStatus() == AttendeeStatus.VALID) {
+                throw new AppException(ErrorCode.NOT_CHECK_IN);
+            } else if (attendee.getStatus() == AttendeeStatus.OUTSIDE) {
+                throw new AppException(ErrorCode.ATTENDEE_OUTSIDE);
+            }
+
+            // update attendee
+            attendee.setStatus(AttendeeStatus.OUTSIDE);
+
+            // create checkin log
+
+            attendee.getCheckInLogs().add(CheckInLog.builder()
+                    .attendee(attendee)
+                    .actionType(ActionType.OUT)
+                    .eventStaff(eventStaff.get())
+                    .build());
         }
+
+        attendeeRepository.save(attendee);
+        return attendeeBasicMapper.toAttendeeBasicResponse(attendee);
     }
 
-    @Override
     @Transactional
     public AttendeeBasicResponse cancelAttendee(Long id) {
         Attendee attendee = attendeeRepository.findById(id).orElseThrow(
@@ -115,12 +166,7 @@ public class AttendeeServiceImpl implements AttendeeService {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
         Ticket ticket = attendee.getTicket();
-        LocalDateTime deadline = ticket.getEventSession().getStartDateTime().minusMinutes(
-                ticket.getCancelBeforeMinutes()
-        );
-        if (LocalDateTime.now().isAfter(deadline)) {
-            throw new AppException(ErrorCode.CANNOT_CANCEL_TICKET);
-        }
+
         ticket.setSoldQuantity(ticket.getSoldQuantity() - 1);
         ticketRepository.save(ticket);
 
@@ -141,11 +187,17 @@ public class AttendeeServiceImpl implements AttendeeService {
         Ticket ticket = ticketRepository.findById(request.getTicketId()).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
-        attendee.setPrice(ticket.getPrice());
+        if (request.getType() == AttendeeType.INVITE) {
+            attendee.setPrice(0D);
+            attendee.setFinalPrice(0D);
+        } else {
+            attendee.setPrice(ticket.getPrice());
+            attendee.setFinalPrice(ticket.getPrice());
+        }
+        attendee.setDiscountAmount(0D);
+
         attendee.setBooking(booking);
         attendee.setTicket(ticket);
-        attendee.setDiscountAmount(0D);
-        attendee.setFinalPrice(ticket.getPrice());
         if (request.getAttendeeParentId() != null) {
             Attendee attendeeParent = attendeeRepository.findById(request.getAttendeeParentId())
                     .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
@@ -281,18 +333,26 @@ public class AttendeeServiceImpl implements AttendeeService {
     @Override
     public PageResponse<UserAttendeeSummaryResponse>
     getUserAttendeeSummaries(Long eventSessionId,
-                             AttendeeSearchRequest searchRequest, int page, int size) {
+                             AttendeeSearchRequest request, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.Direction.ASC, "email");
         Page<AppUser> appUserPage = attendeeRepository.findUserByEventSession(
-                searchRequest.getStatus(),
+                request.getTicketId(),
+                request.getName(),
+                request.getEmail(),
+                request.getTypes(),
+                request.getStatuses(),
                 eventSessionId,
                 pageable
         );
+
         List<UserAttendeeSummaryResponse> responses = new ArrayList<>();
         if (!appUserPage.isEmpty()) {
             List<AppUser> usersOnPage = appUserPage.getContent();
 
-            List<Attendee> attendees = attendeeRepository.findAllByUserInAndEventSession(null, usersOnPage,
+            List<Attendee> attendees = attendeeRepository.findAllByUserInAndEventSession(
+                    request.getTicketId(),
+                    request.getTypes(),
+                    null, usersOnPage,
                     eventSessionId);
             Map<Long, List<Attendee>> attendeesByUserId = attendees.stream().collect(
                     Collectors.groupingBy(a -> a.getOwner().getId())
@@ -333,5 +393,142 @@ public class AttendeeServiceImpl implements AttendeeService {
     @Override
     public boolean getAttendeeByEventSessionIdAndCurrentUser(Long eventSessionId, Long userId) {
         return attendeeRepository.existsByAppUserIdAndEventSessionId(userId, eventSessionId);
+    }
+
+    @Override
+    @Transactional
+    public AttendanceImportCheckInResponse processAttendanceFromEmails(Long eventSessionId, AttendanceImportRequest request) {
+        List<String> cleanEmails = request.getEmails().stream().filter(
+                        e -> e != null && !e.isBlank()
+                )
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .toList();
+        if (cleanEmails.isEmpty()) {
+            throw new AppException(ErrorCode.RESOURCE_NOT_FOUND);
+        }
+        List<Attendee> validAttendee = attendeeRepository.findBySessionIdAndEmailsIn(eventSessionId, request.getEmails());
+        LocalDateTime now = LocalDateTime.now();
+        for (Attendee attendee : validAttendee) {
+            attendee.setStatus(AttendeeStatus.CHECKED_IN);
+            attendee.setCheckInAt(now);
+        }
+        attendeeRepository.saveAll(validAttendee);
+
+        List<String> successfulEmails = validAttendee.stream()
+                .map(a -> a.getOwner().getEmail()).distinct().toList();
+        List<String> failedEmails = cleanEmails.stream().filter(email -> !successfulEmails.contains(email))
+                .toList();
+        return AttendanceImportCheckInResponse.builder()
+                .successCount(validAttendee.size())
+                .failedCount(failedEmails.size())
+                .failedEmails(failedEmails)
+                .build();
+    }
+
+
+    @Override
+    public PageResponse<AttendeeCheckinResponse> getAttendeeCheckins(Long ticketId, String email, int page, int size) {
+        if (Objects.equals(email, "")) {
+            email = null;
+        }
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<AttendeeCheckedIn> pageData = attendeeRepository.findAllCheckedInByTicketId(ticketId, email, pageable);
+        List<AttendeeCheckinResponse> responses = pageData.getContent().stream().map(
+                attendeeCheckedIn -> AttendeeCheckinResponse.builder()
+                        .checkedInCount(attendeeCheckedIn.getCheckedInCount())
+                        .fullName(attendeeCheckedIn.getFullName())
+                        .email(attendeeCheckedIn.getEmail())
+                        .userId(attendeeCheckedIn.getUserId()).build()
+        ).toList();
+        return PageResponse.<AttendeeCheckinResponse>builder()
+                .currentPage(page)
+                .totalElements(pageData.getTotalElements())
+                .totalPage(pageData.getTotalPages())
+                .pageSize(pageData.getSize())
+                .data(responses)
+                .build();
+    }
+
+    @Override
+    public PageResponse<CheckInLogResponse> getCheckInLogs(CheckInLogSearchRequest request, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
+                "createdAt"));
+        Page<CheckInLog> pageData = checkInLogRepository.filter(
+                request.getTicketCode(), request.getAttendeeId(), request.getActionType(), request.getEventStaffId(),
+                request.getFromTime(), request.getToTime(), pageable
+        );
+        List<CheckInLogResponse> responses = pageData.getContent().stream().map(
+                checkInLogMapper::toCheckInLogResponse
+        ).toList();
+        return PageResponse.<CheckInLogResponse>builder()
+                .currentPage(page)
+                .totalElements(pageData.getTotalElements())
+                .totalPage(pageData.getTotalPages())
+                .pageSize(pageData.getSize())
+                .data(responses)
+                .build();
+    }
+
+    @Override
+    public void exportReportAttendees(ExcelWriter excelWriter, AttendeeSearchRequest request, String eventName) {
+        WriteSheet writeSheet = EasyExcel.writerSheet("danh_sach_nguoi_tham_gia")
+                .relativeHeadRowIndex(1)
+                .registerWriteHandler(new EventTitleWriteHandler(eventName))
+                .build();
+        int currentPage = 1;
+        int pageSize = 1000;
+        boolean hasNextPage = true;
+        boolean hasData = false;
+
+        while (hasNextPage) {
+            Pageable pageable = PageRequest.of(currentPage - 1, pageSize, Sort.by(Sort.Direction.ASC,
+                    "createdAt"));
+            Page<Attendee> pageData = attendeeRepository.filterReport(
+                    request.getName(),
+                    request.getEmail(),
+                    request.getTicketId(),
+                    request.getTypes(),
+                    request.getStatuses(),
+                    request.getEventSessionId(),
+                    pageable);
+            if (pageData == null || pageData.isEmpty()) {
+                break;
+            }
+            hasData = true;
+            List<AttendeeExportResponse> attendeeReports = pageData.stream().map(
+                    attendee -> {
+                        AttendeeExportResponse attendeeExport = attendeeExportMapper.toAttendeeExportResponse(attendee);
+
+                        if (attendee.getCheckInAt() != null) {
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+                            attendeeExport.setCheckInAt(attendee.getCheckInAt().format(formatter));
+                        }
+
+                        attendeeExport.setType(attendee.getType() == AttendeeType.INVITE ? "Khách mời" : "Người tham gia");
+                        attendeeExport.setStatus(attendee.getStatus() == AttendeeStatus.CHECKED_IN ? "Đã check-in"
+                                : "Chưa check-in");
+                        return attendeeExport;
+                    }
+            ).collect(Collectors.toList());
+
+            excelWriter.write(attendeeReports, writeSheet);
+
+            if (currentPage >= pageData.getTotalPages()) {
+                hasNextPage = false;
+            } else {
+                currentPage++;
+            }
+        }
+        if (!hasData) {
+            excelWriter.write(new ArrayList<AttendeeExportResponse>(), writeSheet);
+        }
+        excelWriter.finish();
+
+    }
+
+    @Override
+    public int countBoughtTicket(Long ticketId, Long userId) {
+        return attendeeRepository.countBoughtTicket(ticketId, userId);
     }
 }

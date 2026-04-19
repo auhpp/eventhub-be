@@ -1,15 +1,16 @@
 package com.auhpp.event_management.service.impl;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.write.metadata.WriteSheet;
 import com.auhpp.event_management.constant.*;
 import com.auhpp.event_management.dto.request.*;
-import com.auhpp.event_management.dto.response.EventBasicResponse;
-import com.auhpp.event_management.dto.response.EventResponse;
-import com.auhpp.event_management.dto.response.PageResponse;
-import com.auhpp.event_management.dto.response.TagResponse;
+import com.auhpp.event_management.dto.response.*;
 import com.auhpp.event_management.entity.*;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.EventBasicMapper;
+import com.auhpp.event_management.mapper.EventExportMapper;
 import com.auhpp.event_management.mapper.EventMapper;
 import com.auhpp.event_management.repository.*;
 import com.auhpp.event_management.service.*;
@@ -31,9 +32,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -55,6 +58,9 @@ public class EventServiceImpl implements EventService {
     EventSeriesRepository eventSeriesRepository;
     TagRepository tagRepository;
     TagService tagService;
+    NotificationService notificationService;
+    GoogleCalendarService googleCalendarService;
+    EventExportMapper eventExportMapper;
 
     private void handleEventTags(List<EventTag> eventTags, List<TagUpdateRequest> requests, Event event) {
         for (TagUpdateRequest tagRequest : requests) {
@@ -169,6 +175,7 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
+        eventStaffService.checkAllPermission(event.getId());
 //        if (event.isExpired()) {
 //            throw new AppException(ErrorCode.RESOURCE_CAN_NOT_UPDATE);
 //        }
@@ -178,6 +185,8 @@ public class EventServiceImpl implements EventService {
                     () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
             );
             event.setEventSeries(eventSeries);
+        } else {
+            event.setEventSeries(null);
         }
 
         if (event.getType() == EventType.OFFLINE && request.getLocationLatitude() != null
@@ -187,6 +196,9 @@ public class EventServiceImpl implements EventService {
                     request.getLocationLatitude());
             Point locationPoint = geometryFactory.createPoint(locationCoordinate);
             event.setLocationCoordinates(locationPoint);
+            for (EventSession eventSession : event.getEventSessions()) {
+                googleCalendarService.syncUpdatedEventToAllUsersInBackground(eventSession.getId());
+            }
         }
 
         if (request.getCategoryId() != null) {
@@ -262,6 +274,30 @@ public class EventServiceImpl implements EventService {
             ticketRepository.saveAll(tickets);
             eventRepository.save(event);
 
+            // send notfication
+            List<CategoryFollower> categoryFollowers = event.getCategory().getCategoryFollowers() != null ?
+                    event.getCategory().getCategoryFollowers() : List.of();
+            for (CategoryFollower categoryFollower : categoryFollowers) {
+                AppUser follower = categoryFollower.getAppUser();
+                AppUser sender = event.getAppUser();
+                notificationService.createNotification(
+                        NotificationRequest.builder()
+                                .message("")
+                                .recipientIds(List.of(follower.getId()))
+                                .type(NotificationType.CATEGORY_EVENT)
+                                .subjectAvatar(sender.getAvatar())
+                                .subjectType(NotificationSubjectType.USER)
+                                .subjectId(sender.getId())
+                                .subject(!Objects.equals(sender.getFullName(), null) ?
+                                        sender.getFullName() : sender.getEmail())
+                                .targetAvatar(event.getPoster())
+                                .targetId(event.getId())
+                                .targetType(NotificationTargetType.EVENT)
+                                .target(event.getName())
+                                .build()
+                );
+            }
+
         } else {
             throw new AppException(ErrorCode.RESOURCE_CAN_NOT_UPDATE);
         }
@@ -298,14 +334,15 @@ public class EventServiceImpl implements EventService {
                 "createdAt"));
         Page<Event> pageData = null;
         if (request.getEventSearchStatus() != null) {
+            List<EventStatus> statuses = request.getStatus() == null ? null : List.of(request.getStatus());
             if (request.getEventSearchStatus() == EventSearchStatus.COMING) {
                 pageData = eventRepository.findAllByUserIdAndStatusAndComingStatus(request.getUserId(),
-                        request.getStatus(), LocalDateTime.now(), request.getType(),
+                        statuses, LocalDateTime.now(), request.getType(),
                         request.getEventSeriesId(), request.getFromDate(), request.getToDate(), request.getName(),
                         pageable);
             } else if (request.getEventSearchStatus() == EventSearchStatus.PAST) {
                 pageData = eventRepository.findAllByUserIdAndStatusAndPastStatus(request.getUserId(),
-                        request.getStatus(), LocalDateTime.now(), request.getType(),
+                        statuses, LocalDateTime.now(), request.getType(),
                         request.getEventSeriesId(), request.getFromDate(), request.getToDate(), request.getName(),
                         pageable);
             }
@@ -331,6 +368,7 @@ public class EventServiceImpl implements EventService {
                     request.getCurrentUserId(),
                     request.getHasFavorite(),
                     request.getEmail(),
+                    request.getSlug(),
                     pageable);
         }
         List<EventResponse> eventResponses = pageData.getContent().stream().map(
@@ -362,10 +400,9 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
-        String email = SecurityUtils.getCurrentUserLogin();
-        if (!Objects.equals(email, event.getAppUser().getEmail())) {
-            throw new AppException(ErrorCode.FORBIDDEN);
-        }
+
+        eventStaffService.checkAllPermission(event.getId());
+
         if (event.getStatus() == EventStatus.PENDING) {
             event.setStatus(EventStatus.CANCELLED);
             eventRepository.save(event);
@@ -392,7 +429,77 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Integer countEvent(EventCountRequest request) {
-        return eventRepository.countEvent(request.getCategoryId(), request.getStatuses(), null, null);
+        return eventRepository.countEvent(request.getOrganizerId(), request.getCategoryId(), request.getStatuses(), null, null);
+    }
+
+    @Override
+    public void exportReportEvent(ExcelWriter excelWriter, EventSearchRequest request) {
+        WriteSheet writeSheet = EasyExcel.writerSheet("danh_sach_su_kien")
+                .relativeHeadRowIndex(1)
+                .registerWriteHandler(new EventTitleWriteHandler("Danh sách sự kiện"))
+                .build();
+        int currentPage = 1;
+        int pageSize = 1000;
+        boolean hasNextPage = true;
+        boolean hasData = false;
+
+        while (hasNextPage) {
+            Pageable pageable = PageRequest.of(currentPage - 1, pageSize, Sort.by(Sort.Direction.ASC,
+                    "createdAt"));
+            Page<Event> pageData = eventRepository.filterEvents(request.getUserId(), request.getStatus(),
+                    request.getType(), request.getFromDate(), request.getToDate(), request.getCategoryIds(),
+                    request.getPriceFrom(), request.getPriceTo(), request.getName(), request.getEventSeriesId(),
+                    request.getHasResale(),
+                    request.getCurrentUserId(),
+                    request.getHasFavorite(),
+                    request.getEmail(),
+                    request.getSlug(),
+                    pageable);
+            if (pageData == null || pageData.isEmpty()) {
+                break;
+            }
+            hasData = true;
+            List<EventReportExportResponse> eventReports = pageData.stream().map(
+                    event -> {
+                        EventReportExportResponse eventReport = eventExportMapper.toEventReportExportResponse(event);
+
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+                        eventReport.setCreatedAt(event.getCreatedAt().format(formatter));
+
+                        eventReport.setEventType(event.getType().name());
+                        eventReport.setEventName(event.getStatus().name());
+                        eventReport.setExpired(event.isExpired());
+                        eventReport.setOnGoing(event.isOnGoing());
+                        eventReport.setTotalSessions(event.getEventSessions().size());
+                        if (event.getType() == EventType.ONLINE) {
+                            eventReport.setAddress("");
+                            eventReport.setLocation("");
+                        }
+                        return eventReport;
+                    }
+            ).collect(Collectors.toList());
+
+            excelWriter.write(eventReports, writeSheet);
+
+            if (currentPage >= pageData.getTotalPages()) {
+                hasNextPage = false;
+            } else {
+                currentPage++;
+            }
+        }
+        if (!hasData) {
+            excelWriter.write(new ArrayList<EventReportExportResponse>(), writeSheet);
+        }
+        excelWriter.finish();
+    }
+
+    @Override
+    public Boolean hasResalable(Long id) {
+        Boolean res = eventRepository.getHasResalable(id);
+        if (res == null) {
+            return false;
+        }
+        return res;
     }
 
 

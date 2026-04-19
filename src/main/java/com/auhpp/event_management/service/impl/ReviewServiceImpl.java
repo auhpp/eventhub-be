@@ -151,7 +151,7 @@ public class ReviewServiceImpl implements ReviewService {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
         Page<Review> pageData = reviewRepository.filterReview(request.getEventSessionId(),
-                request.getUserId(), request.getAttendeeId(), pageable);
+                request.getUserId(), request.getAttendeeId(), request.getRating(), request.getEmail(), pageable);
         List<ReviewResponse> responses = pageData.getContent().stream().map(
                 reviewMapper::toReviewResponse
         ).toList();
@@ -166,7 +166,8 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public ReviewStatsResponse getReviewStats(Long eventSessionId) {
-        List<Object[]> ratingCounts = reviewRepository.countReviewsByRating(eventSessionId);
+        List<Object[]> ratingCounts = reviewRepository.countReviewsByRating(
+                null, eventSessionId, null, null, null);
         long totalReview = 0;
         long totalScore = 0;
 

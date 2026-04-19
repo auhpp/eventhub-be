@@ -10,7 +10,10 @@ import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.AttendeeBasicMapper;
 import com.auhpp.event_management.mapper.TicketGiftMapper;
-import com.auhpp.event_management.repository.*;
+import com.auhpp.event_management.repository.AppUserRepository;
+import com.auhpp.event_management.repository.AttendeeRepository;
+import com.auhpp.event_management.repository.BookingRepository;
+import com.auhpp.event_management.repository.TicketGiftRepository;
 import com.auhpp.event_management.service.AttendeeService;
 import com.auhpp.event_management.service.EmailService;
 import com.auhpp.event_management.service.NotificationService;
@@ -48,7 +51,6 @@ public class TicketGiftServiceImpl implements TicketGiftService {
     AttendeeService attendeeService;
     AttendeeBasicMapper attendeeBasicMapper;
     NotificationService notificationService;
-    AttendeeTicketGiftRepository attendeeTicketGiftRepository;
 
     @Override
     @Transactional
@@ -82,8 +84,6 @@ public class TicketGiftServiceImpl implements TicketGiftService {
             if (eventSession.isExpired()) {
                 throw new AppException(ErrorCode.EXPIRED_EVENT_SESSION);
             }
-            attendee.setType(AttendeeType.GIFT);
-            attendeeRepository.save(attendee);
 
             if (event == null) {
                 event = attendee.getTicket().getEventSession().getEvent();
@@ -92,8 +92,12 @@ public class TicketGiftServiceImpl implements TicketGiftService {
                 attendeeTicketGifts.add(AttendeeTicketGift.builder()
                         .ticketGift(ticketGift)
                         .attendee(attendee)
-                        .status(TicketGiftStatus.PENDING)
                         .build());
+                attendee.setType(AttendeeType.GIFT);
+                attendee.setStatus(AttendeeStatus.PENDING_GIFT);
+                attendeeRepository.save(attendee);
+            } else {
+                throw new AppException(ErrorCode.INVALID_TICKET);
             }
         }
         ticketGift.setAttendeeTicketGifts(attendeeTicketGifts);
@@ -149,7 +153,6 @@ public class TicketGiftServiceImpl implements TicketGiftService {
             // Handle attendee
             List<Attendee> attendees = ticketGift.getAttendeeTicketGifts().stream().map(
                     attendeeTicketGift -> {
-                        attendeeTicketGift.setStatus(TicketGiftStatus.ACCEPTED);
                         Attendee attendee = attendeeTicketGift.getAttendee();
                         EventSession eventSession = attendee.getTicket().getEventSession();
                         if (eventSession.isExpired()) {
@@ -157,6 +160,8 @@ public class TicketGiftServiceImpl implements TicketGiftService {
                         }
                         attendee.setOwner(receiver);
                         attendee.setTicketCode(attendeeService.generateTicketCode());
+                        attendee.setType(AttendeeType.GIFT);
+                        attendee.setStatus(AttendeeStatus.VALID);
                         return attendee;
                     }
             ).toList();
@@ -186,6 +191,17 @@ public class TicketGiftServiceImpl implements TicketGiftService {
         attendeeRepository.saveAll(attendees);
     }
 
+    private void resetAttendeeStatus(TicketGift ticketGift) {
+        List<Attendee> attendees = ticketGift.getAttendeeTicketGifts().stream().map(
+                attendeeTicketGift -> {
+                    Attendee attendee = attendeeTicketGift.getAttendee();
+                    attendee.setStatus(AttendeeStatus.VALID);
+                    return attendee;
+                }
+        ).toList();
+        attendeeRepository.saveAll(attendees);
+    }
+
     @Override
     @Transactional
     public TicketGiftResponse reject(Long id, EventInvitationRejectRequest eventInvitationRejectRequest) {
@@ -199,9 +215,9 @@ public class TicketGiftServiceImpl implements TicketGiftService {
             ticketGift.setStatus(TicketGiftStatus.REJECTED);
             resetAttendeeType(ticketGift, true);
             ticketGift.setRejectionMessage(eventInvitationRejectRequest.getRejectionMessage());
-            ticketGift.getAttendeeTicketGifts().forEach(
-                    attendeeTicketGift -> attendeeTicketGift.setStatus(TicketGiftStatus.REJECTED)
-            );
+
+            resetAttendeeStatus(ticketGift);
+
             ticketGiftRepository.save(ticketGift);
             return ticketGiftMapper.toTicketGiftResponse(ticketGift);
         } else {
@@ -221,9 +237,9 @@ public class TicketGiftServiceImpl implements TicketGiftService {
         if (ticketGift.getStatus() == TicketGiftStatus.PENDING) {
             ticketGift.setStatus(TicketGiftStatus.REVOKED);
             resetAttendeeType(ticketGift, false);
-            ticketGift.getAttendeeTicketGifts().forEach(
-                    attendeeTicketGift -> attendeeTicketGift.setStatus(TicketGiftStatus.REVOKED)
-            );
+
+            resetAttendeeStatus(ticketGift);
+
             ticketGiftRepository.save(ticketGift);
             return ticketGiftMapper.toTicketGiftResponse(ticketGift);
         } else {
@@ -294,29 +310,11 @@ public class TicketGiftServiceImpl implements TicketGiftService {
         }
         for (TicketGift ticketGift : expiredTicketGifts) {
             ticketGift.setStatus(TicketGiftStatus.EXPIRED);
-            ticketGift.getAttendeeTicketGifts().forEach(
-                    attendeeTicketGift -> attendeeTicketGift.setStatus(TicketGiftStatus.EXPIRED)
-            );
             resetAttendeeType(ticketGift, false);
-            ticketGiftRepository.save(ticketGift);
-        }
-    }
 
-    @Override
-    @Transactional
-    public void refundTicket(List<Long> attendeeIds) {
-        for (Long id : attendeeIds) {
-            AttendeeTicketGift attendeeTicketGift = attendeeTicketGiftRepository.findByAttendeeIdAndStatus(id,
-                    TicketGiftStatus.ACCEPTED).orElseThrow(
-                    () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
-            );
-            attendeeTicketGift.setStatus(TicketGiftStatus.REFUNDED);
-            Attendee attendee = attendeeTicketGift.getAttendee();
-            attendee.setOwner(attendeeTicketGift.getTicketGift().getSender());
-            attendee.setType(attendee.getSourceType() == SourceType.PURCHASE ? AttendeeType.BUY : AttendeeType.RESALE);
-            // change ticket code
-            attendee.setTicketCode(attendeeService.generateTicketCode());
-            attendeeRepository.save(attendee);
+            resetAttendeeStatus(ticketGift);
+
+            ticketGiftRepository.save(ticketGift);
         }
     }
 }

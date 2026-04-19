@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -44,22 +45,10 @@ public class PaymentController {
     @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<BookingConfirmPaymentResponse> confirmPaymentBooking(
             @Valid @RequestBody CheckPaymentRequest checkPaymentRequest, HttpServletRequest httpServletRequest
-    ) {
+    ) throws IOException {
         BookingConfirmPaymentResponse response = vnPayService.confirmPaymentBooking(checkPaymentRequest, httpServletRequest);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(response);
-    }
-
-    @PostMapping("/refund/{eventId}")
-    @PreAuthorize("hasAnyRole('ORGANIZER')")
-    public ResponseEntity<List<RefundBookingResponse>> refund(
-            @PathVariable("eventId") Long id,
-            HttpServletRequest httpServletRequest
-    ) {
-        List<RefundBookingResponse> responses =
-                vnPayService.refund(id, httpServletRequest);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(responses);
     }
 
 }

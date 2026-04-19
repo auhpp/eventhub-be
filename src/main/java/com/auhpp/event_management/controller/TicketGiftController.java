@@ -106,14 +106,4 @@ public class TicketGiftController {
                 .body(response);
     }
 
-    @PostMapping("/refund")
-    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
-    public ResponseEntity<Void> refund(
-            @RequestBody List<Long> attendeeIds
-    ) {
-        ticketGiftService.refundTicket(attendeeIds);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .build();
-    }
 }

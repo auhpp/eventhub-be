@@ -29,7 +29,14 @@ public class SecurityConfiguration {
             "/api/v1/category-follower/count",
             "/api/v1/event-series/filter",
             "/api/v1/event-series-follower/filter",
-            "/api/v1/event-series-follower/count"
+            "/api/v1/event-series-follower/count",
+            "/api/v1/user-follower/filter",
+            "/api/v1/resale-post/filter",
+            "/api/v1/user/send-email/reset-password",
+            "/api/v1/user/reset-password",
+            "/api/v1/otp/verify",
+
+
     };
     private final String[] PUBLIC_GET_ENDPOINTS = {
             "/api/v1/category/**", "/api/v1/event/**",
@@ -38,7 +45,10 @@ public class SecurityConfiguration {
             "/api/v1/review/stats/{eventSessionId}",
             "/api/v1/event-image/filter/{eventId}",
             "/api/v1/event-series/{id}",
-            "/ws/**"
+            "/ws/**",
+            "/api/v1/user/{id}",
+            "/api/v1/user-follower/count",
+
     };
 
 
@@ -50,6 +60,13 @@ public class SecurityConfiguration {
             "/api/v1/auth/current-user",
     };
 
+    private static final String[] SWAGGER_WHITELIST = {
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/swagger-resources/**",
+            "/webjars/**"
+    };
 
     private final CustomJwtDecoder customJwtDecoder;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
@@ -60,6 +77,7 @@ public class SecurityConfiguration {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         request -> request
+                                .requestMatchers(SWAGGER_WHITELIST).permitAll()
                                 .requestMatchers(HttpMethod.POST, PRIVATE_POST_ENDPOINTS).authenticated()
                                 .requestMatchers(HttpMethod.POST, PRIVATE_GET_ENDPOINTS).authenticated()
                                 .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()

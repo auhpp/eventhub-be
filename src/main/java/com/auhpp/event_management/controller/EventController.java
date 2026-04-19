@@ -1,13 +1,13 @@
 package com.auhpp.event_management.controller;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
 import com.auhpp.event_management.constant.EventSessionStatus;
 import com.auhpp.event_management.dto.request.*;
-import com.auhpp.event_management.dto.response.EventBasicResponse;
-import com.auhpp.event_management.dto.response.EventResponse;
-import com.auhpp.event_management.dto.response.EventSessionResponse;
-import com.auhpp.event_management.dto.response.PageResponse;
+import com.auhpp.event_management.dto.response.*;
 import com.auhpp.event_management.service.EventService;
 import com.auhpp.event_management.service.EventSessionService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.net.URLEncoder;
 
 @RestController
 @RequestMapping("/api/v1/event")
@@ -85,7 +88,7 @@ public class EventController {
     }
 
     @PutMapping(value = "/{eventId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<EventBasicResponse> updateEvent(
             @PathVariable(name = "eventId") Long id,
             @RequestPart(value = "data") @Valid EventUpdateRequest request,
@@ -99,7 +102,7 @@ public class EventController {
 
 
     @PostMapping("/{eventId}/event-session")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<EventSessionResponse> createEventSession(
             @PathVariable(name = "eventId") Long id,
             @Valid @RequestBody EventSessionCreateRequest request
@@ -111,7 +114,7 @@ public class EventController {
     }
 
     @PostMapping("/cancel/{eventId}")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<Void> cancelEvent(
             @PathVariable("eventId") Long id
     ) {
@@ -127,6 +130,36 @@ public class EventController {
         Integer result = eventService.countEvent(request);
         return ResponseEntity
                 .status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/has-resalable/{id}")
+    public ResponseEntity<Boolean> hasResalable(
+            @PathVariable("id") Long id
+    ) {
+        Boolean result = eventService.hasResalable(id);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(result);
+    }
+
+    @PostMapping("/reports/export")
+    public void exportEvent(
+            @RequestBody EventSearchRequest request,
+            HttpServletResponse response) throws IOException {
+        try {
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("utf-8");
+            String fileName = URLEncoder.encode("danh_sach_su_kien", "UTF-8").replaceAll("\\+", "%20");
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+
+            ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream(), EventReportExportResponse.class).build();
+            eventService.exportReportEvent(excelWriter, request);
+
+        } catch (Exception e) {
+            response.reset();
+            response.setContentType("application/json");
+            response.setCharacterEncoding("utf-8");
+            response.getWriter().println("{ \"message\": \"Lỗi trong quá trình xuất Excel: " + e.getMessage() + "\" }");
+        }
     }
 
 }

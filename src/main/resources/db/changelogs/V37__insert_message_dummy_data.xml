@@ -1,0 +1,32 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+
+    <changeSet id="1775557560248-1" author="auhpp">
+        <sqlFile path="data/conversation.sql" relativeToChangelogFile="true" splitStatements="true" encoding="UTF-8"/>
+        <rollback>
+            <sql>DELETE FROM conversation;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1775557560248-2" author="auhpp">
+        <sqlFile path="data/conversation_member.sql" relativeToChangelogFile="true" splitStatements="true"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sql>DELETE FROM conversation_member;</sql>
+        </rollback>
+    </changeSet>
+
+
+    <changeSet id="1775557560248-3" author="auhpp">
+        <sqlFile path="data/message.sql" relativeToChangelogFile="true" splitStatements="true" encoding="UTF-8"/>
+        <rollback>
+            <sql>UPDATE conversation SET latest_message_id = NULL;</sql>
+            <sql>DELETE FROM message;</sql>
+        </rollback>
+    </changeSet>
+
+
+</databaseChangeLog>

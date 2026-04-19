@@ -24,7 +24,7 @@ public class EventImageController {
     EventImageService eventImageService;
 
     @PostMapping(path = "/{eventId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<List<EventImageResponse>> uploadEventImages(
             @PathVariable(name = "eventId") Long eventId,
             @RequestParam(name = "eventSessionId", required = false) Long eventSessionId,
@@ -65,7 +65,7 @@ public class EventImageController {
     }
 
     @PostMapping(path = "/refresh/{eventId}")
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<Void> refreshProcessImages(
             @PathVariable(name = "eventId") Long eventId) {
         eventImageService.refreshProcessImages(

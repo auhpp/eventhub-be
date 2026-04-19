@@ -27,7 +27,9 @@ public interface ResalePostRepository extends JpaRepository<ResalePost, Long>, R
             "AND  (CAST(:name AS string ) IS NULL OR LOWER(rp.appUser.fullName) " +
             "LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) " +
             "AND (:email IS NULL OR rp.appUser.email = :email) " +
-            "AND (:statuses IS NULL OR rp.status IN :statuses)")
+            "AND (:statuses IS NULL OR rp.status IN :statuses)" +
+            "AND (CAST(:startDate AS timestamp) IS NULL OR rp.createdAt >= :startDate) " +
+            "AND (CAST(:endDate AS timestamp) IS NULL OR rp.createdAt <= :endDate)")
     Page<ResalePost> filter(
             @Param("eventSessionId") Long eventSessionId,
             @Param("eventId") Long eventId,
@@ -38,6 +40,8 @@ public interface ResalePostRepository extends JpaRepository<ResalePost, Long>, R
             @Param("name") String name,
             @Param("email") String email,
             @Param("statuses") List<ResalePostStatus> statuses,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
             Pageable pageable
     );
 

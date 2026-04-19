@@ -12,9 +12,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SocialLinkCreateRequest {
+    private Long id;
+
     @NotNull(message = "Social type cannot be null")
     private SocialType type;
 
-    @NotNull(message = "urlLink cannot be empty")
     private String urlLink;
 }

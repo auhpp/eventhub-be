@@ -25,8 +25,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
                                               @Param("memberId2") Long memberId2);
 
     @Query("SELECT c FROM Conversation c " +
-            "WHERE (:hasPin IS NULL OR c.hasPin = :hasPin) " +
-            "AND EXISTS (" +
+            "WHERE  EXISTS (" +
             "   SELECT 1 FROM ConversationMember cm " +
             "   LEFT JOIN cm.receivedMessages rm " +
             "   WHERE cm.conversation.id = c.id " +
@@ -40,10 +39,9 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
             "       LIKE LOWER(CONCAT('%', CAST(:nameMember AS string), '%')) " +
             "   AND otherCm.appUser.email != :currentUserEmail " +
             ") ) " +
-            "ORDER BY c.hasPin DESC, c.latestMessage.createdAt DESC "
+            "ORDER BY c.latestMessage.createdAt DESC "
     )
-    Page<Conversation> filter(@Param("hasPin") Boolean hasPin,
-                              @Param("status") MessageStatus status,
+    Page<Conversation> filter(@Param("status") MessageStatus status,
                               @Param("nameMember") String nameMember,
                               @Param("currentUserEmail") String currentUserEmail,
                               Pageable pageable

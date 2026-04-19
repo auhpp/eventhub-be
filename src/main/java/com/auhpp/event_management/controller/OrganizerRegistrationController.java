@@ -1,14 +1,17 @@
 package com.auhpp.event_management.controller;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
 import com.auhpp.event_management.constant.RegistrationStatus;
-import com.auhpp.event_management.constant.ResalePostStatus;
 import com.auhpp.event_management.dto.request.OrganizerCreateRequest;
 import com.auhpp.event_management.dto.request.OrganizerRegistrationSearchRequest;
 import com.auhpp.event_management.dto.request.OrganizerUpdateRequest;
 import com.auhpp.event_management.dto.request.RejectionRequest;
+import com.auhpp.event_management.dto.response.OrganizerRegistrationExcelReportResponse;
 import com.auhpp.event_management.dto.response.OrganizerRegistrationResponse;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.service.OrganizerRegistrationService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +21,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.net.URLEncoder;
 
 @RestController
 @RequestMapping("/api/v1/organizer-registration")
@@ -138,5 +144,26 @@ public class OrganizerRegistrationController {
         Integer result = organizerRegistrationService.count(status);
         return ResponseEntity
                 .status(HttpStatus.OK).body(result);
+    }
+
+    @PostMapping("/reports/export")
+    public void exportOrganizerRegistration(
+            @RequestBody OrganizerRegistrationSearchRequest request,
+            HttpServletResponse response) throws IOException {
+        try {
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("utf-8");
+            String fileName = URLEncoder.encode("danh_sach_ho_so_nha_to_chuc", "UTF-8").replaceAll("\\+", "%20");
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+
+            ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream(), OrganizerRegistrationExcelReportResponse.class).build();
+            organizerRegistrationService.exportReportOrganizer(excelWriter, request);
+
+        } catch (Exception e) {
+            response.reset();
+            response.setContentType("application/json");
+            response.setCharacterEncoding("utf-8");
+            response.getWriter().println("{ \"message\": \"Lỗi trong quá trình xuất Excel: " + e.getMessage() + "\" }");
+        }
     }
 }

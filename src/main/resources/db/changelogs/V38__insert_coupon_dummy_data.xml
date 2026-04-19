@@ -1,0 +1,36 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="1775576260150-1" author="auhpp">
+        <sqlFile path="data/coupon.sql" relativeToChangelogFile="true" splitStatements="true" encoding="UTF-8"/>
+        <rollback>
+            <sql>DELETE FROM coupon;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1775576260150-2" author="auhpp">
+        <sqlFile path="data/ticket_coupon.sql" relativeToChangelogFile="true" splitStatements="true"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sql>DELETE FROM ticket_coupon;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1775576260150-3" author="auhpp">
+        <sqlFile path="data/favorite.sql" relativeToChangelogFile="true" splitStatements="true"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sql>DELETE FROM favorite;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1775576260150-4" author="auhpp">
+        <sqlFile path="data/payment_method.sql" relativeToChangelogFile="true" splitStatements="true"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sql>DELETE FROM payment_method;</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

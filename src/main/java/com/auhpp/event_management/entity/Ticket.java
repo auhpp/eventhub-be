@@ -41,14 +41,14 @@ public class Ticket {
     @Column(nullable = false)
     private Integer maximumPerPurchase;
 
+    private Integer maximumPerUser;
+
     private Integer soldQuantity;
 
     @Column(nullable = false)
     private Integer invitationQuota;
 
     private Integer invitedQuantity;
-
-    private Integer cancelBeforeMinutes;
 
     @Enumerated(EnumType.STRING)
     private TicketStatus status;

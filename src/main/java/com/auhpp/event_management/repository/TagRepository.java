@@ -21,12 +21,12 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
 
     @Query("SELECT t FROM Tag t " +
             "WHERE (:type IS NULL OR t.type = :type) " +
-            "AND (:userId IS NULL OR t.id IN (" +
-            "   SELECT ut.tag.id FROM UserTag ut " +
-            "   WHERE ut.appUser.id = :userId))" +
-            "AND (CAST(:name AS string ) IS NULL OR LOWER(t.name) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) ")
+            "AND (CAST(:name AS string ) IS NULL OR LOWER(t.name) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) " +
+            "AND (:eventId IS NULL OR exists (" +
+            "SELECT 1 FROM t.eventTags et " +
+            "Where et.event.id = :eventId))")
     List<Tag> findAllByType(@Param("type") TagType type, @Param("name") String name,
-                            @Param("userId") Long userId);
+                            @Param("eventId") Long eventId);
 
     Optional<Tag> findBySlug(String slug);
 }

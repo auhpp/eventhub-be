@@ -45,7 +45,7 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
     public List<CategoryDistributionResponse> getCategoryDistribution(
             DateRangeFilterRequest request, EventStatus status) {
         StringBuilder query = new StringBuilder(
-                "SELECT c.id as categoryId, c.name as categoryName, COUNT(e.id) as eventCount " +
+                "SELECT c.id as category_id, c.name as category_name, COUNT(e.id) as event_count " +
                         " FROM event e ");
         handleJoin(query);
 
@@ -53,7 +53,7 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         Map<String, Object> params = new HashMap<>();
         handleQuery(status, request, where, params);
         query.append(where);
-        query.append(" GROUP BY c.id ");
+        query.append(" GROUP BY c.id, c.name  ");
 
         Query dataQuery = entityManager.createNativeQuery(query.toString(), Tuple.class);
         for (String key : params.keySet()) {
@@ -62,9 +62,9 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         List<Tuple> tuples = dataQuery.getResultList();
         List<CategoryDistributionResponse> res = tuples.stream().map(
                 tuple -> CategoryDistributionResponse.builder()
-                        .categoryName(tuple.get("categoryName", String.class))
-                        .categoryId(tuple.get("categoryId") != null ? ((Number) tuple.get("categoryId")).longValue() : 0L)
-                        .eventCount(tuple.get("eventCount") != null ? ((Number) tuple.get("eventCount")).longValue() : 0L)
+                        .categoryName(tuple.get("category_name", String.class))
+                        .categoryId(tuple.get("category_id") != null ? ((Number) tuple.get("category_id")).longValue() : 0L)
+                        .eventCount(tuple.get("event_count") != null ? ((Number) tuple.get("event_count")).longValue() : 0L)
                         .build()
         ).toList();
         return res;
@@ -74,8 +74,8 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
     public EventApprovalStatResponse getEventApprovalStatResponse(DateRangeFilterRequest request) {
         StringBuilder query = new StringBuilder(
                 "SELECT " +
-                        " SUM (CASE WHEN e.status = 'APPROVED' THEN 1 ELSE 0 END) AS approvedCount," +
-                        " SUM (CASE WHEN e.status = 'REJECTED' THEN 1 ELSE 0 END) AS rejectedCount " +
+                        " SUM (CASE WHEN e.status = 'APPROVED' THEN 1 ELSE 0 END) AS approved_count," +
+                        " SUM (CASE WHEN e.status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected_count " +
                         " FROM event e ");
 
         StringBuilder where = new StringBuilder(" WHERE 1 = 1 ");
@@ -87,11 +87,12 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         for (String key : params.keySet()) {
             dataQuery.setParameter(key, params.get(key));
         }
+
         List<Tuple> tuples = dataQuery.getResultList();
         List<EventApprovalStatResponse> res = tuples.stream().map(
                 tuple -> EventApprovalStatResponse.builder()
-                        .approvedCount(tuple.get("approvedCount") != null ? ((Number) tuple.get("approvedCount")).longValue() : 0L)
-                        .rejectedCount(tuple.get("rejectedCount") != null ? ((Number) tuple.get("rejectedCount")).longValue() : 0L)
+                        .approvedCount(tuple.get("approved_count") != null ? ((Number) tuple.get("approved_count")).longValue() : 0L)
+                        .rejectedCount(tuple.get("rejected_count") != null ? ((Number) tuple.get("rejected_count")).longValue() : 0L)
                         .build()
         ).toList();
         return res.getFirst();

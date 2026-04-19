@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CouponReportDetailResponse {
-    private TicketStandardResponse ticket;
     private int usageQuantity;
+    private int totalQuantity;
+    private Double totalUsageMoney;
 }

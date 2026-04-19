@@ -1,5 +1,6 @@
 package com.auhpp.event_management.entity;
 
+import com.auhpp.event_management.constant.SyncStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -44,12 +45,13 @@ public class AppUser {
 
     private Boolean status;
 
-    private String authProvider;
-
-    private String providerId;
-
     @Column(length = 300)
     private String refreshToken;
+
+    private String googleRefreshToken;
+
+    @Enumerated(EnumType.STRING)
+    private SyncStatus googleSyncStatus;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -119,8 +121,12 @@ public class AppUser {
     @OneToMany(mappedBy = "appUser")
     private List<UserNote> userNotes;
 
-    @OneToMany(mappedBy = "appUser",
-            cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST},
-            orphanRemoval = true)
-    private List<UserTag> userTags;
+    @OneToMany(mappedBy = "appUser")
+    private List<PaymentMethod> paymentMethods;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<Wallet> wallets;
+
+    @OneToMany(mappedBy = "appUser")
+    private List<CalendarSyncMapping> calendarSyncMappings;
 }

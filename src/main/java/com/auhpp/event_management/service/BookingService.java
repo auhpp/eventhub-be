@@ -1,5 +1,6 @@
 package com.auhpp.event_management.service;
 
+import com.alibaba.excel.ExcelWriter;
 import com.auhpp.event_management.constant.BookingStatus;
 import com.auhpp.event_management.constant.WalletType;
 import com.auhpp.event_management.dto.request.*;
@@ -9,6 +10,7 @@ import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.UserBookingSummaryResponse;
 import com.auhpp.event_management.entity.Booking;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 public interface BookingService {
@@ -28,7 +30,7 @@ public interface BookingService {
 
     BookingResponse getBookingByTransactionId(String transactionId, WalletType walletType);
 
-    BookingResponse updatePaymentBooking(Long id, LocalDateTime vnpPayDate);
+    BookingResponse updatePaymentBooking(Long id, LocalDateTime vnpPayDate) throws IOException;
 
     PageResponse<BookingBasicResponse> getBookings(BookingSearchRequest bookingSearchRequest,
                                                    int page, int size);
@@ -40,4 +42,7 @@ public interface BookingService {
     BookingResponse getBookingByResalePostIdAndCurrentUserAndStatus(Long resalePostId, BookingStatus status);
 
     UserBookingSummaryResponse getUserBookingSummary(Long eventSessionId, Long userId);
+
+    void exportReportBookings(ExcelWriter excelWriter, BookingSearchRequest request, String eventName);
+
 }

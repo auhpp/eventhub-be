@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Hóa đơn điện tử</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            color: #000000;
+            line-height: 1.5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .clear {
+            clear: both;
+        }
+
+        /* --- Header --- */
+        .header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #000000;
+            padding-bottom: 20px;
+        }
+
+        .header-left {
+            float: left;
+            width: 50%;
+        }
+
+        .header-right {
+            float: right;
+            width: 50%;
+            text-align: right;
+        }
+
+        .invoice-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #000000;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .system-name {
+            float: left;
+            margin: 0;
+            font-size: 20px;
+            font-weight: bold;
+            color: #000000;
+            line-height: 32px;
+            text-transform: uppercase;
+        }
+
+        /* --- Info Sections --- */
+        .info-section {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            float: left;
+            width: 48%;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #000000;
+            box-sizing: border-box;
+        }
+
+        .info-box-right {
+            float: right;
+        }
+
+        .info-box-full {
+            width: 100%;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #000000;
+            box-sizing: border-box;
+            margin-bottom: 30px;
+        }
+
+        .info-title {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #000000;
+            margin-bottom: 10px;
+            margin-top: 0;
+            border-bottom: 1px dashed #000000;
+            padding-bottom: 5px;
+        }
+
+        .info-row {
+            margin-bottom: 6px;
+        }
+
+        .info-label {
+            color: #000000;
+            display: inline-block;
+            width: 110px;
+        }
+
+        /* --- Table --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #000000;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            color: #000000;
+            text-transform: uppercase;
+            font-size: 12px;
+            border-top: 1px solid #000000;
+            border-bottom: 1px solid #000000;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        /* --- Summary --- */
+        .summary-container {
+            width: 100%;
+        }
+
+        .summary-box {
+            float: right;
+            width: 45%;
+        }
+
+        .summary-table td {
+            border-bottom: none;
+            padding: 6px 12px;
+        }
+
+        .summary-table .border-top td {
+            border-top: 1px solid #000000;
+            padding-top: 12px;
+            margin-top: 6px;
+        }
+
+        .total-amount {
+            font-size: 18px;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .discount-text {
+            color: #000000;
+        }
+
+        /* --- Footer --- */
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #000000;
+            font-size: 12px;
+            border-top: 1px solid #000000;
+            padding-top: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <div style="margin-bottom: 5px;">
+            <h2 class="system-name">EVENTHUB</h2>
+            <div class="clear"></div>
+        </div>
+        <p style="margin: 5px 0; color: #000000;">Nền tảng quản lý và phân phối vé sự kiện</p>
+    </div>
+    <div class="header-right">
+        <h1 class="invoice-title">HÓA ĐƠN</h1>
+        <p style="margin: 5px 0;"><strong>Mã đơn:</strong> <span th:text="'#' + ${booking.id}">#123</span></p>
+        <p style="margin: 0;"><strong>Ngày lập:</strong> <span
+                th:text="${#temporals.format(booking.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span></p>
+    </div>
+    <div class="clear"></div>
+</div>
+
+<div class="info-box-full">
+    <h3 class="info-title">Thông tin sự kiện</h3>
+
+    <div class="info-row">
+        <span class="info-label">Ban tổ chức:</span>
+        <strong style="color: #000000;" th:text="${event.appUser.fullName != null ? event.appUser.fullName : 'Đang cập nhật'}">Tên BTC</strong>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Email hỗ trợ:</span>
+        <strong th:text="${event.appUser.email}">support@event.com</strong>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Tên sự kiện:</span>
+        <strong style="font-size: 16px; color: #000000;" th:text="${event.name}">Tên sự kiện</strong>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Thời gian:</span>
+        <strong>
+            <span th:text="${#temporals.format(eventSession.startDateTime, 'dd/MM/yyyy HH:mm')}"></span>
+            <span> - </span>
+            <span th:text="${#temporals.format(eventSession.endDateTime, 'dd/MM/yyyy HH:mm')}"></span>
+        </strong>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Địa điểm tổ chức:</span>
+        <strong th:if="${event.type != null and event.type.name() == 'OFFLINE'}" th:text="${event.address}">Địa chỉ sự
+            kiện</strong>
+        <strong th:if="${event.type != null and event.type.name() == 'ONLINE'}">
+            Sự kiện trực tuyến <span th:if="${eventSession.meetingPlatform != null}"
+                                     th:text="'(' + ${eventSession.meetingPlatform} + ')'"></span>
+        </strong>
+    </div>
+</div>
+
+<div class="info-section">
+    <div class="info-box">
+        <h3 class="info-title">Thông tin người mua</h3>
+        <div class="info-row">
+            <span class="info-label">Họ và tên:</span>
+            <strong th:text="${booking.customerName}">Nguyễn Văn A</strong>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Số điện thoại:</span>
+            <strong th:text="${booking.customerPhone}">0987654321</strong>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Email:</span>
+            <strong th:text="${booking.customerEmail}">email@example.com</strong>
+        </div>
+    </div>
+
+    <div class="info-box info-box-right">
+        <h3 class="info-title">Thông tin giao dịch</h3>
+        <div class="info-row">
+            <span class="info-label">Trạng thái:</span>
+            <strong th:text="${booking.status}">Thành công</strong>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Phương thức:</span>
+            <strong th:text="${booking.walletType != null ? booking.walletType : 'Chưa cập nhật'}">VNPAY</strong>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Mã giao dịch:</span>
+            <strong th:text="${booking.transactionId != null ? booking.transactionId : '---'}">123456789</strong>
+        </div>
+    </div>
+    <div class="clear"></div>
+</div>
+
+<br/>
+
+<h3 class="info-title" style="border: none; margin-bottom: 5px;">Chi tiết đơn hàng</h3>
+<table>
+    <thead>
+    <tr>
+        <th style="width: 5%;">STT</th>
+        <th style="width: 45%;">Loại vé</th>
+        <th class="text-right" style="width: 20%;">Đơn giá</th>
+        <th class="text-center" style="width: 10%;">SL</th>
+        <th class="text-right" style="width: 20%;">Thành tiền</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="item, stat : ${tickets}">
+        <td th:text="${stat.count}">1</td>
+        <td>
+            <strong th:text="${item.name}">Vé VIP</strong>
+        </td>
+        <td class="text-right" th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">100,000
+            đ
+        </td>
+        <td class="text-center" th:text="${item.quantity}">2</td>
+        <td class="text-right">
+            <strong th:text="${#numbers.formatDecimal(item.price * item.quantity, 0, 'COMMA', 0, 'POINT')} + ' đ'">200,000
+                đ</strong>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="summary-container">
+    <div class="summary-box">
+        <table class="summary-table">
+            <tr>
+                <td>Tạm tính:</td>
+                <td class="text-right"
+                    th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">200,000 đ
+                </td>
+            </tr>
+            <tr th:if="${booking.discountAmount > 0}" class="discount-text">
+                <td>Giảm giá:</td>
+                <td class="text-right"
+                    th:text="'-' + ${#numbers.formatDecimal(booking.discountAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">-
+                    20,000 đ
+                </td>
+            </tr>
+            <tr class="border-top">
+                <td><strong>Tổng thanh toán:</strong></td>
+                <td class="text-right total-amount"
+                    th:text="${#numbers.formatDecimal(booking.finalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">180,000 đ
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="clear"></div>
+</div>
+
+<div class="footer">
+    <p>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!</p>
+    <p>Hóa đơn này được tạo tự động từ hệ thống EVENTHUB.</p>
+</div>
+
+</body>
+</html>

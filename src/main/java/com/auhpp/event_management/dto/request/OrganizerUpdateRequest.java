@@ -1,5 +1,8 @@
 package com.auhpp.event_management.dto.request;
 
+import com.auhpp.event_management.constant.OrganizerType;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,5 +29,8 @@ public class OrganizerUpdateRequest {
 
     private String contactAddress;
 
+    private OrganizerType type;
+
+    private String taxCode;
 }
 

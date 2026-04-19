@@ -46,7 +46,7 @@ public class Coupon {
     @Column(nullable = false)
     private Double value;
 
-    private Integer maxDiscountAmount;
+    private Double maxDiscountAmount;
 
     private Integer maximumUsage;
 

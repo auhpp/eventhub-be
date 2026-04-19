@@ -25,8 +25,10 @@ public class ResaleCustomRepositoryImpl implements ResaleCustomRepository {
         query.append(" INNER JOIN event_session es ON es.event_id = e.id ");
         query.append(" INNER JOIN ticket t ON t.event_session_id = es.id ");
         query.append(" INNER JOIN attendee a ON a.ticket_id = t.id ");
-        query.append(" INNER JOIN booking b ON b.id = a.booking_id ");
-        query.append(" INNER JOIN resale_post rp ON rp.id = b.resale_post_id ");
+        query.append(" INNER JOIN resale_post rp ON rp.id = a.resale_post_id ");
+        query.append(" LEFT JOIN booking b ON b.resale_post_id = rp.id ");
+        query.append(" LEFT JOIN attendee buyer_a ON buyer_a.booking_id = b.id ");
+
     }
 
     private void handleQuery(DateRangeFilterRequest dateRangeFilterRequest,
@@ -51,16 +53,22 @@ public class ResaleCustomRepositoryImpl implements ResaleCustomRepository {
     public List<TopResaleEventResponse> getTopResaleEvent(
             DateRangeFilterRequest request, PaginationFilterRequest paginationFilterRequest) {
         StringBuilder query = new StringBuilder(
-                "SELECT e.id as eventId, e.name as eventName, COUNT(DISTINCT rp.id) as resalePostCount, " +
-                        " COUNT(DISTINCT b.id) as completedTransactionCount " +
-                        " FROM event e ");
+                "SELECT e.id as event_id, " +
+                        "       e.name as event_name, " +
+                        "       COUNT(DISTINCT rp.id) as resale_post_count, " +
+                        "       COUNT(DISTINCT b.id) as completed_transaction_count,  " +
+                        "       COALESCE(SUM(buyer_a.price * (rp.commission_rate / 100.0)), 0.0) as total_resale_commission " +
+                        "FROM event e  ");
         handleJoin(query);
 
         StringBuilder where = new StringBuilder(" WHERE 1 = 1 ");
         Map<String, Object> params = new HashMap<>();
         handleQuery(request, null, where, params);
         query.append(where);
-        query.append(" GROUP BY e.id ");
+        query.append(" GROUP BY e.id, e.name ");
+        query.append(" ORDER BY completed_transaction_count DESC ");
+        query.append(" LIMIT :limitParam ");
+        params.put("limitParam", paginationFilterRequest.getLimit());
 
         Query dataQuery = entityManager.createNativeQuery(query.toString(), Tuple.class);
         for (String key : params.keySet()) {
@@ -69,10 +77,13 @@ public class ResaleCustomRepositoryImpl implements ResaleCustomRepository {
         List<Tuple> tuples = dataQuery.getResultList();
         List<TopResaleEventResponse> res = tuples.stream().map(
                 tuple -> TopResaleEventResponse.builder()
-                        .eventName(tuple.get("eventName", String.class))
-                        .eventId(tuple.get("eventId") != null ? ((Number) tuple.get("eventId")).longValue() : 0L)
-                        .resalePostCount(tuple.get("resalePostCount") != null ? ((Number) tuple.get("resalePostCount")).longValue() : 0L)
-                        .completedTransactionCount(tuple.get("completedTransactionCount") != null ? ((Number) tuple.get("completedTransactionCount")).longValue() : 0L)
+                        .eventName(tuple.get("event_name", String.class))
+                        .eventId(tuple.get("event_id") != null ? ((Number) tuple.get("event_id")).longValue() : 0L)
+                        .resalePostCount(tuple.get("resale_post_count") != null ? ((Number) tuple.get("resale_post_count")).longValue() : 0L)
+                        .completedTransactionCount(tuple.get("completed_transaction_count") != null ?
+                                ((Number) tuple.get("completed_transaction_count")).longValue() : 0L)
+                        .totalFee((tuple.get("total_resale_commission") != null ?
+                                ((Number) tuple.get("total_resale_commission")).doubleValue() : 0L))
                         .build()
         ).toList();
         return res;
@@ -81,7 +92,7 @@ public class ResaleCustomRepositoryImpl implements ResaleCustomRepository {
     @Override
     public ResaleOverviewResponse getResaleOverviewResponse(DateRangeFilterRequest request, Long eventId) {
         StringBuilder query = new StringBuilder(
-                "SELECT COUNT(DISTINCT rp.id) as totalResalePosts, COUNT(DISTINCT b.id) as successfulTransactions  " +
+                "SELECT COUNT(DISTINCT rp.id) as total_resale_posts, COUNT(DISTINCT b.id) as successful_transactions  " +
                         " FROM event e ");
         handleJoin(query);
 
@@ -97,8 +108,9 @@ public class ResaleCustomRepositoryImpl implements ResaleCustomRepository {
         List<Tuple> tuples = dataQuery.getResultList();
         List<ResaleOverviewResponse> res = tuples.stream().map(
                 tuple -> ResaleOverviewResponse.builder()
-                        .totalResalePosts(tuple.get("totalResalePosts") != null ? ((Number) tuple.get("totalResalePosts")).longValue() : 0L)
-                        .successfulTransactions(tuple.get("successfulTransactions") != null ? ((Number) tuple.get("successfulTransactions")).longValue() : 0L)
+                        .totalResalePosts(tuple.get("total_resale_posts") != null ? ((Number) tuple.get("total_resale_posts")).longValue() : 0L)
+                        .successfulTransactions(tuple.get("successful_transactions") != null ?
+                                ((Number) tuple.get("successful_transactions")).longValue() : 0L)
                         .build()
         ).toList();
         return res.getFirst();

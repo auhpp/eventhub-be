@@ -56,4 +56,7 @@ public class EventStaff {
 
     @OneToMany(mappedBy = "eventStaff")
     private List<Attendee> attendees;
+
+    @OneToMany(mappedBy = "eventStaff")
+    private List<CheckInLog> checkInLogs;
 }

@@ -122,7 +122,9 @@ public class EventSeriesServiceImpl implements EventSeriesService {
     public PageResponse<EventSeriesResponse> getEventSeries(EventSeriesSearchRequest request, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
-        Page<EventSeries> pageData = eventSeriesRepository.filterEventSeries(request.getUserId(), request.getUserFollowerId(),
+        Page<EventSeries> pageData = eventSeriesRepository.filterEventSeries(request.getName(),
+                request.getUserId(), request.getUserFollowerId(),
+                request.getStatuses(),
                 pageable);
         List<EventSeriesResponse> responses = pageData.getContent().stream().map(
                 eventSeriesMapper::toEventSeriesResponse

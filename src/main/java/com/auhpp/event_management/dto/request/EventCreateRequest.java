@@ -28,6 +28,9 @@ public class EventCreateRequest {
     @NotNull(message = "Category id cannot be null")
     private Long categoryId;
 
+    @NotNull(message = "hasResalable cannot be null")
+    private Boolean hasResalable;
+
     @NotEmpty(message = "Event name cannot be empty")
     private String description;
 

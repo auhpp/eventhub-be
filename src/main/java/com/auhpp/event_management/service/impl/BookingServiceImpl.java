@@ -1,21 +1,19 @@
 package com.auhpp.event_management.service.impl;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.write.metadata.WriteSheet;
 import com.auhpp.event_management.constant.*;
 import com.auhpp.event_management.dto.request.*;
-import com.auhpp.event_management.dto.response.BookingBasicResponse;
-import com.auhpp.event_management.dto.response.BookingResponse;
-import com.auhpp.event_management.dto.response.PageResponse;
-import com.auhpp.event_management.dto.response.UserBookingSummaryResponse;
+import com.auhpp.event_management.dto.response.*;
 import com.auhpp.event_management.entity.*;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
-import com.auhpp.event_management.mapper.AttendeeBasicMapper;
-import com.auhpp.event_management.mapper.BookingBasicMapper;
-import com.auhpp.event_management.mapper.BookingMapper;
-import com.auhpp.event_management.mapper.UserBasicMapper;
+import com.auhpp.event_management.mapper.*;
 import com.auhpp.event_management.repository.*;
 import com.auhpp.event_management.service.AttendeeService;
 import com.auhpp.event_management.service.BookingService;
+import com.auhpp.event_management.service.InvoiceService;
 import com.auhpp.event_management.util.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +27,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -51,6 +51,9 @@ public class BookingServiceImpl implements BookingService {
     AttendeeBasicMapper attendeeBasicMapper;
     TicketGiftRepository ticketGiftRepository;
     ResalePostRepository resalePostRepository;
+    WalletRepository walletRepository;
+    InvoiceService invoiceService;
+    BookingReportMapper bookingReportMapper;
 
     private boolean checkValidDateSellTicket(Ticket ticket) {
         LocalDateTime currentDateTime = LocalDateTime.now();
@@ -76,26 +79,36 @@ public class BookingServiceImpl implements BookingService {
 
         double totalAmount = 0;
         for (BookingTicketRequest bookingTicketRequest : pendingBookingCreateRequest.getBookingTicketRequests()) {
+            // check quantity this ticket type user bought
+            int quantityBought = attendeeRepository.countBoughtTicket(bookingTicketRequest.getTicketId(), appUser.getId());
             Ticket ticket = ticketRepository.findById(bookingTicketRequest.getTicketId()).orElseThrow(
                     () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
             );
+
+            if (ticket.getMaximumPerUser() != null) {
+                if (quantityBought + bookingTicketRequest.getQuantity() > ticket.getMaximumPerUser()) {
+                    throw new AppException(ErrorCode.MAXIMUM_TICKET_PER_USER);
+                }
+            }
+
             if (Objects.equals(ticket.getEventSession().getEvent().getAppUser().getId(), appUser.getId())) {
                 throw new AppException(ErrorCode.INVALID_TIME_BOOKING);
             }
-            int soldQuantity = ticket.getSoldQuantity() == null ? 0 : ticket.getSoldQuantity();
             int bookingTicketQuantity = bookingTicketRequest.getQuantity();
+
             if (!checkValidDateSellTicket(ticket)) {
                 throw new AppException(ErrorCode.INVALID_TIME_BOOKING);
             }
             if (bookingTicketQuantity > ticket.getMaximumPerPurchase()) {
                 throw new AppException(ErrorCode.INVALID_QUANTITY);
             }
-            if (bookingTicketQuantity > (ticket.getQuantity() - soldQuantity)) {
+
+            int updatedRows = ticketRepository.reserveTickets(ticket.getId(), bookingTicketRequest.getQuantity());
+            if (updatedRows == 0) {
                 throw new AppException(ErrorCode.NOT_ENOUGH_QUANTITY);
             }
             totalAmount = totalAmount + bookingTicketQuantity * ticket.getPrice();
-            ticket.setSoldQuantity(soldQuantity + bookingTicketRequest.getQuantity());
-            ticketRepository.save(ticket);
+
             // Create attendee
             for (int i = 0; i < bookingTicketQuantity; i++) {
                 attendeeService.createAttendee(AttendeeCreateRequest.builder()
@@ -110,6 +123,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setTotalAmount(totalAmount);
         booking.setDiscountAmount(0D);
         booking.setFinalAmount(totalAmount);
+        booking.setIsFundReleased(false);
         bookingRepository.save(booking);
 
         String key = RedisPrefix.BOOKING_EXPIRATION.getValue() + booking.getId();
@@ -147,6 +161,14 @@ public class BookingServiceImpl implements BookingService {
             Attendee attendee = attendeeRepository.findById(attendeeId).orElseThrow(
                     () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
             );
+            Ticket ticket = attendee.getTicket();
+            int quantityBought = attendeeRepository.countBoughtTicket(ticket.getId(), appUser.getId());
+
+            if (ticket.getMaximumPerUser() != null) {
+                if (quantityBought + request.getAttendeeIds().size() > ticket.getMaximumPerUser()) {
+                    throw new AppException(ErrorCode.MAXIMUM_TICKET_PER_USER);
+                }
+            }
             // check status
             if (attendee.getStatus() != AttendeeStatus.ON_RESALE) {
                 throw new AppException(ErrorCode.ATTENDEE_STATUS_INVALID);
@@ -166,6 +188,8 @@ public class BookingServiceImpl implements BookingService {
         }
         booking.setTotalAmount(totalAmount);
         booking.setFinalAmount(totalAmount);
+        booking.setDiscountAmount(0D);
+        booking.setIsFundReleased(false);
         bookingRepository.save(booking);
 
         String key = RedisPrefix.BOOKING_EXPIRATION.getValue() + booking.getId();
@@ -187,6 +211,7 @@ public class BookingServiceImpl implements BookingService {
                 .customerPhone(bookingCreateRequest.getUser().getPhoneNumber())
                 .type(BookingType.INVITE)
                 .appUser(bookingCreateRequest.getUser())
+                .createdAt(LocalDateTime.now())
                 .build();
         bookingRepository.save(booking);
         for (int i = 0; i < bookingCreateRequest.getQuantity(); i++) {
@@ -208,23 +233,22 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public void deleteBooking(Long id) {
         Optional<Booking> bookingOptional = bookingRepository.findById(id);
+
         if (bookingOptional.isPresent()) {
             Booking booking = bookingOptional.get();
-            if (booking.getStatus() == BookingStatus.PENDING) {
+
+            int lockedCount = bookingRepository.lockBookingForDeletion(id);
+
+            if (lockedCount > 0) {
                 if (booking.getType() == BookingType.BUY) {
-                    Map<Long, Integer> ticketMap = new HashMap<>();
+                    Map<Long, Integer> ticketCountMap = new HashMap<>();
                     booking.getAttendees().forEach(
                             attendee -> {
-                                Ticket ticket = attendee.getTicket();
-                                if (!ticketMap.containsKey(ticket.getId())) {
-                                    ticketMap.put(ticket.getId(), ticket.getSoldQuantity());
-                                }
-                                ticketMap.put(ticket.getId(), ticketMap.get(ticket.getId()) - 1);
+                                Long ticketId = attendee.getTicket().getId();
+                                ticketCountMap.put(ticketId, ticketCountMap.getOrDefault(ticketId, 0) + 1);
                             }
                     );
-                    ticketMap.forEach(
-                            ticketRepository::updateSoldQuantity
-                    );
+                    ticketCountMap.forEach(ticketRepository::releaseTickets);
                 } else if (booking.getType() == BookingType.RESALE) {
                     for (Attendee attendee : booking.getAttendees()) {
                         Attendee attendeeParent = attendee.getParentAttendee();
@@ -232,9 +256,11 @@ public class BookingServiceImpl implements BookingService {
                         attendeeRepository.save(attendeeParent);
                     }
                 }
-                bookingRepository.deleteById(id);
+
+                bookingRepository.delete(booking);
+
             } else {
-                throw new AppException(ErrorCode.RESOURCE_CAN_NOT_DELETE);
+                System.out.println("Booking " + id + " đã được xử lý bởi luồng khác. Bỏ qua tác vụ xóa.");
             }
         }
     }
@@ -365,12 +391,7 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
-        String email = SecurityUtils.getCurrentUserLogin();
-        if (!Objects.equals(email, booking.getAppUser().getEmail())) {
-            booking.setAttendees(booking.getAttendees().stream().filter(
-                    attendee -> Objects.equals(attendee.getOwner().getEmail(), email)
-            ).toList());
-        }
+
         return bookingMapper.toBookingResponse(booking);
     }
 
@@ -384,10 +405,11 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public BookingResponse updatePaymentBooking(Long id, LocalDateTime vnpPayDate) {
+    public BookingResponse updatePaymentBooking(Long id, LocalDateTime vnpPayDate) throws IOException {
         Booking booking = bookingRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
+
         if (booking.getStatus() == BookingStatus.PENDING) {
             if (vnpPayDate != null) {
                 booking.setCreatedAt(vnpPayDate);
@@ -396,6 +418,25 @@ public class BookingServiceImpl implements BookingService {
             }
             existsBookingExpirationRedisKey(id);
             booking.setStatus(BookingStatus.PAID);
+
+            if (booking.getType() == BookingType.BUY || booking.getType() == BookingType.RESALE) {
+                WalletType walletType = booking.getType() == BookingType.BUY ? WalletType.ORGANIZER_WALLET :
+                        WalletType.USER_WALLET;
+                Event event = booking.getAttendees().getFirst().getTicket().getEventSession().getEvent();
+                AppUser appUser = booking.getType() == BookingType.BUY ? event.getAppUser() :
+                        booking.getResalePost().getAppUser();
+                // get wallet
+                Wallet wallet = appUser.getWallets().stream().filter(
+                        w -> w.getType() == walletType
+                ).findFirst().get();
+
+                // update wallet
+                double pendingBalance = wallet.getPendingBalance() == null ? 0 : wallet.getPendingBalance();
+                wallet.setPendingBalance(pendingBalance + booking.getFinalAmount());
+                walletRepository.save(wallet);
+
+            }
+
             if (booking.getType() == BookingType.RESALE) {
                 ResalePost resalePost = booking.getResalePost();
                 boolean soldAll = true;
@@ -406,16 +447,26 @@ public class BookingServiceImpl implements BookingService {
                 }
                 if (soldAll) {
                     resalePost.setStatus(ResalePostStatus.SOLD);
+                    resalePostRepository.save(resalePost);
+                }
+                // handle new attendee
+                for (Attendee attendee : booking.getAttendees()) {
+                    attendeeService.confirmValidAttendee(attendee.getId());
                 }
             }
-            for (Attendee attendee : booking.getAttendees()) {
-                if (!checkValidDateSellTicket(attendee.getTicket())) {
-                    deleteBooking(id);
-                    throw new AppException(ErrorCode.INVALID_TIME_BOOKING);
+            if (booking.getType() == BookingType.BUY) {
+                for (Attendee attendee : booking.getAttendees()) {
+                    if (!checkValidDateSellTicket(attendee.getTicket())) {
+                        deleteBooking(id);
+                        throw new AppException(ErrorCode.INVALID_TIME_BOOKING);
+                    }
+                    attendeeService.confirmValidAttendee(attendee.getId());
                 }
-                attendeeService.confirmValidAttendee(attendee.getId());
             }
             bookingRepository.save(booking);
+        }
+        if (booking.getType() == BookingType.BUY || booking.getType() == BookingType.RESALE) {
+            invoiceService.createInvoice(booking);
         }
         return bookingMapper.toBookingResponse(booking);
     }
@@ -425,10 +476,16 @@ public class BookingServiceImpl implements BookingService {
                                                           int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
-        Page<Booking> bookings = bookingRepository.filterAll(request.getUserId(),
+        Page<Booking> bookings = bookingRepository.filterAll(
+                request.getBookingId(),
+                request.getEmail(),
+                request.getUserId(),
                 request.getEventSessionId(),
                 request.getStatus(),
                 request.getUpcoming(),
+                request.getTypes(),
+                request.getStartDateTime(),
+                request.getEndDateTime(),
                 pageable);
         List<BookingBasicResponse> bookingResponse = bookings.getContent().stream().map(
                 bookingBasicMapper::toBookingBasicResponse
@@ -512,7 +569,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // Handle invitation attendee
-        List<Attendee> invitationAttendees = attendeeRepository.findAllByUserInAndEventSession(
+        List<Attendee> invitationAttendees = attendeeRepository.findAllByUserInAndEventSession(null, null,
                 SourceType.INVITATION, List.of(user), eventSessionId
         );
         if (!invitationAttendees.isEmpty()) {
@@ -524,7 +581,9 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // handle purchase booking
-        List<Booking> bookings = bookingRepository.findAllByUserInAndEventSession(List.of(user), eventSessionId);
+        List<Booking> bookings = bookingRepository.findAllByUserInAndEventSession(
+                List.of(BookingType.BUY, BookingType.RESALE),
+                List.of(user), eventSessionId);
         if (!bookings.isEmpty()) {
             for (Booking booking : bookings) {
                 BookingBasicResponse basicResponse = bookingBasicMapper.toBookingBasicResponse(booking);
@@ -538,6 +597,74 @@ public class BookingServiceImpl implements BookingService {
                 .user(userBasicMapper.toUserBasicResponse(user))
                 .bookings(responses)
                 .build();
+    }
+
+    @Override
+    public void exportReportBookings(ExcelWriter excelWriter, BookingSearchRequest request, String eventName) {
+        WriteSheet writeSheet = EasyExcel.writerSheet("danh_sach_don_hang")
+                .relativeHeadRowIndex(1)
+                .registerWriteHandler(new EventTitleWriteHandler(eventName))
+                .build();
+        int currentPage = 1;
+        int pageSize = 1000;
+        boolean hasNextPage = true;
+        boolean hasData = false;
+
+        while (hasNextPage) {
+            Pageable pageable = PageRequest.of(currentPage - 1, pageSize, Sort.by(Sort.Direction.ASC,
+                    "createdAt"));
+            Page<Booking> pageData = bookingRepository.filterAll(
+                    request.getBookingId(),
+                    request.getEmail(),
+                    request.getUserId(),
+                    request.getEventSessionId(),
+                    request.getStatus(),
+                    request.getUpcoming(),
+                    request.getTypes(),
+                    request.getStartDateTime(),
+                    request.getEndDateTime(),
+                    pageable);
+            if (pageData == null || pageData.isEmpty()) {
+                break;
+            }
+            hasData = true;
+            List<BookingReportResponse> bookingReports = pageData.stream().map(
+                    booking -> {
+                        BookingReportResponse bookingReport = bookingReportMapper.toBookingReportResponse(booking);
+
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+                        bookingReport.setCreatedAt(booking.getCreatedAt().format(formatter));
+
+                        bookingReport.setDiscountAmount(booking.getDiscountAmount() == null ? 0
+                                : bookingReport.getDiscountAmount());
+
+                        bookingReport.setType(booking.getType() == BookingType.BUY ? "Mua thường" : "Mua lại");
+
+                        bookingReport.setTicketQuantity(booking.getAttendees().size());
+
+                        bookingReport.setStatus(booking.getStatus() == BookingStatus.PAID ? "Đã thanh toán" : "Chưa thanh toán");
+
+                        bookingReport.setWalletType(booking.getWalletType().name());
+
+                        if (booking.getType() == BookingType.RESALE) {
+                            bookingReport.setSellBookingId(booking.getAttendees().getFirst().getParentAttendee().getBooking().getId());
+                        }
+                        return bookingReport;
+                    }
+            ).collect(Collectors.toList());
+
+            excelWriter.write(bookingReports, writeSheet);
+
+            if (currentPage >= pageData.getTotalPages()) {
+                hasNextPage = false;
+            } else {
+                currentPage++;
+            }
+        }
+        if (!hasData) {
+            excelWriter.write(new ArrayList<BookingReportResponse>(), writeSheet);
+        }
+        excelWriter.finish();
     }
 
 

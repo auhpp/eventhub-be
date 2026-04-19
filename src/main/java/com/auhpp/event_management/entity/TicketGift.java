@@ -48,7 +48,7 @@ public class TicketGift {
     @JoinColumn(nullable = false)
     private Booking booking;
 
-    @OneToMany(mappedBy = "ticketGift", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @OneToMany(mappedBy = "ticketGift", cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<AttendeeTicketGift> attendeeTicketGifts;
 
 
