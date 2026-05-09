@@ -107,7 +107,7 @@ public interface AttendeeRepository extends JpaRepository<Attendee, Long>, JpaSp
     boolean existsByAppUserIdAndEventSessionId(@Param("appUserId") Long appUserId,
                                                @Param("eventSessionId") Long eventSessionId);
 
-    @Query("SELECT COALESCE(SUM(a.finalPrice * (e.commissionRate / 100.0) + e.commissionFixedPerTicket), 0.0) " +
+    @Query("SELECT COALESCE(SUM(a.price * (e.commissionRate / 100.0) + e.commissionFixedPerTicket), 0.0) " +
             "FROM Attendee a " +
             "JOIN a.ticket t " +
             "JOIN t.eventSession es " +
@@ -205,4 +205,11 @@ public interface AttendeeRepository extends JpaRepository<Attendee, Long>, JpaSp
             "AND a.owner.id = :userId " +
             "AND (a.type =  'BUY' OR a.type = 'RESALE' OR a.type = 'GIFT')")
     int countBoughtTicket(@Param("ticketId") Long ticketId, @Param("userId") Long userId);
+
+    @Query("SELECT COUNT(a.id) > 0 FROM Attendee a " +
+            "WHERE a.owner.email = :email " +
+            "AND a.ticket.eventSession.event.id = :eventId " +
+            "AND a.status IN :statuses")
+    boolean existsAttendee(@Param("eventId") Long eventId, @Param("email") String email,
+                           @Param("statuses") List<AttendeeStatus> statuses);
 }

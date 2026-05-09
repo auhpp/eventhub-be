@@ -1,6 +1,7 @@
 package com.auhpp.event_management.controller;
 
 import com.auhpp.event_management.dto.request.ReviewCreateRequest;
+import com.auhpp.event_management.dto.request.ReviewReplyRequest;
 import com.auhpp.event_management.dto.request.ReviewSearchRequest;
 import com.auhpp.event_management.dto.request.ReviewUpdateRequest;
 import com.auhpp.event_management.dto.response.PageResponse;
@@ -65,5 +66,16 @@ public class ReviewController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(result);
+    }
+
+    @PostMapping("/reply/{id}")
+    public ResponseEntity<Void> replyReview(
+            @PathVariable("id") Long id,
+            @RequestBody @Valid ReviewReplyRequest request
+    ) {
+        reviewService.replyReview(id, request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
     }
 }

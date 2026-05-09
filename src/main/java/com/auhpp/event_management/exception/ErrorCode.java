@@ -67,7 +67,7 @@ public enum ErrorCode {
     ATTENDEE_OUTSIDE(1057, "Attendee outside", HttpStatus.BAD_REQUEST),
     EVENT_NOT_ALLOW_RESALE(1058, "Event not allow resale", HttpStatus.BAD_REQUEST),
     MAXIMUM_TICKET_PER_USER(1059, "Maximum ticket per user", HttpStatus.BAD_REQUEST),
-
+    EXISTS_REVIEW(1060, "Exist review", HttpStatus.BAD_REQUEST),
     ;
 
 

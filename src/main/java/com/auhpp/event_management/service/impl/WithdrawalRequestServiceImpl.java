@@ -211,4 +211,9 @@ public class WithdrawalRequestServiceImpl implements WithdrawalRequestService {
         excelWriter.finish();
 
     }
+
+    @Override
+    public int count(WithdrawalStatus status) {
+        return withdrawalRequestRepository.countWithdrawalRequest(List.of(status), null, null);
+    }
 }

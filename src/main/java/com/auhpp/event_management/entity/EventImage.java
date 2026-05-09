@@ -40,9 +40,6 @@ public class EventImage {
     @ManyToOne
     private EventSession eventSession;
 
-    @ManyToOne
-    private Event event;
-
-    @OneToMany(mappedBy = "eventImage")
+    @OneToMany(mappedBy = "eventImage", cascade = {CascadeType.REMOVE}, orphanRemoval = true)
     private List<FaceData> faceDataList;
 }

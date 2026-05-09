@@ -20,10 +20,6 @@ public class Conversation {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private CommonStatus status;
-
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

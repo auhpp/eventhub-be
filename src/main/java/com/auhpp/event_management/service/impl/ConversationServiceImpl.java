@@ -14,6 +14,7 @@ import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.ConversationMapper;
 import com.auhpp.event_management.repository.AppUserRepository;
+import com.auhpp.event_management.repository.ConversationMemberRepository;
 import com.auhpp.event_management.repository.ConversationRepository;
 import com.auhpp.event_management.repository.MessageRepository;
 import com.auhpp.event_management.service.ConversationService;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -39,6 +41,7 @@ public class ConversationServiceImpl implements ConversationService {
     ConversationMapper conversationMapper;
     MessageRepository messageRepository;
     AppUserRepository appUserRepository;
+    ConversationMemberRepository conversationMemberRepository;
 
     @Override
     @Transactional
@@ -69,11 +72,10 @@ public class ConversationServiceImpl implements ConversationService {
             members.add(ConversationMember.builder()
                     .appUser(member)
                     .conversation(conversation)
+                    .status(CommonStatus.ACTIVE)
                     .build());
         }
         conversation.setConversationMembers(members);
-
-        conversation.setStatus(CommonStatus.ACTIVE);
         // save
         conversationRepository.save(conversation);
         return conversationMapper.toConversationResponse(conversation);
@@ -127,5 +129,24 @@ public class ConversationServiceImpl implements ConversationService {
         String email = SecurityUtils.getCurrentUserLogin();
         Optional<Conversation> res = conversationRepository.findByOtherMember(email, otherMemberId);
         return res.map(conversationMapper::toConversationResponse).orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public void disableConversation(Long conversationMemberId) {
+        ConversationMember conversationMember = conversationMemberRepository.findById(conversationMemberId).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        String email = SecurityUtils.getCurrentUserLogin();
+        if (!Objects.equals(conversationMember.getAppUser().getEmail(), email)) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+        if (conversationMember.getStatus() == CommonStatus.ACTIVE) {
+            conversationMember.setStatus(CommonStatus.INACTIVE);
+        }
+        else{
+            conversationMember.setStatus(CommonStatus.ACTIVE);
+        }
+        conversationMemberRepository.save(conversationMember);
     }
 }

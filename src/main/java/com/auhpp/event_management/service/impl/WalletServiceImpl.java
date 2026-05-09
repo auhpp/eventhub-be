@@ -17,7 +17,6 @@ import com.auhpp.event_management.mapper.WalletMapper;
 import com.auhpp.event_management.repository.AppUserRepository;
 import com.auhpp.event_management.repository.BookingRepository;
 import com.auhpp.event_management.repository.WalletRepository;
-import com.auhpp.event_management.repository.WalletTransactionRepository;
 import com.auhpp.event_management.service.WalletService;
 import com.auhpp.event_management.service.WalletTransactionService;
 import lombok.AccessLevel;
@@ -115,7 +114,7 @@ public class WalletServiceImpl implements WalletService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processSingleBooking(Booking booking) {
-        if (booking.getIsFundReleased()) {
+        if (booking.getType() == BookingType.INVITE || booking.getIsFundReleased()) {
             return;
         }
         // define user and wallet
@@ -136,7 +135,7 @@ public class WalletServiceImpl implements WalletService {
                 double commRate = event.getCommissionRate() != null ? event.getCommissionRate() : 0.0;
                 double fixedFee = event.getCommissionFixedPerTicket() != null ? event.getCommissionFixedPerTicket() : 0.0;
 
-                double basePriceForCommission = attendee.getFinalPrice() != null ? attendee.getFinalPrice() : attendee.getPrice();
+                double basePriceForCommission = attendee.getPrice();
 
                 commissionFee += (basePriceForCommission * (commRate / 100) +
                         fixedFee);
@@ -144,7 +143,7 @@ public class WalletServiceImpl implements WalletService {
                 double commRate = booking.getResalePost().getCommissionRate() != null ?
                         booking.getResalePost().getCommissionRate() : 0.0;
 
-                double basePriceForCommission = attendee.getFinalPrice() != null ? attendee.getFinalPrice() : attendee.getPrice();
+                double basePriceForCommission = attendee.getPrice();
 
                 commissionFee += basePriceForCommission * (commRate / 100);
             }

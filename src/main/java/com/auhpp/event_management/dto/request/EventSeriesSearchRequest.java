@@ -17,5 +17,6 @@ public class EventSeriesSearchRequest {
     private Long userFollowerId;
     private List<EventSeriesStatus> statuses;
     private String name;
+    private Boolean hasPublic;
 
 }

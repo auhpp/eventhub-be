@@ -1,5 +1,6 @@
 package com.auhpp.event_management.dto.response;
 
+import com.auhpp.event_management.constant.AccessImage;
 import com.auhpp.event_management.constant.EventStatus;
 import com.auhpp.event_management.constant.EventType;
 import lombok.AllArgsConstructor;
@@ -55,5 +56,5 @@ public class EventResponse {
 
     private EventSeriesResponse eventSeries;
 
-    private boolean hasPhotos;
+    private AccessImage accessImage;
 }

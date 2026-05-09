@@ -2,6 +2,8 @@ package com.auhpp.event_management.controller;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.ExcelWriter;
+import com.auhpp.event_management.constant.ResalePostStatus;
+import com.auhpp.event_management.constant.WithdrawalStatus;
 import com.auhpp.event_management.dto.request.WithdrawalRequestCreateRequest;
 import com.auhpp.event_management.dto.request.WithdrawalRequestSearchRequest;
 import com.auhpp.event_management.dto.request.WithdrawalRequestUpdateRequest;
@@ -94,5 +96,14 @@ public class WithdrawalRequestController {
             response.setCharacterEncoding("utf-8");
             response.getWriter().println("{ \"message\": \"Lỗi trong quá trình xuất Excel: " + e.getMessage() + "\" }");
         }
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<Integer> count(
+            WithdrawalStatus status
+    ) {
+        Integer result = withdrawalRequestService.count(status);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(result);
     }
 }

@@ -14,4 +14,22 @@
             <column name="maximum_per_user" type="INTEGER"/>
         </addColumn>
     </changeSet>
+    <changeSet author="auhpp (generated)" id="1775961273610-4">
+        <dropColumn columnName="status" tableName="conversation"/>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775961273610-5">
+        <addColumn tableName="conversation_member">
+            <column name="status" type="varchar" defaultValue="ACTIVE"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775961273610-6">
+        <addColumn tableName="review">
+            <column name="reply_message" type="text"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="auhpp (generated)" id="1775961273610-7">
+        <addColumn tableName="review">
+            <column name="reply_at" type="timestamp"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

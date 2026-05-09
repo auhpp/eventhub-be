@@ -162,4 +162,15 @@ public class EventController {
         }
     }
 
+    @PostMapping("/access-image/{eventId}")
+    public ResponseEntity<Void> changeAccessImage(
+            @PathVariable("eventId") Long eventId,
+            @RequestBody EventAccessImageRequest request
+    ) {
+        eventService.changeAccessImage(eventId, request);
+        return ResponseEntity
+                .status(HttpStatus.OK).build();
+    }
+
+
 }

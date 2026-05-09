@@ -19,12 +19,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             "AND (:userId IS NULL OR r.attendee.owner.id = :userId) " +
             "AND (:attendeeId IS NULL OR r.attendee.id = :attendeeId)" +
             "AND (:rating IS NULL OR r.rating = :rating)" +
+            "AND (:organizerId IS NULL OR r.eventSession.event.appUser.id = :organizerId)" +
             "AND (:email IS NULL OR r.attendee.owner.email = :email)")
     Page<Review> filterReview(@Param("eventSessionId") Long eventSessionId,
                               @Param("userId") Long userId,
                               @Param("attendeeId") Long attendeeId,
                               @Param("rating") Long rating,
                               @Param("email") String email,
+                              @Param("organizerId") Long organizerId,
                               Pageable pageable);
 
     @Query("SELECT r.rating, COALESCE(COUNT(distinct r.id), 0) FROM Review r " +
@@ -52,4 +54,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Object[] countAverage(@Param("organizerId") Long organizerId,
                           @Param("startDate") LocalDateTime startDate,
                           @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT COUNT(r.id) > 0 FROM Review r " +
+            "WHERE r.eventSession.id = :eventSessionId " +
+            "AND r.attendee.owner.email = :ownerId")
+    boolean existsReview(@Param("ownerId") long ownerId,
+                         @Param("eventSessionId") Long eventSessionId);
 }

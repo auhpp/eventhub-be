@@ -16,6 +16,8 @@ public interface ConversationService {
     ConversationResponse update(Long id, ConversationUpdateRequest request);
 
     void delete(Long id);
+
     ConversationResponse findByOtherMember(Long otherMemberId);
 
+    void disableConversation(Long conversationMemberId);
 }

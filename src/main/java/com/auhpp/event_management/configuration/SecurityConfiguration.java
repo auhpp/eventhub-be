@@ -35,9 +35,10 @@ public class SecurityConfiguration {
             "/api/v1/user/send-email/reset-password",
             "/api/v1/user/reset-password",
             "/api/v1/otp/verify",
-
-
+            "/api/v1/tag/all",
+            "/api/v1/stats/reviews-summary"
     };
+
     private final String[] PUBLIC_GET_ENDPOINTS = {
             "/api/v1/category/**", "/api/v1/event/**",
             "/api/v1/event-invitation/{token}",
@@ -48,7 +49,6 @@ public class SecurityConfiguration {
             "/ws/**",
             "/api/v1/user/{id}",
             "/api/v1/user-follower/count",
-
     };
 
 

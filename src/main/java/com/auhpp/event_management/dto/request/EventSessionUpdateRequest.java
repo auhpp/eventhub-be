@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ValidUpdateEventSession
+//@ValidUpdateEventSession   // comment to demo
 public class EventSessionUpdateRequest {
     private LocalDateTime checkinStartTime;
 

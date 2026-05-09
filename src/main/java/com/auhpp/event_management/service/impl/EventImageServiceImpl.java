@@ -12,7 +12,6 @@ import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.EventImageMapper;
 import com.auhpp.event_management.repository.EventImageRepository;
-import com.auhpp.event_management.repository.EventRepository;
 import com.auhpp.event_management.repository.EventSessionRepository;
 import com.auhpp.event_management.repository.FaceDataRepository;
 import com.auhpp.event_management.service.*;
@@ -25,12 +24,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -39,7 +39,6 @@ public class EventImageServiceImpl implements EventImageService {
     EventImageRepository eventImageRepository;
     EventImageMapper eventImageMapper;
     CloudinaryService cloudinaryService;
-    EventRepository eventRepository;
     EventSessionRepository eventSessionRepository;
     FaceDataService faceDataService;
     FaceDataRepository faceDataRepository;
@@ -49,28 +48,23 @@ public class EventImageServiceImpl implements EventImageService {
     @Override
     @Transactional
     public List<EventImageResponse> uploadEventImages(
-            Long eventId, Long eventSessionId,
+            Long eventSessionId,
             List<MultipartFile> files) {
-
-        if (eventStaffService.isCheckInStaff(eventId)) {
+        EventSession eventSession = eventSessionRepository.findById(eventSessionId).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        Event event = eventSession.getEvent();
+        if (eventStaffService.isCheckInStaff(event.getId())) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
-        Optional<Event> eventOptional = eventRepository.findById(eventId);
-        Optional<EventSession> eventSessionOptional = Optional.empty();
-        if (eventSessionId != null) {
-            eventSessionOptional = eventSessionRepository.findById(eventSessionId);
-        }
+
         List<EventImageResponse> responses = new ArrayList<>();
         for (MultipartFile file : files) {
             // Upload to cloudinary
-            String folderName = "";
-            if (eventOptional.isPresent()) {
-                folderName = FolderName.EVENT.getValue() + eventOptional.get().getId() + "/images";
-            } else if (eventSessionOptional.isPresent()) {
-                folderName = FolderName.EVENT.getValue() + eventSessionOptional.get().getEvent().getId()
-                        + "/event-session/" + eventSessionOptional.get().getId() + "/images";
-            }
+            String folderName = FolderName.EVENT.getValue() + event.getId()
+                    + "/event-session/" + eventSession.getId() + "/images";
+
             Map<String, Object> uploadResult = cloudinaryService.uploadFile(file,
                     folderName, true);
             String publicId = (String) uploadResult.get("public_id");
@@ -81,25 +75,25 @@ public class EventImageServiceImpl implements EventImageService {
                     .imageUrl(imageUrl)
                     .publicId(publicId)
                     .processStatus(ProcessStatus.PENDING)
+                    .eventSession(eventSession)
                     .build();
-            if (eventOptional.isPresent()) {
-                eventImage.setEvent(eventOptional.get());
-            } else if (eventSessionOptional.isPresent()) {
-                eventImage.setEventSession(eventSessionOptional.get());
-                eventImage.setEvent(eventSessionOptional.get().getEvent());
-            }
 
             eventImageRepository.save(eventImage);
             responses.add(eventImageMapper.toEventImageResponse(eventImage));
 
             // call AI service handle image
-            faceDataService.processEventImage(eventImage.getId(), imageUrl);
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    faceDataService.processEventImage(eventImage.getId(), eventImage.getImageUrl());
+                }
+            });
         }
         return responses;
     }
 
     @Override
-    public List<EventImageResponse> searchPhotos(Long eventId, MultipartFile selfie) {
+    public List<EventImageResponse> searchPhotos(Long eventSessionId, MultipartFile selfie) {
         List<Double> userVector = spotterService.extractUserVector(selfie);
 
         if (userVector == null || userVector.isEmpty()) {
@@ -110,7 +104,7 @@ public class EventImageServiceImpl implements EventImageService {
         double threshold = 0.6;
         int limit = 50;
         List<FaceSearchResult> results = faceDataRepository.searchFace(
-                vectorStr, threshold, eventId, limit
+                vectorStr, threshold, eventSessionId, limit
         );
         return results.stream().map(
                 faceSearchResult ->
@@ -122,10 +116,11 @@ public class EventImageServiceImpl implements EventImageService {
     }
 
     @Override
-    public PageResponse<EventImageResponse> findAll(Long eventId, ProcessStatus status, int page, int size) {
+    public PageResponse<EventImageResponse> findAll(Long eventSessionId, ProcessStatus status, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
-        Page<EventImage> pageData = eventImageRepository.findByProcessStatusAndEventId(status, eventId, pageable);
+        Page<EventImage> pageData = eventImageRepository
+                .findByProcessStatusAndEventSessionId(status, eventSessionId, pageable);
         List<EventImageResponse> responses = pageData.getContent().stream().map(
                 eventImageMapper::toEventImageResponse
         ).toList();
@@ -139,17 +134,26 @@ public class EventImageServiceImpl implements EventImageService {
     }
 
     @Override
-    public void refreshProcessImages(Long eventId) {
-        if (eventStaffService.isCheckInStaff(eventId)) {
+    public void refreshProcessImages(Long eventSessionId) {
+        EventSession eventSession = eventSessionRepository.findById(eventSessionId).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        if (eventStaffService.isCheckInStaff(eventSession.getEvent().getId())) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
-        List<EventImage> eventImages = eventImageRepository.findAllByProcessStatusAndEventId(
-                ProcessStatus.FAILED, eventId);
+        List<EventImage> eventImages = eventImageRepository.findAllByProcessStatusAndEventSessionId(
+                List.of(ProcessStatus.FAILED, ProcessStatus.PENDING), eventSessionId);
         // call AI service handle image
         for (EventImage eventImage : eventImages) {
             faceDataService.processEventImage(eventImage.getId(), eventImage.getImageUrl());
         }
+    }
+
+    @Override
+    @Transactional
+    public void deleteImage(Long imageId) {
+        eventImageRepository.deleteById(imageId);
     }
 
 }

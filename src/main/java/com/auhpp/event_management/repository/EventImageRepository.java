@@ -16,14 +16,15 @@ public interface EventImageRepository extends JpaRepository<EventImage, Long> {
 
     @Query("SELECT ei FROM EventImage ei " +
             "WHERE (:processStatus IS NULL OR ei.processStatus = :processStatus) " +
-            "AND ei.event.id = :eventId ")
-    Page<EventImage> findByProcessStatusAndEventId(@Param("processStatus") ProcessStatus processStatus,
-                                                   @Param("eventId") Long eventId,
+            "AND ei.eventSession.id = :eventSessionId ")
+    Page<EventImage> findByProcessStatusAndEventSessionId(@Param("processStatus") ProcessStatus processStatus,
+                                                   @Param("eventSessionId") Long eventSessionId,
                                                    Pageable pageable);
 
     @Query("SELECT ei FROM EventImage ei " +
-            "WHERE (:processStatus IS NULL OR ei.processStatus = :processStatus) " +
-            "AND ei.event.id = :eventId ")
-    List<EventImage> findAllByProcessStatusAndEventId(@Param("processStatus") ProcessStatus processStatus,
-                                                      @Param("eventId") Long eventId);
+            "WHERE (:processStatuses IS NULL OR ei.processStatus IN :processStatuses) " +
+            "AND ei.eventSession.id = :eventSessionId ")
+    List<EventImage> findAllByProcessStatusAndEventSessionId(
+            @Param("processStatuses") List<ProcessStatus> processStatuses,
+                                                      @Param("eventSessionId") Long eventSessionId);
 }

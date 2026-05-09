@@ -13,6 +13,4 @@ import java.util.List;
 @AllArgsConstructor
 public class FaceResult {
     private List<Double> embedding;
-    private List<Integer> bbox;
-    private Double detScore;
 }

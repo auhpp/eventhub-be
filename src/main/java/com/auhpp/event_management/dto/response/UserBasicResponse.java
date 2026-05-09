@@ -19,7 +19,7 @@ public class UserBasicResponse {
     private String avatar;
     private String biography;
     private Boolean isOnline;
-    private Boolean status;
+    private boolean status;
     private LocalDateTime lastSeen;
     private LocalDateTime createdAt;
     private RoleResponse role;

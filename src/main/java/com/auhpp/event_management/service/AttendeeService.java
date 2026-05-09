@@ -44,4 +44,6 @@ public interface AttendeeService {
     void exportReportAttendees(ExcelWriter excelWriter, AttendeeSearchRequest request, String eventName);
 
     int countBoughtTicket(Long ticketId, Long userId);
+
+    boolean checkAttendance(Long eventId);
 }

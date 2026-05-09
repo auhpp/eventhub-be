@@ -3,23 +3,18 @@ package com.auhpp.event_management.service.impl;
 import com.auhpp.event_management.constant.AttendeeStatus;
 import com.auhpp.event_management.constant.FolderName;
 import com.auhpp.event_management.dto.request.ReviewCreateRequest;
+import com.auhpp.event_management.dto.request.ReviewReplyRequest;
 import com.auhpp.event_management.dto.request.ReviewSearchRequest;
 import com.auhpp.event_management.dto.request.ReviewUpdateRequest;
 import com.auhpp.event_management.dto.response.PageResponse;
 import com.auhpp.event_management.dto.response.RatingBreakdownResponse;
 import com.auhpp.event_management.dto.response.ReviewResponse;
 import com.auhpp.event_management.dto.response.ReviewStatsResponse;
-import com.auhpp.event_management.entity.Attendee;
-import com.auhpp.event_management.entity.EventSession;
-import com.auhpp.event_management.entity.Review;
-import com.auhpp.event_management.entity.ReviewImage;
+import com.auhpp.event_management.entity.*;
 import com.auhpp.event_management.exception.AppException;
 import com.auhpp.event_management.exception.ErrorCode;
 import com.auhpp.event_management.mapper.ReviewMapper;
-import com.auhpp.event_management.repository.AttendeeRepository;
-import com.auhpp.event_management.repository.EventSessionRepository;
-import com.auhpp.event_management.repository.ReviewImageRepository;
-import com.auhpp.event_management.repository.ReviewRepository;
+import com.auhpp.event_management.repository.*;
 import com.auhpp.event_management.service.CloudinaryService;
 import com.auhpp.event_management.service.ReviewService;
 import lombok.AccessLevel;
@@ -49,23 +44,29 @@ public class ReviewServiceImpl implements ReviewService {
     AttendeeRepository attendeeRepository;
     CloudinaryService cloudinaryService;
     ReviewImageRepository reviewImageRepository;
+    private final EventStaffRepository eventStaffRepository;
 
     @Override
     @Transactional
     public ReviewResponse createReview(ReviewCreateRequest request) {
         Review review = new Review();
+        Attendee attendee = attendeeRepository.findById(request.getAttendeeId()).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        if (attendee.getStatus() != AttendeeStatus.CHECKED_IN && attendee.getStatus() != AttendeeStatus.OUTSIDE) {
+            throw new AppException(ErrorCode.CHECKED_IN_TICKET);
+        }
+        // find exist review for this customer
+        if (reviewRepository.existsReview(attendee.getOwner().getId(), request.getEventSessionId())) {
+            throw new AppException(ErrorCode.EXISTS_REVIEW);
+        }
         EventSession eventSession = eventSessionRepository.findById(request.getEventSessionId()).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
         if (!eventSession.isExpired()) {
             throw new AppException(ErrorCode.NOT_EXPIRED_EVENT_SESSION);
         }
-        Attendee attendee = attendeeRepository.findById(request.getAttendeeId()).orElseThrow(
-                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
-        );
-        if (attendee.getStatus() != AttendeeStatus.CHECKED_IN) {
-            throw new AppException(ErrorCode.CHECKED_IN_TICKET);
-        }
+
         review.setAttendee(attendee);
         review.setEventSession(eventSession);
         review.setRating(request.getRating());
@@ -151,7 +152,9 @@ public class ReviewServiceImpl implements ReviewService {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC,
                 "createdAt"));
         Page<Review> pageData = reviewRepository.filterReview(request.getEventSessionId(),
-                request.getUserId(), request.getAttendeeId(), request.getRating(), request.getEmail(), pageable);
+                request.getUserId(), request.getAttendeeId(), request.getRating(), request.getEmail(),
+                request.getOrganizerId(),
+                pageable);
         List<ReviewResponse> responses = pageData.getContent().stream().map(
                 reviewMapper::toReviewResponse
         ).toList();
@@ -199,5 +202,20 @@ public class ReviewServiceImpl implements ReviewService {
                 .totalReviews(totalReview)
                 .breakdown(breakdownList)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void replyReview(Long id, ReviewReplyRequest request) {
+        EventStaff eventStaff = eventStaffRepository.findById(request.getEventStaffId()).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        Review review = reviewRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        review.setEventStaff(eventStaff);
+        review.setReplyMessage(request.getReplyMessage());
+        review.setReplyAt(LocalDateTime.now());
+        reviewRepository.save(review);
     }
 }

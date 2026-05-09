@@ -30,4 +30,6 @@ public interface EventService {
 
     Boolean hasResalable(Long id);
 
+    void changeAccessImage(Long id, EventAccessImageRequest request);
+
 }

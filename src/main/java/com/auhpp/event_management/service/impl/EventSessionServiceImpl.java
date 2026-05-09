@@ -141,11 +141,14 @@ public class EventSessionServiceImpl implements EventSessionService {
             guestTotalQuantity += guestTotalQuantityTmp;
 
             int checkedInQuantityTmp = ticket.getAttendees().stream().filter(
-                    attendee -> attendee.getStatus() == AttendeeStatus.CHECKED_IN &&
-                            (attendee.getType() == AttendeeType.BUY || attendee.getType() == AttendeeType.RESALE)
+                    attendee -> (attendee.getStatus() == AttendeeStatus.CHECKED_IN ||
+                            attendee.getStatus() == AttendeeStatus.OUTSIDE) &&
+                            (attendee.getType() == AttendeeType.BUY
+                                    || attendee.getType() == AttendeeType.GIFT || attendee.getType() == AttendeeType.RESALE)
             ).toList().size();
             int guestCheckedInQuantityTmp = ticket.getAttendees().stream().filter(
-                    attendee -> attendee.getStatus() == AttendeeStatus.CHECKED_IN &&
+                    attendee -> (attendee.getStatus() == AttendeeStatus.CHECKED_IN ||
+                            attendee.getStatus() == AttendeeStatus.OUTSIDE) &&
                             attendee.getType() == AttendeeType.INVITE
             ).toList().size();
             checkedInQuantity += checkedInQuantityTmp;
@@ -158,7 +161,8 @@ public class EventSessionServiceImpl implements EventSessionService {
 
             int outsideQuantityTmp = ticket.getAttendees().stream().filter(
                     attendee -> attendee.getStatus() == AttendeeStatus.OUTSIDE &&
-                            attendee.getType() == AttendeeType.BUY
+                            (attendee.getType() == AttendeeType.BUY || attendee.getType() == AttendeeType.GIFT
+                                    || attendee.getType() == AttendeeType.RESALE)
             ).toList().size();
             int guestOutsideQuantityTmp = ticket.getAttendees().stream().filter(
                     attendee -> attendee.getStatus() == AttendeeStatus.OUTSIDE &&
@@ -260,7 +264,6 @@ public class EventSessionServiceImpl implements EventSessionService {
                         projection.getTicketsSold()
                 ));
             } else {
-                // Nếu giờ/ngày đó KHÔNG có người mua vé -> Cho bằng 0
                 finalDataPoints.add(new EventChartDataPoint(label, 0.0, 0));
             }
         }

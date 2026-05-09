@@ -1,5 +1,6 @@
 package com.auhpp.event_management.dto.response;
 
+import com.auhpp.event_management.constant.AccessImage;
 import com.auhpp.event_management.constant.EventType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,5 +29,7 @@ public class EventBasicResponse {
     private String poster;
 
     private CategoryResponse category;
+
+    private AccessImage accessImage;
 
 }

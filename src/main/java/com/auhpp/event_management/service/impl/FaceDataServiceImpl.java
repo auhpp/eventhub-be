@@ -1,7 +1,6 @@
 package com.auhpp.event_management.service.impl;
 
 import com.auhpp.event_management.constant.ProcessStatus;
-import com.auhpp.event_management.dto.pojo.FaceCoordinate;
 import com.auhpp.event_management.dto.response.FaceResult;
 import com.auhpp.event_management.entity.EventImage;
 import com.auhpp.event_management.entity.FaceData;
@@ -46,19 +45,9 @@ public class FaceDataServiceImpl implements FaceDataService {
                 List<Float> floatVector = face.getEmbedding().stream()
                         .map(Double::floatValue)
                         .toList();
-                List<Integer> bbox = face.getBbox();
-                FaceCoordinate cord = new FaceCoordinate();
-                if (bbox != null && bbox.size() == 4) {
-                    cord.setX1(bbox.get(0).doubleValue());
-                    cord.setY1(bbox.get(1).doubleValue());
-                    cord.setX2(bbox.get(2).doubleValue());
-                    cord.setY2(bbox.get(3).doubleValue());
-                }
                 FaceData faceData = FaceData.builder()
                         .eventImage(eventImage)
                         .faceEncoding(floatVector)
-                        .coordinate(cord)
-                        .detectionScore(face.getDetScore())
                         .build();
                 faceDataToSave.add(faceData);
             }

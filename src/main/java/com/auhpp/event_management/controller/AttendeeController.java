@@ -206,4 +206,13 @@ public class AttendeeController {
             response.getWriter().println("{ \"message\": \"Lỗi trong quá trình xuất Excel: " + e.getMessage() + "\" }");
         }
     }
+
+    @GetMapping("/exist-attendance/{eventId}")
+    public ResponseEntity<Boolean> checkAttendance(
+            @PathVariable("eventId") Long eventId
+    ) {
+        boolean res = attendeeService.checkAttendance(eventId);
+        return ResponseEntity
+                .status(HttpStatus.OK).body(res);
+    }
 }

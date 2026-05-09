@@ -15,7 +15,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ValidUpdateEvent
+//@ValidUpdateEvent
 public class EventUpdateRequest {
     private String name;
 

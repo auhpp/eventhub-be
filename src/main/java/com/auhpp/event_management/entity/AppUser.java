@@ -129,4 +129,10 @@ public class AppUser {
 
     @OneToMany(mappedBy = "appUser")
     private List<CalendarSyncMapping> calendarSyncMappings;
+
+    @OneToMany(mappedBy = "follower")
+    private List<UserFollower> userFollowers;
+
+    @OneToMany(mappedBy = "followed")
+    private List<UserFollower> userFolloweds;
 }

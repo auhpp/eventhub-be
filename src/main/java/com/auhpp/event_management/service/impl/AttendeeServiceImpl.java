@@ -297,9 +297,10 @@ public class AttendeeServiceImpl implements AttendeeService {
                 throw new AppException(ErrorCode.FORBIDDEN);
             }
             EventSession eventSession = attendee.getTicket().getEventSession();
-            if (eventSession.getCheckinStartTime() != null && eventSession.getCheckinStartTime().isBefore(LocalDateTime.now())) {
-                throw new AppException(ErrorCode.INVALID_TIME_JOIN);
-            }
+//            if (eventSession.getCheckinStartTime() != null
+//                    && eventSession.getCheckinStartTime().isBefore(LocalDateTime.now())) {
+//                throw new AppException(ErrorCode.INVALID_TIME_JOIN);
+//            }
             return attendee.getTicket().getEventSession().getMeetingUrl();
         }
         return "";
@@ -530,5 +531,11 @@ public class AttendeeServiceImpl implements AttendeeService {
     @Override
     public int countBoughtTicket(Long ticketId, Long userId) {
         return attendeeRepository.countBoughtTicket(ticketId, userId);
+    }
+
+    @Override
+    public boolean checkAttendance(Long eventId) {
+        return attendeeRepository.existsAttendee(eventId, SecurityUtils.getCurrentUserLogin(),
+                List.of(AttendeeStatus.CHECKED_IN, AttendeeStatus.OUTSIDE));
     }
 }

@@ -25,4 +25,13 @@ public interface WithdrawalRequestRepository extends JpaRepository<WithdrawalReq
                                    @Param("startDate") LocalDateTime startDate,
                                    @Param("endDate") LocalDateTime endDate,
                                    Pageable pageable);
+
+    @Query("SELECT COUNT(w) FROM WithdrawalRequest w " +
+            "WHERE (:statuses IS NULL OR w.status IN :statuses) " +
+            "AND (CAST(:startDate AS timestamp) IS NULL OR w.createdAt >= :startDate) " +
+            "AND (CAST(:endDate AS timestamp) IS NULL OR w.createdAt <= :endDate)")
+    Integer countWithdrawalRequest(
+            @Param("statuses") List<WithdrawalStatus> statuses,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 }

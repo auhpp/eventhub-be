@@ -23,53 +23,63 @@ import java.util.List;
 public class EventImageController {
     EventImageService eventImageService;
 
-    @PostMapping(path = "/{eventId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(path = "/{eventSessionId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<List<EventImageResponse>> uploadEventImages(
-            @PathVariable(name = "eventId") Long eventId,
-            @RequestParam(name = "eventSessionId", required = false) Long eventSessionId,
+            @PathVariable(name = "eventSessionId") Long eventSessionId,
             @RequestParam(name = "files") List<MultipartFile> files
     ) {
         List<EventImageResponse> result = eventImageService.uploadEventImages(
-                eventId, eventSessionId, files
+                eventSessionId, files
         );
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(result);
     }
 
-    @GetMapping("/filter/{eventId}")
+    @GetMapping("/filter/{eventSessionId}")
     public ResponseEntity<PageResponse<EventImageResponse>> findAll(
-            @PathVariable(name = "eventId") Long eventId,
+            @PathVariable(name = "eventSessionId") Long eventSessionId,
             @RequestParam(name = "processStatus", required = false) ProcessStatus status,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int size
     ) {
-        PageResponse<EventImageResponse> result = eventImageService.findAll(eventId, status, page, size);
+        PageResponse<EventImageResponse> result = eventImageService.findAll(eventSessionId, status, page, size);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(result);
     }
 
-    @PostMapping("/search/{eventId}")
+    @PostMapping("/search/{eventSessionId}")
     public ResponseEntity<List<EventImageResponse>> searchPhotos(
-            @PathVariable(name = "eventId") Long eventId,
+            @PathVariable(name = "eventSessionId") Long eventSessionId,
             @RequestParam(name = "file") MultipartFile selfie
     ) {
         List<EventImageResponse> result = eventImageService.searchPhotos(
-                eventId, selfie
+                eventSessionId, selfie
         );
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(result);
     }
 
-    @PostMapping(path = "/refresh/{eventId}")
+    @PostMapping(path = "/refresh/{eventSessionId}")
     @PreAuthorize("hasAnyRole('ORGANIZER', 'USER')")
     public ResponseEntity<Void> refreshProcessImages(
-            @PathVariable(name = "eventId") Long eventId) {
+            @PathVariable(name = "eventSessionId") Long eventSessionId) {
         eventImageService.refreshProcessImages(
-                eventId
+                eventSessionId
+        );
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @DeleteMapping(path = "/{imageId}")
+    public ResponseEntity<Void> delete(
+            @PathVariable(name = "imageId") Long imageId) {
+        eventImageService.deleteImage(
+                imageId
         );
         return ResponseEntity
                 .status(HttpStatus.OK)

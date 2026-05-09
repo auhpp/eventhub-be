@@ -24,12 +24,14 @@ public interface EventSeriesRepository extends JpaRepository<EventSeries, Long> 
             "LOWER(es.appUser.fullName)" +
             "   LIKE LOWER(CONCAT('%', CAST(:name AS string), '%')))" +
             "OR LOWER(es.name)" +
-            " LIKE LOWER(CONCAT('%', CAST(:name AS string), '%')))")
+            " LIKE LOWER(CONCAT('%', CAST(:name AS string), '%')))" +
+            "AND (:hasPublic IS NULL OR es.hasPublic = :hasPublic)")
     Page<EventSeries> filterEventSeries(
             @Param("name") String name,
             @Param("userId") Long userId,
             @Param("userFollowerId") Long userFollowerId,
             @Param("statuses") List<EventSeriesStatus> statuses,
+            @Param("hasPublic") Boolean hasPublic,
             Pageable pageable);
 
     @Query("SELECT es FROM EventSeries es " +

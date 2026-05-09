@@ -28,6 +28,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.DayOfWeek;
@@ -109,8 +111,9 @@ public class EventServiceImpl implements EventService {
         );
         event.setCategory(category);
 
+        EventSeries eventSeries = null;
         if (request.getEventSeriesId() != null) {
-            EventSeries eventSeries = eventSeriesRepository.findById(request.getEventSeriesId()).orElseThrow(
+            eventSeries = eventSeriesRepository.findById(request.getEventSeriesId()).orElseThrow(
                     () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
             );
             event.setEventSeries(eventSeries);
@@ -126,6 +129,7 @@ public class EventServiceImpl implements EventService {
         }
 
         event.setStatus(EventStatus.PENDING);
+        event.setAccessImage(AccessImage.PUBLIC);
         eventRepository.save(event);
 
         // handle tags
@@ -163,9 +167,88 @@ public class EventServiceImpl implements EventService {
             eventSessionCreateRequest.setStatus(EventSessionStatus.PENDING);
             eventSessionService.createEventSession(eventSessionCreateRequest, event.getId());
         }
+
+        notificationCategory(category, event);
+
+        if (eventSeries != null) {
+            notificationEventSeries(eventSeries, event);
+        }
+        notificationFollowOrganizer(appUser, event);
+
         return eventMapper.toEventResponse(event);
     }
 
+    private void notificationCategory(Category category, Event event) {
+        if (category.getCategoryFollowers() != null && !category.getCategoryFollowers().isEmpty()) {
+
+            List<Long> recipientIds = category.getCategoryFollowers().stream()
+                    .map(follower -> follower.getAppUser().getId())
+                    .toList();
+
+            notificationService.createNotification(
+                    NotificationRequest.builder()
+                            .type(NotificationType.CATEGORY_EVENT)
+                            .recipientIds(recipientIds)
+                            .subjectType(NotificationSubjectType.CATEGORY)
+                            .subjectId(category.getId())
+                            .subject(category.getName())
+                            .subjectAvatar(category.getAvatarUrl())
+                            .targetType(NotificationTargetType.EVENT)
+                            .targetId(event.getId())
+                            .target(event.getName())
+                            .targetAvatar(event.getThumbnail())
+                            .build()
+            );
+        }
+    }
+
+    private void notificationEventSeries(EventSeries eventSeries, Event event) {
+        if (eventSeries.getEventSeriesFollowers() != null && !eventSeries.getEventSeriesFollowers().isEmpty()) {
+
+            List<Long> recipientIds = eventSeries.getEventSeriesFollowers().stream()
+                    .map(follower -> follower.getAppUser().getId())
+                    .toList();
+
+            notificationService.createNotification(
+                    NotificationRequest.builder()
+                            .type(NotificationType.EVENT_SERIES_EVENT)
+                            .recipientIds(recipientIds)
+                            .subjectType(NotificationSubjectType.EVENT_SERIES)
+                            .subjectId(eventSeries.getId())
+                            .subject(eventSeries.getName())
+                            .subjectAvatar(eventSeries.getAvatar())
+                            .targetType(NotificationTargetType.EVENT)
+                            .targetId(event.getId())
+                            .target(event.getName())
+                            .targetAvatar(event.getThumbnail())
+                            .build()
+            );
+        }
+    }
+
+    private void notificationFollowOrganizer(AppUser organizer, Event event) {
+        if (organizer.getUserFolloweds() != null && !organizer.getUserFolloweds().isEmpty()) {
+
+            List<Long> recipientIds = organizer.getUserFolloweds().stream()
+                    .map(follower -> follower.getFollower().getId())
+                    .toList();
+
+            notificationService.createNotification(
+                    NotificationRequest.builder()
+                            .type(NotificationType.ORGANIZER_NEW_EVENT)
+                            .recipientIds(recipientIds)
+                            .subjectType(NotificationSubjectType.ORGANIZER)
+                            .subjectId(organizer.getId())
+                            .subject(organizer.getFullName())
+                            .subjectAvatar(organizer.getAvatar())
+                            .targetType(NotificationTargetType.EVENT)
+                            .targetId(event.getId())
+                            .target(event.getName())
+                            .targetAvatar(event.getThumbnail())
+                            .build()
+            );
+        }
+    }
 
     @Override
     @Transactional
@@ -185,6 +268,7 @@ public class EventServiceImpl implements EventService {
                     () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
             );
             event.setEventSeries(eventSeries);
+            notificationEventSeries(eventSeries, event);
         } else {
             event.setEventSeries(null);
         }
@@ -196,15 +280,14 @@ public class EventServiceImpl implements EventService {
                     request.getLocationLatitude());
             Point locationPoint = geometryFactory.createPoint(locationCoordinate);
             event.setLocationCoordinates(locationPoint);
-            for (EventSession eventSession : event.getEventSessions()) {
-                googleCalendarService.syncUpdatedEventToAllUsersInBackground(eventSession.getId());
-            }
+
         }
 
         if (request.getCategoryId() != null) {
             Category category = categoryRepository.findById(request.getCategoryId()).orElseThrow(
                     () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
             );
+            notificationCategory(category, event);
             event.setCategory(category);
         }
         AppUser owner = event.getAppUser();
@@ -245,6 +328,19 @@ public class EventServiceImpl implements EventService {
         event.setEventTags(eventTags);
 
         eventRepository.save(event);
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                // Đoạn này chỉ chạy khi eventRepository.save(event) đã thực sự commit xuống DB
+                if (event.getEventSessions() != null) {
+                    for (EventSession eventSession : event.getEventSessions()) {
+                        googleCalendarService.syncUpdatedEventToAllUsersInBackground(eventSession.getId());
+                    }
+                }
+            }
+        });
+
         return eventBasicMapper.toEventBasicResponse(event);
     }
 
@@ -389,9 +485,7 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
         );
-        EventResponse response = eventMapper.toEventResponse(event);
-        response.setHasPhotos(!event.getEventImages().isEmpty());
-        return response;
+        return eventMapper.toEventResponse(event);
     }
 
     @Override
@@ -500,6 +594,16 @@ public class EventServiceImpl implements EventService {
             return false;
         }
         return res;
+    }
+
+    @Override
+    @Transactional
+    public void changeAccessImage(Long id, EventAccessImageRequest request) {
+        Event event = eventRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.RESOURCE_NOT_FOUND)
+        );
+        event.setAccessImage(request.getAccessImage());
+        eventRepository.save(event);
     }
 
 

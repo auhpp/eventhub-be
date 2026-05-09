@@ -45,7 +45,7 @@ public class ResalePost {
     @OneToMany(mappedBy = "resalePost")
     private List<Booking> bookings;
 
-    @OneToMany(mappedBy = "resalePost", cascade = {CascadeType.MERGE})
+    @OneToMany(mappedBy = "resalePost", cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<Attendee> attendees;
 
     @ManyToOne(optional = false)

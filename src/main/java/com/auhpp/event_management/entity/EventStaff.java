@@ -59,4 +59,7 @@ public class EventStaff {
 
     @OneToMany(mappedBy = "eventStaff")
     private List<CheckInLog> checkInLogs;
+
+    @OneToMany(mappedBy = "eventStaff")
+    private List<Review> reviews;
 }

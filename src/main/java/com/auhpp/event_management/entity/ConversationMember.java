@@ -1,6 +1,7 @@
 
 package com.auhpp.event_management.entity;
 
+import com.auhpp.event_management.constant.CommonStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -19,6 +20,10 @@ public class ConversationMember {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private CommonStatus status;
 
     @CreationTimestamp
     @Column(updatable = false)

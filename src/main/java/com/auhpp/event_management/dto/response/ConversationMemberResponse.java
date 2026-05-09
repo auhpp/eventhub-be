@@ -1,5 +1,6 @@
 package com.auhpp.event_management.dto.response;
 
+import com.auhpp.event_management.constant.CommonStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,4 +18,6 @@ public class ConversationMemberResponse {
     private UserBasicResponse appUser;
 
     private LocalDateTime createdAt;
+
+    private CommonStatus status;
 }

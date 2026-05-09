@@ -1,5 +1,6 @@
 package com.auhpp.event_management.entity;
 
+import com.auhpp.event_management.constant.AccessImage;
 import com.auhpp.event_management.constant.EventStatus;
 import com.auhpp.event_management.constant.EventType;
 import jakarta.persistence.*;
@@ -66,6 +67,9 @@ public class Event {
 
     private Boolean hasResalable;
 
+    @Enumerated(EnumType.STRING)
+    private AccessImage accessImage;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -86,9 +90,6 @@ public class Event {
 
     @OneToMany(mappedBy = "event")
     private List<EventStaff> eventStaffs;
-
-    @OneToMany(mappedBy = "event")
-    private List<EventImage> eventImages;
 
     @OneToMany(mappedBy = "event")
     private List<Favorite> favorites;

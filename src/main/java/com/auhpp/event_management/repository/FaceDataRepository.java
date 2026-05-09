@@ -16,7 +16,7 @@ public interface FaceDataRepository extends JpaRepository<FaceData, Long> {
             "(fd.face_encoding <=> cast(:vectorStr as vector(512))) as distance " +
             "FROM face_data fd " +
             "JOIN event_image ei ON fd.event_image_id = ei.id " +
-            "WHERE ei.event_id = :eventId " +
+            "WHERE ei.event_session_id = :eventSessionId " +
             "AND (fd.face_encoding <=> cast(:vectorStr as vector(512))) < :threshold " +
             "ORDER BY distance ASC " +
             "LIMIT :limit ",
@@ -24,7 +24,7 @@ public interface FaceDataRepository extends JpaRepository<FaceData, Long> {
     List<FaceSearchResult> searchFace(
             @Param("vectorStr") String vectorStr,
             @Param("threshold") double threshold,
-            @Param("eventId") Long eventId,
+            @Param("eventSessionId") Long eventSessionId,
             @Param("limit") int limit
     );
 }

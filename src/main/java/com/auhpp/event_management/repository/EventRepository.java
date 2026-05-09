@@ -185,4 +185,6 @@ public interface EventRepository extends JpaRepository<Event, Long>,
     @Query("SELECT e.hasResalable FROM Event e " +
             "WHERE e.id = :eventId")
     Boolean getHasResalable(@Param("eventId") Long eventId);
+
+
 }

@@ -124,7 +124,7 @@ public class EventSeriesServiceImpl implements EventSeriesService {
                 "createdAt"));
         Page<EventSeries> pageData = eventSeriesRepository.filterEventSeries(request.getName(),
                 request.getUserId(), request.getUserFollowerId(),
-                request.getStatuses(),
+                request.getStatuses(), request.getHasPublic(),
                 pageable);
         List<EventSeriesResponse> responses = pageData.getContent().stream().map(
                 eventSeriesMapper::toEventSeriesResponse

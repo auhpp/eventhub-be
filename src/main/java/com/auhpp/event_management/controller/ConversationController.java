@@ -71,4 +71,14 @@ public class ConversationController {
                 .status(HttpStatus.OK)
                 .body(res);
     }
+
+    @PostMapping("/disable/{memberId}")
+    public ResponseEntity<Void> disableConversation(
+            @PathVariable("memberId") Long memberId
+    ) {
+        conversationService.disableConversation(memberId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
 }

@@ -18,9 +18,11 @@ public interface ResalePostRepository extends JpaRepository<ResalePost, Long>, R
 
     @Query("SELECT DISTINCT rp FROM ResalePost rp " +
             "LEFT JOIN rp.attendees a " +
-            "WHERE (:eventSessionId IS NULL OR a.ticket.eventSession.id = :eventSessionId) " +
-            "AND (:eventId IS NULL OR a.ticket.eventSession.event.id = :eventId) " +
-            "AND (:ticketId IS NULL OR a.ticket.id = :ticketId) " +
+            "LEFT JOIN a.ticket t " +
+            "LEFT JOIN t.eventSession es " +
+            "WHERE (:eventSessionId IS NULL OR es.id = :eventSessionId) " +
+            "AND (:eventId IS NULL OR es.event.id = :eventId) " +
+            "AND (:ticketId IS NULL OR t.id = :ticketId) " +
             "AND (:hasRetail IS NULL OR rp.hasRetail = :hasRetail) " +
             "AND (:quantity IS NULL OR SIZE(rp.attendees) = :quantity) " +
             "AND (:userId IS NULL OR rp.appUser.id = :userId) " +

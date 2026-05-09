@@ -26,6 +26,10 @@ public class Review {
     @Column(nullable = false)
     private Integer rating;
 
+    private String replyMessage;
+
+    private LocalDateTime replyAt;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -36,6 +40,9 @@ public class Review {
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private EventSession eventSession;
+
+    @ManyToOne
+    private EventStaff eventStaff;
 
     @OneToOne(optional = false)
     @JoinColumn(nullable = false)
